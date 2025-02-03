@@ -5,13 +5,13 @@ import { Input } from "@/components/ui/input"
 
 interface TodoItemProps {
   todo: {
-    id: number
+    id: string
     text: string
     completed: boolean
   }
-  onUpdate: (id: number, newText: string) => void
-  onDelete: (id: number) => void
-  onToggle: (id: number) => void
+  onUpdate: (id: string, newText: string) => void
+  onDelete: (id: string) => void
+  onToggle: (id: string) => void
 }
 
 export default function TodoItem({ todo, onUpdate, onDelete, onToggle }: TodoItemProps) {
