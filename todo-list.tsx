@@ -4,9 +4,9 @@ import { useState } from "react"
 import { Plus } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import Header from "./components/header"
-import Footer from "./components/footer"
-import TodoItem from "./components/todo-item"
+import Header from "@/components/header"
+import Footer from "@/components/footer"
+import TodoItem from "@/components/todo-item"
 
 interface Todo {
   id: number
