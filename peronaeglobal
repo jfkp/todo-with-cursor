@@ -211,3 +211,35 @@ Sécurité & conformité	Opérateur sécurité / conformité
 Gouvernance	Administrateur
 Exploitation	Opérateur plateforme
 Intégration API	Système externe
+
+
+Persona,Role,Objectif,User Story,Flux principal,Composants clés
+Utilisateur final,Knowledge Worker,Obtenir des réponses fiables,Prompt texte simple,"AuthN → Guardrails(Input) → PolicyShield → Orchestrateur → LLMaaS → Guardrails(Output) → MemoryStore → Observabilité","AuthN, Guardrails, PolicyShield, Orchestrateur, LLMaaS, MemoryStore"
+Utilisateur final,Knowledge Worker,Exploiter documents internes,Upload document,"AuthN → Guardrails → PolicyShield → Orchestrateur → ContextHub(upload) → Storage → Observabilité","AuthN, Guardrails, PolicyShield, Orchestrateur, ContextHub, Storage"
+Utilisateur final,Knowledge Worker,Q&A sur document,RAG local,"AuthN → Guardrails → PolicyShield → Orchestrateur → ContextHub(search) → LLMaaS → Guardrails → MemoryStore","ContextHub, LLMaaS, Guardrails"
+Utilisateur final,Knowledge Worker,Reprendre une session,Consultation historique,"AuthN → Orchestrateur → MemoryStore(read) → UI","Orchestrateur, MemoryStore"
+Utilisateur final,Knowledge Worker,Améliorer la qualité IA,Feedback utilisateur,"AuthN → Orchestrateur → Observabilité","Orchestrateur, Observabilité"
+
+Utilisateur avancé,Power User,Optimiser la qualité,Choix explicite du modèle,"AuthN → PolicyShield(AUTHZ modèle) → Orchestrateur → LLMaaS","PolicyShield, Orchestrateur, LLMaaS"
+Utilisateur avancé,Power User,Analyse avancée,Prompt complexe,"AuthN → Guardrails → PolicyShield → Orchestrateur → LLMaaS","Guardrails, PolicyShield, Orchestrateur"
+Utilisateur avancé,Power User,Multimodal,Analyse image,"AuthN → Guardrails(multimodal) → PolicyShield → Orchestrateur → LLMaaS","Guardrails, Orchestrateur, LLMaaS"
+Utilisateur avancé,Power User,RAG intensif,Recherche avancée,"AuthN → Guardrails → PolicyShield → Orchestrateur → ContextHub → LLMaaS","ContextHub, LLMaaS"
+
+Administrateur plateforme,Admin,Gouverner accès,Gestion des rôles,"AuthN → PolicyShield(OPS) → Persistence → Observabilité","PolicyShield, Persistence"
+Administrateur plateforme,Admin,Superviser plateforme,Dashboard global,"AuthN → Observabilité → UI","Observabilité"
+
+Opérateur sécurité,Security,Prévenir fuites,Analyse prompts,"Guardrails(Input) → Observabilité","Guardrails"
+Opérateur sécurité,Security,Détection données sensibles,PII & secrets,"Guardrails → PolicyShield(decision) → Observabilité","Guardrails, PolicyShield"
+Opérateur sécurité,Security,Blocage conformité,Rejet sécurité,"Guardrails → Orchestrateur(BLOCK/REJECT) → Observabilité","Guardrails, Orchestrateur"
+
+Opérateur plateforme,Ops,Santé plateforme,Métriques temps réel,"Observabilité(metrics/traces)","Observabilité"
+Opérateur plateforme,Ops,Diagnostic incidents,Logs centralisés,"Gateway/Orchestrateur/Services → Observabilité","Gateway, Orchestrateur"
+Opérateur plateforme,Ops,Résilience,Circuit breakers,"Orchestrateur → LLMaaS/RAGaaS","Orchestrateur, LLMaaS, RAGaaS"
+
+Opérateur conformité,Audit,Audit réglementaire,Consultation journaux,"Observabilité(audit store)","Observabilité"
+Opérateur conformité,Audit,Export conformité,Export traces,"Observabilité → Export","Observabilité"
+Opérateur conformité,Audit,Droit à l’oubli,Purge données,"Orchestrateur → MemoryStore/ContextHub → Audit","MemoryStore, ContextHub"
+
+Système externe,Client API,Intégration IA,Appel inference API,"AuthN M2M → PolicyShield → Orchestrateur → LLMaaS","PolicyShield, Orchestrateur"
+Système externe,Client API,Recherche augmentée,Appel RAGaaS,"AuthN M2M → PolicyShield → Orchestrateur → RAGaaS","PolicyShield, Orchestrateur, RAGaaS"
+Système externe,Client API,Robustesse API,Gestion erreurs,"Orchestrateur → Observabilité","Observabilité"
