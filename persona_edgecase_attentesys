@@ -1,0 +1,252 @@
+🎭 Persona 1 — Utilisateur final (Knowledge Worker)
+🎯 Scénarios nominaux
+
+Se connecte via SSO
+
+Soumet un prompt texte simple
+
+Upload un document (PDF, Word)
+
+Pose une question sur le document
+
+Reçoit une réponse contextualisée
+
+Consulte l’historique de ses conversations
+
+Donne un feedback sur la réponse
+
+⚠️ Edge cases critiques
+
+Prompt ambigu ou incomplet
+
+Document trop volumineux
+
+Document non lisible (scan, format corrompu)
+
+Réponse LLM trop longue ou hors sujet
+
+Timeout ou indisponibilité du LLM
+
+Modèle sélectionné non autorisé
+
+Perte de session
+
+⛔ Attentes système non négociables
+
+Aucun accès sans authentification
+
+Message d’erreur compréhensible
+
+Aucune donnée sensible persistée
+
+Continuité conversationnelle fiable
+
+Traçabilité de chaque interaction
+
+🎭 Persona 2 — Utilisateur avancé (Power User)
+🎯 Scénarios nominaux
+
+Sélection explicite du modèle LLM
+
+Usage intensif du RAG
+
+Soumission de prompts complexes
+
+Envoi d’images pour analyse
+
+Combinaison texte + document + image
+
+⚠️ Edge cases critiques
+
+Sélection d’un modèle non autorisé
+
+Dépassement de quotas
+
+Prompt trop long
+
+Format multimodal invalide
+
+Coût excessif généré par erreur
+
+⛔ Attentes système non négociables
+
+Respect strict des droits d’accès
+
+Rejet explicite si modèle interdit
+
+Limitation automatique des abus
+
+Feedback clair sur les refus
+
+Aucun contournement des règles
+
+🎭 Persona 3 — Administrateur de la plateforme
+🎯 Scénarios nominaux
+
+Création et modification des rôles
+
+Attribution d’accès aux modèles
+
+Consultation du dashboard global
+
+Supervision de l’activité
+
+⚠️ Edge cases critiques
+
+Changement de rôle en cours de session
+
+Conflit entre règles
+
+Suppression accidentelle d’un rôle
+
+Accès partiel non intentionnel
+
+⛔ Attentes système non négociables
+
+Décisions déterministes
+
+Aucun accès implicite
+
+Audit systématique des changements
+
+Rollback possible
+
+Séparation claire admin / utilisateur
+
+🎭 Persona 4 — Opérateur sécurité
+🎯 Scénarios nominaux
+
+Analyse de tous les prompts entrants
+
+Consultation des alertes sécurité
+
+Visualisation des contenus bloqués
+
+Supervision des guardrails
+
+⚠️ Edge cases critiques
+
+PII partiellement masquée
+
+Tentative de prompt injection indirecte
+
+Fichier déguisé (zip renommé)
+
+Contenu borderline (toxique, ambigu)
+
+Fuite potentielle via réponse LLM
+
+⛔ Attentes système non négociables
+
+Aucun prompt sans analyse
+
+Blocage strict des contenus à risque
+
+Différenciation BLOCK / REJECT
+
+Logs exploitables
+
+Zéro bypass possible
+
+🎭 Persona 5 — Opérateur plateforme (Ops / SRE)
+🎯 Scénarios nominaux
+
+Consultation des métriques temps réel
+
+Analyse des logs centralisés
+
+Détection d’incidents
+
+Suivi de la disponibilité des services externes
+
+⚠️ Edge cases critiques
+
+Indisponibilité LLMaas / RAGaaS
+
+Pic de trafic soudain
+
+Dégradation de latence
+
+Erreurs en cascade
+
+Saturation des ressources
+
+⛔ Attentes système non négociables
+
+Circuit breakers actifs
+
+Alertes en temps réel
+
+Isolation des pannes
+
+Visibilité bout-en-bout
+
+Aucun effet domino
+
+🎭 Persona 6 — Opérateur conformité / audit
+🎯 Scénarios nominaux
+
+Consultation des journaux d’audit
+
+Export des traces
+
+Vérification des décisions
+
+Contrôle RGPD
+
+⚠️ Edge cases critiques
+
+Donnée non traçable
+
+Historique incomplet
+
+Incohérence décision / action
+
+Demande de suppression RGPD urgente
+
+⛔ Attentes système non négociables
+
+Traçabilité complète
+
+Historique immuable
+
+Accès en lecture seule
+
+Droit à l’oubli effectif
+
+Conformité démontrable
+
+🎭 Persona 7 — Système externe (Client applicatif)
+🎯 Scénarios nominaux
+
+Appel API d’inférence
+
+Appel RAGaaS
+
+Transmission de contexte
+
+Consommation des réponses
+
+⚠️ Edge cases critiques
+
+Token invalide
+
+Quota dépassé
+
+Payload mal formé
+
+Timeout API
+
+Version contractuelle incompatible
+
+⛔ Attentes système non négociables
+
+API contractuelle stable
+
+Erreurs explicites
+
+Sécurité machine-to-machine
+
+Isolation par client
+
+Observabilité API complète
