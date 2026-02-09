@@ -1,0 +1,213 @@
+Personas officiels V0 — Plateforme IA gouvernée
+🎭 1. Utilisateur final (Knowledge Worker)
+
+Rôle
+Utilisateur métier non technique consommant l’IA au quotidien.
+
+Objectif principal
+
+Obtenir des réponses fiables, contextualisées et exploitables sans exposition de données sensibles.
+
+Interactions clés
+
+Authentification SSO
+
+Soumission de prompts texte / multimodaux
+
+Upload de documents
+
+Q&A, RAG, reformulation
+
+Consultation de l’historique
+
+Feedback sur les réponses
+
+Flux critiques
+
+Prompt simple
+
+Prompt + document
+
+RAG local / RAGaaS
+
+Sélection du modèle
+
+Mémoire conversationnelle
+
+🎭 2. Utilisateur avancé (Power User)
+
+Rôle
+Utilisateur métier expert ou analyste.
+
+Objectif principal
+
+Tirer parti avancé des capacités IA (choix modèle, prompts complexes, multimodal).
+
+Spécificités
+
+Sélection explicite du modèle
+
+Utilisation intensive du RAG
+
+Usage multimodal (texte + image)
+
+Demandes longues ou complexes
+
+Flux sensibles
+
+Coût
+
+Latence
+
+Sélection modèle autorisée
+
+Limites de quota
+
+🎭 3. Administrateur de la plateforme
+
+Rôle
+Responsable de la gouvernance fonctionnelle.
+
+Objectif principal
+
+Contrôler qui peut faire quoi, avec quels modèles, et sous quelles règles.
+
+Interactions clés
+
+Gestion des rôles et permissions
+
+Accès aux dashboards
+
+Paramétrage des politiques
+
+Supervision globale
+
+Flux critiques
+
+RBAC
+
+Accès aux modèles
+
+Visualisation activité
+
+🎭 4. Opérateur sécurité
+
+Rôle
+Responsable conformité, sécurité et protection des données.
+
+Objectif principal
+
+Prévenir les usages malveillants, fuites de données et non-conformités.
+
+Interactions clés
+
+Consultation des logs d’audit
+
+Suivi des alertes sécurité
+
+Analyse des blocages
+
+Supervision des guardrails
+
+Flux critiques
+
+Détection PII
+
+Classification données
+
+Prompt malveillant
+
+Contournement de règles
+
+🎭 5. Opérateur plateforme (Ops / SRE)
+
+Rôle
+Responsable de la santé opérationnelle.
+
+Objectif principal
+
+Garantir la disponibilité, la performance et la qualité de service.
+
+Interactions clés
+
+Suivi des métriques temps réel
+
+Analyse des logs centralisés
+
+Gestion des incidents
+
+Supervision des dépendances externes
+
+Flux critiques
+
+Latence
+
+Erreurs LLMaas / RAGaaS
+
+Circuit breakers
+
+Saturation
+
+🎭 6. Opérateur conformité / audit
+
+Rôle
+Responsable audit interne ou externe.
+
+Objectif principal
+
+Vérifier que la plateforme est conforme et traçable.
+
+Interactions clés
+
+Accès aux journaux d’audit
+
+Export des traces
+
+Vérification des décisions
+
+Contrôle RGPD
+
+Flux critiques
+
+Traçabilité bout-en-bout
+
+Droit à l’oubli
+
+Historique décisions
+
+🎭 7. Système externe (Client applicatif)
+
+Rôle
+Application ou service consommant la plateforme via API.
+
+Objectif principal
+
+Intégrer l’IA de manière sécurisée et gouvernée.
+
+Interactions clés
+
+Appels API
+
+RAGaaS
+
+Inference LLMaas
+
+Métadonnées & contextes
+
+Flux critiques
+
+AuthN machine
+
+Quotas
+
+Format contractuel
+
+Erreurs API
+
+Couverture V0 — Pourquoi cette liste est suffisante
+Domaine	Couvert par
+UX utilisateur	Utilisateur / Power User
+Sécurité & conformité	Opérateur sécurité / conformité
+Gouvernance	Administrateur
+Exploitation	Opérateur plateforme
+Intégration API	Système externe
