@@ -1,0 +1,213 @@
+👤 Acteurs côté utilisateurs finaux
+1. Utilisateur de la plateforme IA gouvernée
+
+Acteur principal métier.
+
+Responsabilités / attentes
+
+Se connecter via SSO entreprise
+
+Soumettre des prompts (texte, image)
+
+Uploader des documents (PDF, Word, Excel)
+
+Poser des questions sur ses documents (RAG)
+
+Sélectionner un modèle LLM
+
+Recevoir des réponses riches (texte, code, tableaux, images)
+
+Reprendre des conversations passées
+
+Bénéficier de mémoire contextuelle
+
+Accéder à des prompts préconfigurés
+
+Donner un feedback sur les réponses
+
+🛡️ Acteurs sécurité & gouvernance
+2. Opérateur Sécurité
+
+Responsable de la protection et de la conformité.
+
+Responsabilités / attentes
+
+Analyser tous les prompts avant traitement
+
+Détecter PII, secrets, données sensibles
+
+Détecter les niveaux de classification (public / interne / confidentiel / secret)
+
+Bloquer les contenus malveillants ou non conformes
+
+Accéder aux métriques et incidents de sécurité
+
+Suivre les tentatives de contournement
+
+3. Responsable Sécurité / Compliance
+
+Acteur orienté audit et conformité.
+
+Responsabilités / attentes
+
+Accéder aux logs d’audit complets
+
+Tracer chaque accès et chaque action
+
+Détecter des anomalies d’usage
+
+Répondre aux exigences réglementaires (RGPD, audits)
+
+⚙️ Acteurs exploitation & plateforme
+4. Opérateur de la plateforme
+
+Responsable du bon fonctionnement opérationnel.
+
+Responsabilités / attentes
+
+Suivre la santé globale de la plateforme
+
+Accéder aux métriques temps réel
+
+Monitorer la qualité de service
+
+Centraliser et consulter les logs
+
+Diagnostiquer les incidents
+
+Mettre en place des limites d’usage (rate limiting)
+
+Protéger contre les usages abusifs
+
+5. Administrateur de la plateforme
+
+Responsable de la configuration fonctionnelle.
+
+Responsabilités / attentes
+
+Gérer les rôles et permissions
+
+Contrôler l’accès aux services et modèles
+
+Accéder à un dashboard global
+
+Avoir une vue synthétique de l’activité et de la santé des services
+
+🧠 Acteurs logiques / rôle produit (non humains)
+
+Ces acteurs apparaissent explicitement dans les US formulées “en tant que …”.
+
+6. Orchestrateur (Smart Router)
+
+Acteur central de décision.
+
+Responsabilités
+
+Orchestrer le flux séquentiel de traitement
+
+Appeler Guardrails, PolicyShield, MemoryStore
+
+Récupérer le contexte conversationnel
+
+Respecter le choix du modèle utilisateur
+
+Router vers LLMaaS / RAGaaS
+
+Appliquer circuit breakers et contrôles de résilience
+
+7. PolicyShield
+
+Autorité de gouvernance.
+
+Responsabilités
+
+Authentifier l’utilisateur via SSO (dans tes US)
+
+Autoriser les actions
+
+Gouverner le routage
+
+Fournir une décision unifiée
+
+Tracer toutes les décisions
+
+8. Security Guardrails
+
+Acteur de contrôle de contenu.
+
+Responsabilités
+
+Analyser prompts et documents
+
+Détecter PII, secrets, toxicité
+
+Classifier les contenus
+
+Décider PASS / BLOCK / REJECT
+
+9. ContextHub
+
+Acteur connaissance & RAG.
+
+Responsabilités
+
+Extraire le texte des documents uploadés
+
+Vectoriser les contenus
+
+Permettre la recherche sémantique
+
+Supporter le RAG local
+
+Servir de base de connaissance documentaire
+
+10. MemoryStore
+
+Acteur de continuité conversationnelle.
+
+Responsabilités
+
+Stocker les préférences utilisateur
+
+Stocker le contexte conversationnel
+
+Restituer le contexte pour les requêtes suivantes
+
+11. LLMaaS / RAGaaS (services externes)
+
+Acteurs fournisseurs d’IA.
+
+Responsabilités
+
+Produire des réponses à partir des prompts
+
+Générer des embeddings
+
+Rester opaques (boîte noire)
+
+📊 Acteurs observabilité
+12. Système d’Observabilité
+
+Acteur transverse.
+
+Responsabilités
+
+Centraliser logs, métriques, traces
+
+Suivre coûts, usages, performances
+
+Alimenter dashboards et alertes
+
+🧩 Synthèse rapide
+Catégorie	Acteurs
+Utilisateurs	Utilisateur plateforme
+Sécurité	Opérateur sécurité, Responsable conformité
+Exploitation	Opérateur plateforme
+Administration	Administrateur plateforme
+Gouvernance	PolicyShield
+Orchestration	Orchestrateur
+Contrôle contenu	Security Guardrails
+Connaissance	ContextHub
+Mémoire	MemoryStore
+IA	LLMaaS, RAGaaS
+Transverse	Observabilité
