@@ -243,3 +243,36 @@ Opérateur conformité,Audit,Droit à l’oubli,Purge données,"Orchestrateur �
 Système externe,Client API,Intégration IA,Appel inference API,"AuthN M2M → PolicyShield → Orchestrateur → LLMaaS","PolicyShield, Orchestrateur"
 Système externe,Client API,Recherche augmentée,Appel RAGaaS,"AuthN M2M → PolicyShield → Orchestrateur → RAGaaS","PolicyShield, Orchestrateur, RAGaaS"
 Système externe,Client API,Robustesse API,Gestion erreurs,"Orchestrateur → Observabilité","Observabilité"
+
+feuille 2
+
+Persona,Role,Scénario nominal,Edge case critique,Attente système non négociable,Réaction attendue
+Utilisateur final,Knowledge Worker,Question simple au LLM,"Prompt contenant données sensibles (IBAN, email perso)",Aucune donnée sensible ne doit être transmise au LLM,BLOCAGE par Guardrails + message explicite
+Utilisateur final,Knowledge Worker,Upload document,"Document classé confidentiel vers modèle non autorisé",Respect strict des règles de classification,Routage refusé + justification claire
+Utilisateur final,Knowledge Worker,RAG sur document,"Document non indexé ou purge récente",Aucune réponse halluciné,Réponse contrôlée : “contenu indisponible”
+Utilisateur final,Knowledge Worker,Consultation historique,"Conversation supprimée (RGPD)",Droit à l’oubli prioritaire,Conversation absente + trace audit
+Utilisateur final,Knowledge Worker,Feedback utilisateur,"Feedback massif automatisé",Protection contre abus,Rate limit + journalisation
+
+Utilisateur avancé,Power User,Choix du modèle,"Sélection d’un modèle non autorisé",Respect des droits d’accès,BLOCAGE AUTHZ + alternative proposée
+Utilisateur avancé,Power User,Prompt complexe,"Prompt trop long ou coûteux",Maîtrise des coûts IA,Refus contrôlé + suggestion optimisation
+Utilisateur avancé,Power User,Multimodal image,"Image contenant données sensibles",Protection RGPD,BLOCAGE Guardrails image
+Utilisateur avancé,Power User,RAG avancé,"Requête retournant trop de documents",Performance & pertinence,Limitation k-top + reranking
+
+Administrateur plateforme,Admin,Gestion des rôles,"Suppression accidentelle d’un rôle critique",Préservation plateforme,Confirmation forte + rollback possible
+Administrateur plateforme,Admin,Dashboard,"Pic d’erreurs non détecté",Vision temps réel,Alerte automatique visible
+
+Opérateur sécurité,Security,Analyse prompts,"Tentative de contournement (jailbreak)",Sécurité absolue,Détection + blocage + alerte
+Opérateur sécurité,Security,Détection PII,"Faux négatif PII",Principe de précaution,Blocage par défaut + audit
+Opérateur sécurité,Security,Rejet conformité,"Contenu ambigu",Priorité sécurité,REJECT explicite
+
+Opérateur plateforme,Ops,Monitoring,"Service LLM indisponible",Résilience système,Circuit breaker + fallback
+Opérateur plateforme,Ops,Logs,"Logs incomplets ou non corrélés",Traçabilité obligatoire,BLOCAGE déploiement
+Opérateur plateforme,Ops,Charge élevée,"Pic soudain de trafic",Équité & QoS,Rate limit + priorisation
+
+Opérateur conformité,Audit,Audit,"Trace manquante",Auditabilité totale,NON CONFORME
+Opérateur conformité,Audit,Export,"Export incomplet",Conformité réglementaire,Export bloqué
+Opérateur conformité,Audit,Droit à l’oubli,"Données toujours accessibles",RGPD strict,Purge immédiate + preuve
+
+Système externe,Client API,Appel inference,"Token expiré",Sécurité API,401 + audit
+Système externe,Client API,RAGaaS,"Timeout fournisseur externe",Stabilité plateforme,Timeout contrôlé + fallback
+Système externe,Client API,Gestion erreurs,"Erreur non documentée",Contrat API clair,Erreur normalisée
