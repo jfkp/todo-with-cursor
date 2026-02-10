@@ -1,162 +1,189 @@
-US-CH-V0-01-T1 — Validation du fichier uploadé
+US-ADM-ACCESS-01 — Attribution d’accès par lots
 
-Description
-En tant que plateforme, je dois valider le fichier uploadé avant tout traitement.
+En tant que représentant d’entité
+Je veux attribuer des accès à la plateforme par lots d’utilisateurs
+Afin de accélérer le déploiement de la plateforme auprès de mes équipes sans gérer les accès un par un.
 
-Contrôles
+🧩 Périmètre fonctionnel
+Inclus
 
-format autorisé (PDF, DOCX, XLSX)
+Attribution d’accès à plusieurs utilisateurs en une seule opération
 
-taille maximale
+Association de rôles et de permissions par défaut
 
-absence de malware
+Support de plusieurs méthodes d’import (liste, fichier, groupe)
 
-Edge cases
+Traçabilité complète des actions d’attribution
 
-format déguisé
+Exclu
 
-fichier corrompu
+Authentification des utilisateurs (déjà gérée par le SSO)
 
-fichier trop volumineux
+Création des rôles globaux (définis par l’administrateur plateforme)
 
-Attentes non négociables
+Gestion fine des permissions individuelles après attribution
 
-Aucun fichier non conforme accepté
+🛠️ Sous-User Stories techniques
+US-ADM-ACCESS-01-A — Import par lot des utilisateurs
 
-Refus explicite et compréhensible
-
-US-CH-V0-01-T2 — Stockage sécurisé du document
-
-Description
-En tant que plateforme, je dois stocker le document de manière sécurisée et gouvernée.
-
-Caractéristiques
-
-isolation par utilisateur
-
-identifiant document unique (document_id)
-
-métadonnées associées
-
-Edge cases
-
-échec de stockage
-
-collision d’identifiants
-
-Attentes non négociables
-
-Aucun accès inter-utilisateurs
-
-Stockage traçable
-
-US-CH-V0-01-T3 — Extraction du contenu textuel
-
-Description
-En tant que plateforme, je dois extraire le contenu textuel du document uploadé.
-
-Formats
-
-PDF (texte natif ou OCR si nécessaire)
-
-Word
-
-Excel (cellules textuelles)
-
-Edge cases
-
-document scanné
-
-tableaux complexes
-
-texte partiellement lisible
-
-Attentes non négociables
-
-Extraction fidèle
-
-Signalement si extraction partielle
-
-US-CH-V0-01-T4 — Préparation du contenu pour usage IA
-
-Description
-En tant que plateforme, je dois transformer le contenu extrait en format exploitable pour le LLM.
-
-Actions
-
-segmentation
-
-normalisation
-
-nettoyage
-
-Edge cases
-
-contenu très volumineux
-
-structure hétérogène
-
-Attentes non négociables
-
-Aucun contenu modifié sémantiquement
-
-Traçabilité des transformations
-
-US-CH-V0-01-T5 — Mise à disposition pour Q&A (RAG local)
-
-Description
-En tant que plateforme, je dois permettre au LLM de répondre aux questions en s’appuyant sur le document.
+Objectif
+Permettre au représentant d’entité de fournir une liste d’utilisateurs à onboarder.
 
 Fonctionnalités
 
-recherche contextuelle
+Import via :
 
-injection contrôlée du contenu
+Fichier (CSV / XLS)
 
-réponse basée uniquement sur les sources autorisées
+Liste d’emails
 
-Edge cases
+Groupe issu de l’IdP (si disponible)
 
-question hors périmètre du document
-
-document supprimé
-
-Attentes non négociables
-
-Aucune hallucination
-
-Réponse explicitement limitée au contenu
-
-US-CH-V0-01-T6 — Traçabilité & audit
-
-Description
-En tant que plateforme, je dois tracer toutes les étapes du cycle de vie du document.
-
-Événements audités
-
-upload
-
-extraction
-
-utilisation dans une réponse
-
-suppression
+Validation du format et des doublons
 
 Edge cases
 
-purge RGPD
+Fichier mal formé ou colonnes manquantes
 
-accès refusé
+Utilisateurs déjà existants
 
-Attentes non négociables
+Emails non reconnus par l’IdP
 
-Traçabilité bout-en-bout
+Réaction attendue
 
-Audit exploitable a posteriori
+Import partiel accepté
 
-Edge cases globaux critiques
-Situation	Réaction attendue
-Document contenant données sensibles	Blocage ou routage conforme
-Document supprimé	Inaccessible immédiatement
-Question sans réponse dans le document	Réponse explicite “non présent”
-Upload interrompu	Aucun document partiel exploité
+Rapport détaillé des succès / échecs
+
+US-ADM-ACCESS-01-B — Attribution de rôles par défaut
+
+Objectif
+Associer automatiquement des rôles et services aux utilisateurs importés.
+
+Fonctionnalités
+
+Sélection d’un ou plusieurs rôles
+
+Application homogène à tout le lot
+
+Compatibilité avec les règles AUTHZ existantes
+
+Edge cases
+
+Rôle non autorisé pour l’entité
+
+Rôle supprimé entre configuration et exécution
+
+Réaction attendue
+
+Blocage contrôlé
+
+Message explicite + journal d’audit
+
+US-ADM-ACCESS-01-C — Validation & simulation avant application
+
+Objectif
+Permettre au représentant d’entité de vérifier l’impact avant confirmation.
+
+Fonctionnalités
+
+Simulation des accès attribués
+
+Aperçu des services accessibles
+
+Confirmation explicite avant exécution
+
+Edge cases
+
+Simulation différente de l’exécution réelle (règles modifiées entre-temps)
+
+Réaction attendue
+
+Revalidation obligatoire
+
+Refus d’exécution si incohérence détectée
+
+US-ADM-ACCESS-01-D — Audit & traçabilité des attributions
+
+Objectif
+Assurer une traçabilité complète pour sécurité et conformité.
+
+Fonctionnalités
+
+Journalisation :
+
+Qui a attribué
+
+À qui
+
+Quand
+
+Avec quels rôles
+
+Corrélation avec l’entité et le tenant
+
+Edge cases
+
+Action partiellement exécutée
+
+Tentative d’attribution non autorisée
+
+Réaction attendue
+
+Audit complet
+
+Alerte sécurité si nécessaire
+
+US-ADM-ACCESS-01-E — Notification des utilisateurs provisionnés
+
+Objectif
+Informer automatiquement chaque utilisateur provisionné qu’il dispose désormais d’un accès à la plateforme.
+
+Périmètre fonctionnel
+
+Inclus
+
+Envoi automatique d’un email après provisionnement réussi
+
+Email personnalisé par utilisateur
+
+Contenu standardisé :
+
+Confirmation d’accès
+
+Lien vers la plateforme
+
+Instructions de première connexion (SSO)
+
+Support multi-langue (si disponible)
+
+Exclu
+
+Gestion des boîtes mails utilisateurs
+
+Relance manuelle des notifications
+
+Gestion du mot de passe (SSO uniquement)
+
+Déclenchement
+
+Déclenché uniquement après :
+
+Provisionnement réussi
+
+Attribution effective des rôles
+
+Un email par utilisateur provisionné
+
+
+Journalisation :
+
+user_id
+
+email
+
+date d’envoi
+
+statut (SENT / FAILED / SKIPPED)
+
+Corrélation avec l’opération de provisionnement
