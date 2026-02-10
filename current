@@ -1,90 +1,92 @@
-US-AUTHN-V0-01-T1 — Redirection et authentification SSO
+US-OPS-V0-01-T1 — Comptabilisation des requêtes par identité
 
 Description
-En tant que plateforme, je dois rediriger l’utilisateur vers le fournisseur d’identité d’entreprise afin qu’il s’authentifie via le mécanisme SSO standard.
+En tant que plateforme, je dois compter les requêtes émises par chaque utilisateur identifié sur une fenêtre de temps donnée.
 
 Edge cases
 
-IdP indisponible
+Utilisateur sans identité valide
 
-Utilisateur annule l’authentification
+Identités partagées (API client)
 
-Timeout lors de la redirection
+Requêtes concurrentes simultanées
 
 Attentes non négociables
 
-Aucun fallback local
+Comptage basé sur identity_context
 
-Accès refusé tant que l’authentification n’est pas complète
+Aucune requête anonyme comptabilisée comme valide
 
-US-AUTHN-V0-01-T2 — Validation du jeton d’authentification
+US-OPS-V0-01-T2 — Application des seuils de limitation
 
 Description
-En tant que plateforme, je dois valider le jeton retourné par l’IdP (signature, expiration, audience) avant d’autoriser l’accès.
+En tant que plateforme, je dois comparer le volume de requêtes aux seuils définis et décider si la requête est autorisée ou refusée.
 
 Edge cases
 
-Jeton expiré
+Dépassement très rapide du quota (burst)
 
-Jeton signé par un IdP non autorisé
+Requêtes longues vs courtes
 
-Jeton incomplet ou mal formé
+Décalage temporel (clock skew)
 
 Attentes non négociables
 
-Rejet immédiat en cas de doute
+Décision déterministe
 
-Aucune tolérance sur la validité cryptographique
+Aucun contournement possible par parallélisme
 
-US-AUTHN-V0-01-T3 — Construction du contexte d’identité
+US-OPS-V0-01-T3 — Blocage contrôlé des requêtes excédentaires
 
 Description
-En tant que plateforme, je dois construire un identity_context normalisé à partir du jeton validé afin de l’utiliser dans toute la chaîne de gouvernance.
+En tant que plateforme, je dois bloquer les requêtes dépassant les limites autorisées et retourner un message explicite à l’utilisateur.
 
 Edge cases
 
-Attribut obligatoire manquant (user_id, tenant)
+Blocage en cours de session active
 
-Claims incohérents ou contradictoires
+Utilisateur légitime mais très actif
+
+Blocage répété provoquant frustration utilisateur
 
 Attentes non négociables
 
-Pas d’identité partielle
+Réponse explicite (quota dépassé)
 
-Contexte immuable pendant toute la requête
+Aucun appel IA déclenché après blocage
 
-US-AUTHN-V0-01-T4 — Propagation du contexte d’identité
+US-OPS-V0-01-T4 — Différenciation par type d’utilisateur ou service
 
 Description
-En tant que plateforme, je dois propager le identity_context à tous les composants internes (PolicyShield, Orchestrateur, Guardrails, Observabilité).
+En tant que plateforme, je dois pouvoir appliquer des limites différentes selon le profil utilisateur ou le type de service appelé.
 
 Edge cases
 
-Perte du contexte en cours de flux
+Mauvaise catégorisation du profil
 
-Tentative de modification du contexte
+Changement de rôle en cours de session
 
 Attentes non négociables
 
-Traçabilité bout-en-bout
+Décision basée sur contexte courant
 
-Blocage si le contexte est absent ou altéré
+Cohérence avec les règles d’autorisation
 
-US-AUTHN-V0-01-T5 — Traçabilité des authentifications
+US-OPS-V0-01-T5 — Traçabilité et observabilité du rate limiting
 
 Description
-En tant que plateforme, je dois tracer toutes les tentatives d’authentification afin de permettre audit, sécurité et diagnostic.
+En tant que plateforme, je dois tracer toutes les décisions de limitation afin de permettre audit, supervision et ajustement des seuils.
 
 Edge cases
 
-Tentatives répétées échouées
+Absence de logs lors de pics de charge
 
-Volume élevé de connexions simultanées
+Difficulté à corréler les refus
 
 Attentes non négociables
 
-Logs systématiques
+Logs structurés
 
 Corrélation via trace_id
 
-Aucune authentification silencieuse
+Visibilité temps réel pour les opérateurs
