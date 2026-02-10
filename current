@@ -1,333 +1,90 @@
-🎯 US PARENTE
-US-PLAT-AUTHZ-01 — Gestion des rôles et des accès aux services
-🔧 Sous-User Stories techniques
-US-PLAT-AUTHZ-01.1 — Modélisation des rôles et permissions
+US-AUTHN-V0-01-T1 — Redirection et authentification SSO
 
-En tant que plateforme IA gouvernée,
-je veux définir un modèle standard de rôles et de permissions
-afin de représenter de façon cohérente les accès aux services, modèles et capacités IA.
+Description
+En tant que plateforme, je dois rediriger l’utilisateur vers le fournisseur d’identité d’entreprise afin qu’il s’authentifie via le mécanisme SSO standard.
 
-Périmètre
+Edge cases
 
-Rôles (admin, user, power-user, api-client, etc.)
+IdP indisponible
 
-Permissions par :
+Utilisateur annule l’authentification
 
-service (LLM, RAG, upload…)
-
-type de modèle
-
-capacité (multimodal, streaming, long context)
-
-Critères d’acceptation
-
-Le modèle est extensible sans refonte
-
-Les permissions sont déclaratives
-
-Les rôles sont versionnables
-
-US-PLAT-AUTHZ-01.2 — Gestion des rôles utilisateurs
-
-En tant que plateforme IA gouvernée,
-je veux permettre l’association et la révocation de rôles à des utilisateurs
-afin de contrôler dynamiquement leurs droits d’accès.
-
-Périmètre
-
-Mapping utilisateur ↔ rôles
-
-Support multi-rôles
-
-Activation / désactivation immédiate
-
-Critères d’acceptation
-
-Un changement de rôle est effectif immédiatement
-
-Un utilisateur sans rôle n’a accès à aucun service
-
-Chaque modification est auditée
-
-US-PLAT-AUTHZ-01.3 — Autorisation à l’accès des services IA
-
-En tant que plateforme IA gouvernée,
-je veux vérifier les autorisations avant chaque appel à un service IA
-afin d’empêcher tout accès non autorisé.
-
-Périmètre
-
-Vérification systématique avant :
-
-appel LLM
-
-RAG local / RAGaaS
-
-upload / recherche
-
-Décision ALLOW / DENY
-
-Critères d’acceptation
-
-Aucun appel ne contourne la vérification
-
-La décision est traçable
-
-Le refus est explicite et justifié
-
-US-PLAT-AUTHZ-01.4 — Autorisation spécifique par modèle
-
-En tant que plateforme IA gouvernée,
-je veux restreindre l’accès à certains modèles selon les rôles
-afin de maîtriser les coûts, les risques et la conformité.
-
-Périmètre
-
-Autorisation par modèle ou famille de modèles
-
-Prise en compte du choix utilisateur
-
-Critères d’acceptation
-
-Un modèle non autorisé est refusé même s’il est explicitement demandé
-
-Une alternative autorisée peut être proposée
-
-La décision est auditée
-
-US-PLAT-AUTHZ-01.5 — Intégration avec l’Orchestrateur
-
-En tant que plateforme IA gouvernée,
-je veux exposer une API d’autorisation unifiée consommée par l’Orchestrateur
-afin de centraliser toutes les décisions d’accès.
-
-Périmètre
-
-API d’autorisation unique
-
-Réponse structurée (ALLOW/DENY + raisons)
-
-Aucun couplage à l’implémentation interne
-
-Critères d’acceptation
-
-L’Orchestrateur n’appelle qu’une seule API
-
-Aucun moteur de règles n’est exposé
-
-L’API est stable et versionnée
-
-US-PLAT-AUTHZ-01.6 — Audit et traçabilité des décisions
-
-En tant que plateforme IA gouvernée,
-je veux tracer toutes les décisions d’autorisation
-afin de garantir l’auditabilité et la conformité réglementaire.
-
-Périmètre
-
-Logs structurés :
-
-utilisateur
-
-rôle
-
-ressource
-
-décision
-
-justification
-
-Consultation & export
-
-Critères d’acceptation
-
-Chaque décision est traçable
-
-Les logs sont corrélables par trace_id
-
-Export conformité disponible
-
-🧩 Dépendances internes
-
-Authentification (identity_context)
-
-PolicyShield (AUTHZ)
-
-Orchestrateur
-
-Observabilité / Audit
-
-📌 Vue synthèse (Jira-ready)
-US	Objet
-US-PLAT-AUTHZ-01.1	Modèle rôles & permissions
-US-PLAT-AUTHZ-01.2	Association rôles ↔ utilisateurs
-US-PLAT-AUTHZ-01.3	Autorisation accès services
-US-PLAT-AUTHZ-01.4	Autorisation par modèle
-US-PLAT-AUTHZ-01.5	API unifiée pour l’Orchestrateur
-US-PLAT-AUTHZ-01.6	Audit & traçabilité
-
-Si tu veux, je peux maintenant :
-
-intégrer ces sous-US dans ton CSV Jira
-
-les lier aux personas
-
-les positionner dans le plan de delivery
-
-ou décliner les edge cases sécurité associées
-
-peux-tu rajouter les edges cases à chaque us 
-
-Voici la version enrichie avec edge cases pour chaque sous-US, structurée pour un backlog Jira robuste (conception + sécurité + exploitation), toujours du point de vue plateforme IA gouvernée.
-
-🎯 US PARENTE
-US-PLAT-AUTHZ-01 — Gestion des rôles et des accès aux services
-🔧 US-PLAT-AUTHZ-01.1 — Modélisation des rôles et permissions
-
-Objectif
-Définir un modèle cohérent et extensible de rôles/permissions pour contrôler l’accès aux services IA.
-
-Edge cases critiques
-
-Rôle défini sans aucune permission → accès implicite non souhaité
-
-Permission ambiguë (ex : accès service sans préciser modèle)
-
-Conflit entre permissions héritées (multi-rôles)
-
-Évolution du modèle cassant la rétrocompatibilité
-
-Rôle supprimé mais encore référencé par des utilisateurs
+Timeout lors de la redirection
 
 Attentes non négociables
 
-Principe du moindre privilège
+Aucun fallback local
 
-Aucun accès par défaut
+Accès refusé tant que l’authentification n’est pas complète
 
-Modèle strictement déclaratif
+US-AUTHN-V0-01-T2 — Validation du jeton d’authentification
 
-🔧 US-PLAT-AUTHZ-01.2 — Gestion des rôles utilisateurs
+Description
+En tant que plateforme, je dois valider le jeton retourné par l’IdP (signature, expiration, audience) avant d’autoriser l’accès.
 
-Objectif
-Associer dynamiquement des rôles aux utilisateurs pour piloter leurs droits.
+Edge cases
 
-Edge cases critiques
+Jeton expiré
 
-Utilisateur sans rôle après synchronisation SSO
+Jeton signé par un IdP non autorisé
 
-Suppression d’un rôle encore assigné
-
-Attribution simultanée de rôles contradictoires
-
-Changement de rôle en cours de session active
-
-Désynchronisation IdP ↔ plateforme
+Jeton incomplet ou mal formé
 
 Attentes non négociables
 
-Fail closed (aucun rôle = aucun accès)
+Rejet immédiat en cas de doute
 
-Effet immédiat des changements
+Aucune tolérance sur la validité cryptographique
 
-Traçabilité complète
+US-AUTHN-V0-01-T3 — Construction du contexte d’identité
 
-🔧 US-PLAT-AUTHZ-01.3 — Autorisation à l’accès des services IA
+Description
+En tant que plateforme, je dois construire un identity_context normalisé à partir du jeton validé afin de l’utiliser dans toute la chaîne de gouvernance.
 
-Objectif
-Bloquer toute utilisation de service IA non explicitement autorisée.
+Edge cases
 
-Edge cases critiques
+Attribut obligatoire manquant (user_id, tenant)
 
-Tentative d’appel direct à un service sans passer par l’Orchestrateur
-
-Timeout du moteur d’autorisation
-
-Décision partielle (service autorisé mais contexte interdit)
-
-Réessai automatique après un DENY
-
-Incohérence entre décision AUTHZ et ROUTING
+Claims incohérents ou contradictoires
 
 Attentes non négociables
 
-Aucun contournement possible
+Pas d’identité partielle
 
-Décision déterministe
+Contexte immuable pendant toute la requête
 
-Refus explicite et justifié
+US-AUTHN-V0-01-T4 — Propagation du contexte d’identité
 
-🔧 US-PLAT-AUTHZ-01.4 — Autorisation spécifique par modèle
+Description
+En tant que plateforme, je dois propager le identity_context à tous les composants internes (PolicyShield, Orchestrateur, Guardrails, Observabilité).
 
-Objectif
-Contrôler finement l’accès aux modèles LLM pour coûts, risques et conformité.
+Edge cases
 
-Edge cases critiques
+Perte du contexte en cours de flux
 
-Utilisateur force un model_id non autorisé
-
-Modèle déprécié encore sélectionnable
-
-Modèle autorisé mais hors quota
-
-Changement de politique en cours de requête
-
-Modèle multimodal utilisé pour un usage texte-only
+Tentative de modification du contexte
 
 Attentes non négociables
 
-Le choix utilisateur ne prime jamais sur la gouvernance
+Traçabilité bout-en-bout
 
-Alternative autorisée proposée si possible
+Blocage si le contexte est absent ou altéré
 
-Audit obligatoire
+US-AUTHN-V0-01-T5 — Traçabilité des authentifications
 
-🔧 US-PLAT-AUTHZ-01.5 — API d’autorisation unifiée pour l’Orchestrateur
+Description
+En tant que plateforme, je dois tracer toutes les tentatives d’authentification afin de permettre audit, sécurité et diagnostic.
 
-Objectif
-Centraliser toutes les décisions d’accès via une API unique.
+Edge cases
 
-Edge cases critiques
+Tentatives répétées échouées
 
-Orchestrateur appelle une API spécialisée au lieu de l’API unifiée
-
-Réponse partiellement invalide (AUTHZ ok / ROUTING manquant)
-
-Version d’API incompatible
-
-Latence excessive impactant l’UX
-
-Retry de l’Orchestrateur provoquant double décision
+Volume élevé de connexions simultanées
 
 Attentes non négociables
 
-Single entry point
+Logs systématiques
 
-API versionnée et contractuelle
+Corrélation via trace_id
 
-Idempotence garantie
-
-🔧 US-PLAT-AUTHZ-01.6 — Audit et traçabilité des décisions
-
-Objectif
-Garantir une auditabilité complète des décisions d’accès.
-
-Edge cases critiques
-
-Décision non loggée suite à incident technique
-
-Logs non corrélables (trace_id manquant)
-
-Volume de logs excessif non maîtrisé
-
-Accès non autorisé aux logs d’audit
-
-Export incomplet pour un périmètre donné
-
-Attentes non négociables
-
-Pas de décision sans trace
-
-Séparation accès opérationnel / audit
-
-Export conforme RGPD
+Aucune authentification silencieuse
