@@ -1,306 +1,162 @@
-User Story (produit)
-
-En tant qu’utilisateur de la plateforme IA gouvernée,
-je veux accéder à la plateforme en utilisant mon authentification SSO d’entreprise,
-afin d’accéder aux services IA sans créer de compte spécifique et en respectant les politiques de sécurité de mon organisation.
-
-Description fonctionnelle
-
-La plateforme IA gouvernée doit permettre à un utilisateur de s’authentifier via le SSO d’entreprise avant tout accès aux fonctionnalités.
-
-L’authentification repose sur un fournisseur d’identité externe (IdP) et permet :
-
-d’identifier formellement l’utilisateur
-
-de récupérer ses attributs d’identité (tenant, identifiant, claims)
-
-de créer un contexte d’identité unique et fiable
-
-de conditionner l’accès à tous les services de la plateforme
-
-Aucune action fonctionnelle (LLM, RAG, consultation mémoire, etc.) n’est possible tant que l’utilisateur n’est pas authentifié.
-
-US-OPS-V0-01 — Limitation et paramétrage des requêtes (Rate Limiting)
-User Story (produit)
-
-En tant qu’opérateur et administrateur de la plateforme IA gouvernée,
-je veux limiter et paramétrer le nombre de requêtes par utilisateur et par unité de temps,
-afin de protéger la plateforme contre les abus, garantir une qualité de service équitable
-et adapter les seuils aux profils et usages métiers.
-
-Description fonctionnelle
-
-La plateforme IA gouvernée doit permettre :
-
-d’appliquer des limites de requêtes sur les utilisateurs et clients API
-
-de configurer ces limites dynamiquement via un rôle administrateur
-
-d’appliquer les règles avant toute exécution IA
-
-de tracer toutes les décisions pour audit et supervision
-
-Les règles de rate limiting sont paramétrables sans redéploiement et peuvent varier selon :
-
-le rôle utilisateur
-
-le type de service (LLM, RAG, upload, recherche)
-
-le canal (UI, API, batch)
-
-le contexte (environnement, tenant)
-
-US-OPS-V0-01 — Limitation et paramétrage des requêtes (Rate Limiting)
-User Story (produit)
-
-En tant qu’opérateur et administrateur de la plateforme IA gouvernée,
-je veux limiter et paramétrer le nombre de requêtes par utilisateur et par unité de temps,
-afin de protéger la plateforme contre les abus, garantir une qualité de service équitable
-et adapter les seuils aux profils et usages métiers.
-
-Description fonctionnelle
-
-La plateforme IA gouvernée doit permettre :
-
-d’appliquer des limites de requêtes sur les utilisateurs et clients API
-
-de configurer ces limites dynamiquement via un rôle administrateur
-
-d’appliquer les règles avant toute exécution IA
-
-de tracer toutes les décisions pour audit et supervision
-
-Les règles de rate limiting sont paramétrables sans redéploiement et peuvent varier selon :
-
-le rôle utilisateur
-
-le type de service (LLM, RAG, upload, recherche)
-
-le canal (UI, API, batch)
-
-le contexte (environnement, tenant)
-
-
-US-SEC-V0-01 — Journalisation d’audit centralisée (Audit Logs)
-User Story (produit)
-
-En tant que responsable sécurité de la plateforme IA gouvernée,
-je veux disposer de logs d’audit centralisés pour chaque accès et chaque action,
-afin de tracer l’activité, détecter des anomalies, répondre aux exigences de conformité
-et permettre des investigations de sécurité fiables.
-
-Description fonctionnelle
-
-La plateforme doit produire, centraliser et conserver des logs d’audit complets, cohérents et corrélés couvrant :
-
-les accès utilisateurs (authentification, refus, expirations)
-
-les actions fonctionnelles (prompt, upload, recherche, RAG, appel LLM)
-
-les décisions de gouvernance (AUTHZ, routage, guardrails)
-
-les actions administratives (rôles, règles, paramétrage)
-
-les actions système critiques (blocage, rejet, circuit breaker)
-
-Les logs d’audit sont :
-
-centralisés
-
-immutables
-
-horodatés
-
-corrélés bout-en-bout
-
-Sous-User Stories techniques
-US-SEC-V0-01-T1 — Génération des logs d’accès
+US-CH-V0-01-T1 — Validation du fichier uploadé
 
 Description
-En tant que plateforme, je dois journaliser chaque tentative d’accès (succès ou échec).
+En tant que plateforme, je dois valider le fichier uploadé avant tout traitement.
 
-Éléments loggés
+Contrôles
 
-identity_context
+format autorisé (PDF, DOCX, XLSX)
 
-type d’accès
+taille maximale
 
-résultat (SUCCESS / DENY)
-
-trace_id
+absence de malware
 
 Edge cases
 
-Jeton expiré
+format déguisé
 
-Identité invalide
+fichier corrompu
 
-Tentatives répétées
+fichier trop volumineux
 
 Attentes non négociables
 
-Aucun accès sans trace
+Aucun fichier non conforme accepté
 
-Journalisation même en cas d’échec
+Refus explicite et compréhensible
 
-US-SEC-V0-01-T2 — Journalisation des actions utilisateurs
+US-CH-V0-01-T2 — Stockage sécurisé du document
 
 Description
-En tant que plateforme, je dois journaliser chaque action fonctionnelle effectuée par un utilisateur.
+En tant que plateforme, je dois stocker le document de manière sécurisée et gouvernée.
 
-Actions couvertes
+Caractéristiques
 
-soumission de prompt
+isolation par utilisateur
 
-upload de document
+identifiant document unique (document_id)
 
-recherche
-
-appel LLM / RAG
-
-consultation historique
+métadonnées associées
 
 Edge cases
 
-Action partielle
+échec de stockage
 
-Timeout service externe
+collision d’identifiants
 
 Attentes non négociables
 
-Action tracée même si elle échoue
+Aucun accès inter-utilisateurs
 
-Pas de contenu sensible dans les logs
+Stockage traçable
 
-US-SEC-V0-01-T3 — Journalisation des décisions de gouvernance
+US-CH-V0-01-T3 — Extraction du contenu textuel
 
 Description
-En tant que plateforme, je dois journaliser toutes les décisions de sécurité et de gouvernance.
+En tant que plateforme, je dois extraire le contenu textuel du document uploadé.
 
-Décisions couvertes
+Formats
 
-AUTHZ (ALLOW / DENY)
+PDF (texte natif ou OCR si nécessaire)
 
-routage
+Word
 
-guardrails (PASS / BLOCK / REJECT)
-
-rate limiting
+Excel (cellules textuelles)
 
 Edge cases
 
-Décisions contradictoires
+document scanné
 
-Recalcul de décision
+tableaux complexes
+
+texte partiellement lisible
 
 Attentes non négociables
 
-Décision explicite et horodatée
+Extraction fidèle
 
-Raison toujours présente
+Signalement si extraction partielle
 
-US-SEC-V0-01-T4 — Centralisation des logs d’audit
+US-CH-V0-01-T4 — Préparation du contenu pour usage IA
 
 Description
-En tant que plateforme, je dois centraliser tous les logs d’audit dans un point unique consultable.
+En tant que plateforme, je dois transformer le contenu extrait en format exploitable pour le LLM.
+
+Actions
+
+segmentation
+
+normalisation
+
+nettoyage
+
+Edge cases
+
+contenu très volumineux
+
+structure hétérogène
+
+Attentes non négociables
+
+Aucun contenu modifié sémantiquement
+
+Traçabilité des transformations
+
+US-CH-V0-01-T5 — Mise à disposition pour Q&A (RAG local)
+
+Description
+En tant que plateforme, je dois permettre au LLM de répondre aux questions en s’appuyant sur le document.
 
 Fonctionnalités
 
-agrégation multi-composants
+recherche contextuelle
 
-format standardisé
+injection contrôlée du contenu
 
-stockage durable
+réponse basée uniquement sur les sources autorisées
 
 Edge cases
 
-Perte temporaire d’un composant
+question hors périmètre du document
 
-Latence réseau
+document supprimé
 
 Attentes non négociables
 
-Aucun log local non remonté
+Aucune hallucination
 
-Tolérance aux pannes
+Réponse explicitement limitée au contenu
 
-US-SEC-V0-01-T5 — Corrélation bout-en-bout des événements
+US-CH-V0-01-T6 — Traçabilité & audit
 
 Description
-En tant que plateforme, je dois permettre de reconstituer un flux complet à partir d’un identifiant unique.
+En tant que plateforme, je dois tracer toutes les étapes du cycle de vie du document.
+
+Événements audités
+
+upload
+
+extraction
+
+utilisation dans une réponse
+
+suppression
 
 Edge cases
 
-Appels parallèles
+purge RGPD
 
-Sous-requêtes multiples
-
-Attentes non négociables
-
-trace_id obligatoire
-
-Corrélation inter-services
-
-US-SEC-V0-01-T6 — Consultation et investigation sécurité
-
-Description
-En tant que responsable sécurité, je veux consulter et filtrer les logs pour analyser des incidents.
-
-Fonctionnalités
-
-recherche par utilisateur
-
-recherche par période
-
-recherche par décision
-
-export
-
-Edge cases
-
-Volume très élevé
-
-Recherche longue durée
+accès refusé
 
 Attentes non négociables
 
-Recherche fiable
+Traçabilité bout-en-bout
 
-Export conforme audit
+Audit exploitable a posteriori
 
-US-SEC-V0-01-T7 — Détection d’anomalies basée sur les logs
-
-Description
-En tant que plateforme, je dois permettre la détection d’anomalies à partir des logs d’audit.
-
-Exemples
-
-pics de refus
-
-tentatives répétées
-
-comportements anormaux
-
-Edge cases
-
-Faux positifs
-
-Volume bruité
-
-Attentes non négociables
-
-Logs exploitables par outils d’analyse
-
-Aucune perte de signal
-
-Attentes non négociables (plateforme)
-
-Toute action = une trace d’audit
-
-Aucune décision sans justification loggée
-
-Logs centralisés, immuables et corrélés
-
-Aucun contenu sensible dans les logs
-
-Audit possible a posteriori sans ambiguïté
+Edge cases globaux critiques
+Situation	Réaction attendue
+Document contenant données sensibles	Blocage ou routage conforme
+Document supprimé	Inaccessible immédiatement
+Question sans réponse dans le document	Réponse explicite “non présent”
+Upload interrompu	Aucun document partiel exploité
