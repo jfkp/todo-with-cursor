@@ -1,267 +1,297 @@
-🧩 US-SEC-GR-01.1 — Filtrage basique par mots-clés
+🧩 US-GR-CLASS-01 — Détection automatique du niveau de classification
+🎯 Description fonctionnelle
+
+En tant qu’opérateur sécurité,
+je veux que chaque prompt soumis soit automatiquement classifié selon un niveau de sensibilité (Public, Internal, Confidential, Secret)
+afin que la plateforme applique les règles de routage et de blocage appropriées.
+
+📦 Périmètre fonctionnel
+
+Inclus :
+
+Analyse systématique de chaque prompt
+
+Attribution d’un niveau de classification unique
+
+Traçabilité de la décision
+
+Intégration avec le moteur de routage
+
+Blocage automatique niveau Secret
+
+Exclu :
+
+Classification documentaire hors prompt (V1)
+
+Analyse d’image multimodale (V1)
+
+Reclassification manuelle par utilisateur
+
+🏷️ Niveaux de classification
+Niveau	Signification	Action système
+Public	Donnée non sensible	Routage normal
+Internal	Donnée interne entreprise	Routage vers modèles autorisés
+Confidential	Donnée sensible entreprise	Routage restreint
+Secret	Donnée critique / réglementée	Blocage immédiat
+⚙️ Contraintes
+
+Classification obligatoire avant routage
+
+Latence totale < 200 ms
+
+Règles configurables dynamiquement
+
+Pas de stockage du prompt brut en audit
+
+Versionnement du moteur de classification
+
+✅ Critères d’acceptation
+
+Chaque prompt reçoit un niveau explicite
+
+Le niveau Secret déclenche un BLOCK immédiat
+
+Le routage respecte les règles de classification
+
+L’utilisateur est informé en cas de rejet
+
+La décision est tracée
+
+🔧 Sous-US techniques
+🧩 US-GR-CLASS-01.1 — Moteur de classification statique (règles & patterns)
 🎯 Objectif technique
 
-Implémenter un moteur de filtrage simple basé sur une liste configurable de mots interdits et patterns regex.
+Implémenter une première couche de détection basée sur patterns métiers.
 
 Périmètre
 
-Liste noire configurable (DB ou config dynamique)
+Regex IBAN
 
-Support regex (IBAN, token, secret)
+Numéros internes
 
-Matching case insensitive
+Numéro client
 
-Décision immédiate BLOCK
+Identifiants réglementaires
+
+Mot-clé "secret", "confidentiel"
 
 Contraintes
 
-Latence < 10 ms
+Configuration dynamique
 
-Liste modifiable sans redéploiement
+Versioning règles
 
-Versioning des règles
+Pas de faux négatif critique
 
 Critères d’acceptation
 
-Un mot interdit déclenche BLOCK
+Match pattern → classification minimale Internal ou plus
 
-La règle appliquée est tracée
+Secret détecté → Secret
 
-La liste peut être modifiée dynamiquement
-
-Le filtrage est exécuté avant classification avancée
+Règle appliquée tracée
 
 Edge cases
 
-Mot partiellement masqué → doit être détecté
+Mot masqué partiellement
 
-Regex mal configurée → ne doit pas bloquer système
+Pattern mal configuré
 
-Liste vide → PASS contrôlé
+Prompt multilingue
 
-🧩 US-SEC-GR-01.2 — Classification avancée (toxicité & catégories)
+🧩 US-GR-CLASS-01.2 — Classification sémantique avancée (LLM ou modèle dédié)
 🎯 Objectif technique
 
-Intégrer un moteur de classification capable de scorer les catégories sensibles.
+Utiliser un modèle de classification pour analyser le contexte sémantique.
 
 Périmètre
 
-Toxicité
+Analyse contexte
 
-Violence
+Scoring par niveau
 
-Harcèlement
-
-Haine
-
-Contenu sexuel
-
-Tentative de jailbreak
+Probabilité par classe
 
 Contraintes
 
-Temps max analyse < 200 ms
+Temps < 150 ms
 
 Modèle versionné
 
-Score normalisé 0–1
+Fail-safe (si indisponible → classification restrictive)
 
 Critères d’acceptation
 
-Retour score par catégorie
+Score par niveau
 
-Retour score global
+Niveau final calculé
 
-Trace incluant version modèle
-
-Score exploitable pour décision
+Version modèle tracée
 
 Edge cases
 
-Modèle indisponible → BLOCK fail-safe
+Ambiguïté Internal vs Confidential
 
-Score ambigu (0.49 / 0.51) → respect strict seuil
+Prompt très court
 
-Prompt très long → découpage sécurisé
+Prompt chiffré
 
-🧩 US-SEC-GR-01.3 — Mécanisme de scoring & seuil configurable
+🧩 US-GR-CLASS-01.3 — Règles de décision & priorisation
 🎯 Objectif technique
 
-Implémenter la logique de décision PASS / BLOCK basée sur seuil configurable.
+Déterminer le niveau final en combinant règles statiques et modèle.
 
-Périmètre
+Règle principale
 
-Calcul score global (max ou pondération)
+Le niveau le plus restrictif l’emporte
 
-Seuil configurable par catégorie
+Règles obligatoires
 
-Décision consolidée
+SECRET → BLOCK immédiat
+
+CONFIDENTIAL → routage restreint
+
+INTERNAL → modèles entreprise uniquement
+
+PUBLIC → routage standard
 
 Contraintes
 
-Seuil modifiable dynamiquement
-
-Traçabilité seuil utilisé
+Décision déterministe
 
 Pas de logique codée en dur
 
 Critères d’acceptation
 
-Score ≥ seuil → BLOCK
+SECRET → arrêt immédiat
 
-Score < seuil → PASS
+Routing conforme classification
 
-Seuil visible en audit
-
-Modification seuil sans redéploiement
+Décision tracée avec justification
 
 Edge cases
 
-Seuil mal configuré (ex: 1.5) → validation config
+Conflit règle vs modèle
 
-Seuil = 0 → tout bloqué
+Score borderline
 
-Seuil = 1 → quasi tout passe
+Règles modifiées dynamiquement
 
-🧩 US-SEC-GR-01.4 — API de décision Guardrails
+🧩 US-GR-CLASS-01.4 — Intégration avec PolicyShield (routage conditionnel)
 🎯 Objectif technique
 
-Exposer une API interne stable utilisée par l’Orchestrateur.
-
-Endpoint
-POST /guardrails/analyze
-Entrée
-
-prompt
-
-identity_context
-
-trace_id
-
-Sortie
-
-decision (PASS / BLOCK / REJECT)
-
-category_scores
-
-global_score
-
-reason
-
-rule_version
-
-Contraintes
-
-Temps total < 250 ms
-
-Idempotence
-
-Compatible JSON
-
-Critères d’acceptation
-
-API appelée avant LLM
-
-Réponse structurée
-
-trace_id propagé
-
-Erreurs normalisées
-
-Edge cases
-
-Timeout → BLOCK
-
-JSON invalide → erreur contrôlée
-
-Prompt vide → PASS contrôlé
-
-🧩 US-SEC-GR-01.5 — Audit & stockage des détections
-🎯 Objectif technique
-
-Assurer la traçabilité complète des décisions de sécurité.
+Permettre au moteur de routage de prendre en compte la classification.
 
 Périmètre
 
-Stockage minimal :
+Transmission classification à PolicyShield
+
+Validation modèle autorisé
+
+Décision consolidée
+
+Contraintes
+
+Orchestrateur ne décide pas seul
+
+API stable
+
+Traçabilité complète
+
+Critères d’acceptation
+
+classification_level transmis
+
+modèle non autorisé → BLOCK
+
+Secret → jamais routé
+
+Edge cases
+
+Modèle autorisé mais classification erronée
+
+Règles modifiées en cours de session
+
+Double appel API
+
+🧩 US-GR-CLASS-01.5 — Information utilisateur en cas de rejet
+🎯 Objectif technique
+
+Informer explicitement l’utilisateur si la requête est bloquée.
+
+Périmètre
+
+Message explicite
+
+Niveau détecté
+
+Cause générique (sans exposer règles internes)
+
+Exemple message
+
+Votre requête contient des données classifiées SECRET et ne peut pas être traitée par la plateforme.
+
+Contraintes
+
+Message compréhensible
+
+Pas d’exposition de règles internes
+
+Trace liée au trace_id
+
+Critères d’acceptation
+
+Message affiché en cas de blocage
+
+Pas d’appel LLM effectué
+
+Audit complet enregistré
+
+Edge cases
+
+Utilisateur tente contournement
+
+Message internationalisé
+
+Multi-erreurs simultanées
+
+🧩 US-GR-CLASS-01.6 — Audit & métriques classification
+🎯 Objectif technique
+
+Permettre supervision sécurité.
+
+Données audit
 
 trace_id
 
 user_id
 
-catégorie détectée
-
-score
+classification_level
 
 décision
 
-version règle
+modèle ciblé
 
 timestamp
 
-Contraintes
-
-Aucun stockage du prompt complet en clair
-
-RGPD compliant
-
-Exportable
-
-Critères d’acceptation
-
-100% décisions auditées
-
-Consultation possible par opérateur
-
-Export CSV possible
-
-Edge cases
-
-Échec écriture audit → requête bloquée
-
-Volume massif logs → pas de perte
-
-Donnée sensible dans log → interdite
-
-🧩 US-SEC-GR-01.6 — Observabilité & métriques sécurité
-🎯 Objectif technique
-
-Exposer métriques sécurité pour supervision.
-
 Métriques
 
-Taux de blocage
+% Public / Internal / Confidential / Secret
 
-Top catégories
-
-Tentatives jailbreak
-
-Faux positifs estimés
+Taux de blocage Secret
 
 Volume par utilisateur
 
 Contraintes
 
-Temps réel ou quasi réel
+Pas de stockage prompt brut
 
-Agrégation par période
-
-Non modifiable par utilisateur
+RGPD compliant
 
 Critères d’acceptation
 
-Dashboard disponible
+100% requêtes classifiées
 
-Alertes seuil blocage
+Dashboard sécurité disponible
 
 Export possible
-
-Edge cases
-
-Pic anormal de blocage → alerte
-
-Aucune donnée → monitoring OK
-
-Erreur métrique → log incident
-
-🔒 Résultat final
