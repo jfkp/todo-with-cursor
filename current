@@ -1,202 +1,268 @@
-🧩 US-ORCH-ROUT-01
-Redirection vers le modèle sélectionné par l’utilisateur avec validation catalogue & classification
+🧩 US-PLAT-RES-01
+Protection des appels externes par Circuit Breaker
 🎯 Description fonctionnelle
 
-En tant qu’Orchestrateur,
-je veux rediriger la requête vers le modèle LLM explicitement choisi par l’utilisateur
-après :
+En tant qu’opérateur de la plateforme,
+je veux que les appels vers les services externes LLMaaS, RAGaaS et Assistant Companion soient protégés par un mécanisme de circuit breaker,
+afin d’éviter les cascades de pannes en cas d’indisponibilité d’un service.
 
-Vérification que le modèle existe dans le catalogue interne
+Le circuit :
 
-Validation que le modèle est autorisé pour cet utilisateur (AUTHZ)
+S’ouvre après N erreurs consécutives
 
-Validation que le modèle est compatible avec le niveau de classification détecté par Security Guardrails
+En état ouvert → ne tente plus d’appeler le service
 
-Application de règles de routage simples basées sur logique if / else
+Retourne immédiatement une erreur contrôlée
 
-afin de garantir conformité, sécurité et cohérence de routage.
+Se referme automatiquement après un délai configurable
+
+Stocke son état dans un cache partagé
+
+Journalise chaque changement d’état dans la base d’audit
 
 📦 Périmètre
 Inclus
 
-Lecture du catalogue de modèles
+Circuit breaker par service externe
 
-Validation AUTHZ modèle
+Seuil d’erreurs consécutives configurable
 
-Vérification compatibilité classification ↔ modèle
+Timeout configurable
 
-Routage déterministe basé sur règles simples
+Cache partagé pour l’état
 
-Journalisation complète décision de routage
+Journalisation des transitions d’état
+
+Gestion des états : CLOSED / OPEN / HALF-OPEN
 
 Exclu
 
-Routage dynamique basé sur latence/coût
+Retry intelligent multi-provider
 
-Reranking multi-modèle
+Load balancing dynamique
 
-A/B testing
+SLA contractuel externe
 
-Fallback intelligent multi-provider
-
-🔎 Règles de routage V0 (logique simple)
-
-Exemple contractuel :
-
-IF model NOT IN catalog → REJECT
-IF model NOT AUTHORIZED → BLOCK
-IF classification == SECRET → BLOCK
-IF classification == CONFIDENTIAL AND model NOT IN confidential_allowed_models → BLOCK
-ELSE → ROUTE to selected model
+🔁 États du circuit
+État	Description
+CLOSED	Service fonctionnel, appels autorisés
+OPEN	Service considéré indisponible, appels bloqués
+HALF-OPEN	Phase de test pour vérifier reprise
 🔧 Sous-US techniques
-🧩 US-ORCH-ROUT-01.1 — Vérification catalogue modèle
+🧩 US-PLAT-RES-01.1 — Détection erreurs consécutives
 Description
 
-L’Orchestrateur doit vérifier que le modèle demandé est présent dans le catalogue interne.
+La plateforme doit compter les erreurs consécutives (timeout, 5xx, connexion refusée) pour chaque service externe.
 
 Edge cases
 
-Modèle inexistant
+Erreurs intermittentes
 
-Modèle désactivé
+Timeout long bloquant threads
 
-Catalogue indisponible
+Erreurs non catégorisées
 
-Version modèle non supportée
+Compteur non réinitialisé après succès
 
 Critères d’acceptation
 
-Requête rejetée si modèle absent
+Compteur d’erreurs par service
 
-Message explicite utilisateur
+Reset du compteur après succès
+
+Seuil N configurable
+
+Log structuré :
+
+service_name
+
+error_type
+
+consecutive_error_count
+
+🧩 US-PLAT-RES-01.2 — Ouverture automatique du circuit
+Description
+
+Lorsque le seuil N est atteint, le circuit passe en état OPEN.
+
+Edge cases
+
+Seuil mal configuré (0 ou trop élevé)
+
+Double ouverture simultanée
+
+Cache indisponible
+
+Critères d’acceptation
+
+État OPEN stocké dans cache
+
+Timestamp d’ouverture enregistré
+
+Log audit :
+
+previous_state
+
+new_state=OPEN
+
+reason=threshold_reached
+
+🧩 US-PLAT-RES-01.3 — Blocage immédiat des appels en état OPEN
+Description
+
+En état OPEN, aucun appel n’est transmis au service externe.
+
+Edge cases
+
+Tentative de bypass
+
+Cache expiré
+
+Multiples instances orchestrateur
+
+Critères d’acceptation
+
+Appel bloqué immédiatement
+
+Erreur normalisée retournée :
+
+code=SERVICE_UNAVAILABLE
+
+message explicite
+
+Aucun appel réseau effectué
 
 Log :
 
-model_requested
+service_name
 
-model_status
+state=OPEN
 
-decision=REJECT
+action=BLOCKED
 
-🧩 US-ORCH-ROUT-01.2 — Vérification AUTHZ modèle
+🧩 US-PLAT-RES-01.4 — Fermeture automatique après délai configurable
 Description
 
-L’Orchestrateur interroge PolicyShield pour valider que l’utilisateur a le droit d’utiliser ce modèle.
+Après un délai configurable (cooldown), le circuit passe en HALF-OPEN et autorise un appel test.
 
 Edge cases
 
-Utilisateur sans rôle adapté
+Service toujours indisponible
 
-Modèle premium non autorisé
+Délai mal configuré
 
-Token expiré
-
-Erreur PolicyShield
+Race condition entre instances
 
 Critères d’acceptation
 
-Appel AUTHZ obligatoire
+Passage automatique en HALF-OPEN
 
-BLOCK si refus
+Un seul appel test autorisé
 
-Log avec trace_id et decision=DENY
+Succès → CLOSED
 
-🧩 US-ORCH-ROUT-01.3 — Validation compatibilité classification ↔ modèle
+Échec → OPEN
+
+Logs audit :
+
+previous_state
+
+new_state
+
+recovery_attempt=true
+
+🧩 US-PLAT-RES-01.5 — Stockage de l’état dans un cache partagé
 Description
 
-L’Orchestrateur doit vérifier que le modèle choisi est compatible avec le niveau de classification détecté par Guardrails.
-
-Classification supportée :
-
-Public
-
-Internal
-
-Confidential
-
-Secret (blocage immédiat)
+L’état du circuit est stocké dans un cache distribué afin d’assurer cohérence entre instances.
 
 Edge cases
 
-Classification SECRET → blocage systématique
+Cache indisponible
 
-Classification manquante
+Données expirées
 
-Modèle non certifié pour Confidential
-
-Incohérence catalogue/classification
+Incohérence multi-instance
 
 Critères d’acceptation
 
-SECRET → rejet immédiat
+État centralisé
 
-Confidential → autorisé uniquement si modèle certifié
+TTL configurable
 
-Décision loggée :
+Fallback en lecture locale si cache indisponible
 
-classification_level
+Log incident si cache inaccessible
 
-model_security_level
-
-compatibility=true/false
-
-🧩 US-ORCH-ROUT-01.4 — Routage déterministe if/else
+🧩 US-PLAT-RES-01.6 — Journalisation des transitions d’état
 Description
 
-L’Orchestrateur applique des règles simples et déterministes pour effectuer le routage final.
+Chaque changement d’état doit être journalisé dans la base d’audit.
 
 Edge cases
 
-Aucun modèle valide restant
+Base audit indisponible
 
-Conflit entre AUTHZ et classification
+Log non corrélé
 
-Erreur technique avant routage
+Perte de trace
 
 Critères d’acceptation
 
-Routage unique et déterministe
+Log avec :
 
-Aucun fallback implicite
+service_name
 
-Trace complète de décision :
+previous_state
 
-model_selected
+new_state
 
-reason
+timestamp
 
-rule_applied
+trace_id
+
+Requête consultable via dashboard audit
+
+Échec d’écriture audit → log erreur critique
 
 🔐 Garanties non négociables
 
-Aucun appel LLM sans validation catalogue
+Aucun service externe appelé en état OPEN
 
-Aucun appel LLM sans AUTHZ
+Chaque transition d’état traçable
 
-Aucun appel LLM pour classification SECRET
+Paramètres configurables sans redéploiement
 
-Décision 100% traçable
+Cohérence multi-instance garantie
 
-Aucune règle codée en dur hors configuration
+Erreurs retournées normalisées
 
-🧠 Positionnement dans le pipeline global
+🔎 Flux simplifié
+CALL external_service
+   ↓
+Check circuit state
+   ↓
+IF OPEN → return error
+IF CLOSED → call service
+   ↓
+If error → increment counter
+   ↓
+If counter >= N → OPEN
+   ↓
+After delay → HALF-OPEN → test call
+🧠 Positionnement architecture
 
-Ordre exact :
+Ce circuit breaker se situe :
 
-AuthN
+Orchestrateur
+→ LLMaaS
+→ RAGaaS
+→ Assistant Companion
 
-AUTHZ globale
+Il fait partie du data plane de résilience, pas du control plane.
 
-Guardrails (classification + secrets)
+Si tu veux, je peux maintenant :
 
-Lecture mémoire
+fournir un pseudo-code d’implémentation
 
-Profil utilisateur
-
-🔎 Validation modèle catalogue
-
-🔐 Validation AUTHZ modèle
-
-🔒 Validation compatibilité classification
-
-➡ Routage final vers LLMaaS
+proposer un modèle Redis pour stockage d’état
