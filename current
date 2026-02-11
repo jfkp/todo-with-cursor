@@ -1,187 +1,237 @@
-🔐 EPIC GR-SECRET-V0 — Détection & blocage des secrets dans les prompts
-🧩 US-GR-SECRET-01 — Détection et blocage des secrets via règles Regex
+EPIC GR-OUTPUT-V0 — Validation de sortie LLM
+🧩 US-GR-OUTPUT-01 — Analyse et blocage des réponses LLM avant restitution utilisateur
 🎯 Description fonctionnelle
 
-En tant qu’opérateur de sécurité,
-je veux que les secrets contenus dans les prompts utilisateurs (API keys, tokens, bearer, mots de passe, numéros de carte bancaire, etc.) soient automatiquement détectés et bloqués via des règles basées sur des patterns Regex
-afin d’éviter toute fuite de secrets vers les modèles LLM.
+En tant qu’opérateur sécurité,
+je veux que chaque réponse générée par le LLM soit analysée avant envoi à l’utilisateur
+afin de bloquer les contenus inappropriés, toxiques ou contenant des fuites de données sensibles.
 
 📦 Périmètre fonctionnel
 
 Inclus :
 
-Analyse systématique de chaque prompt entrant
+Analyse systématique de chaque réponse LLM
 
-Détection via regex configurables
+Détection de contenu inapproprié (toxique, haineux, violent, NSFW)
 
-Blocage immédiat si secret détecté
+Détection de fuite de données (PII, secrets, données internes)
 
-Notification utilisateur
+Scoring de risque
+
+Blocage ou filtrage selon seuil configuré
 
 Traçabilité complète
 
-Stockage des métadonnées de détection (sans stocker le secret)
+Message utilisateur contrôlé en cas de blocage
 
-Exclu :
+Exclu (V0) :
 
-Détection sémantique avancée (V1)
+Re-écriture automatique de la réponse
 
-Détection dans fichiers uploadés (V1)
+Human review
 
-Masquage partiel automatique (V1)
+Modèle “LLM as judge”
 
-🧠 Types de secrets à détecter (V0)
-Type	Exemple
-API Key	sk-xxxxxxxx
-Bearer token	Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
-JWT	header.payload.signature
-Mot de passe explicite	password=xxxx
-Numéro carte bancaire	16 chiffres format Visa/Mastercard
-IBAN	FR76 3000 6000 0112 3456 7890 189
+Analyse multimodale sortie image
+
+🧠 Types de risques à détecter
+Catégorie	Exemple
+Toxicité	Insultes, harcèlement
+Violence	Incitation, description explicite
+NSFW	Contenu explicite
+Hate speech	Discours haineux
+PII	Email, téléphone, IBAN
+Secret	API key, token
+Données internes	Références système internes
 ⚙️ Contraintes
 
-Détection obligatoire avant tout appel LLM
+Analyse obligatoire avant restitution
 
-Temps d’analyse < 50 ms
+Temps d’analyse < 100 ms
 
-Règles modifiables sans redéploiement
+Analyse synchrone
 
-Pas de stockage du secret brut
+Aucun contournement possible
+
+Pas de stockage de contenu sensible
 
 Versioning des règles
 
-Détection case insensitive
+Traçabilité complète
 
 ✅ Critères d’acceptation
 
-100% des prompts analysés
+100% des réponses LLM analysées
 
-Secret détecté → BLOCK immédiat
+Si score > seuil → BLOCK
 
-Aucun appel LLM si secret détecté
+Si fuite détectée → REJECT
 
-Message utilisateur explicite
+Aucun contenu bloqué n’est affiché
 
-Trace audit complète
+Décision tracée avec trace_id
+
+L’utilisateur est informé
 
 🔧 Sous-US techniques
-🧩 US-GR-SECRET-01.1 — Implémentation moteur Regex
+🧩 US-GR-OUTPUT-01.1 — Moteur d’analyse contenu sortie
 🎯 Objectif technique
 
-Mettre en place un moteur d’analyse basé sur des patterns Regex configurables.
+Mettre en place un moteur de classification des réponses LLM.
 
-Périmètre
+Mécanismes V0
 
-Catalogue de patterns
+Liste mots-clés
 
-Support multi-pattern
+Regex PII & secrets
 
-Priorité des règles
+Classification par catégories
 
-Regex optimisées performance
+Score agrégé
 
-Exemple patterns (indicatif)
-Bearer\s+[A-Za-z0-9\-\._~\+\/]+=*
-sk-[A-Za-z0-9]{20,}
-(?i)password\s*=\s*.+ 
-\b4[0-9]{12}(?:[0-9]{3})?\b
-\bFR\d{2}\s?\d{4}\s?\d{4}\s?\d{4}\s?\d{4}\s?\d{4}\s?\d{3}\b
 Contraintes
 
-Pas de regex catastrophique (ReDoS safe)
+Analyse texte uniquement
 
-Timeout analyse protégé
+Déterministe
 
-Support UTF-8
+Pas de dépendance externe obligatoire
 
 Critères d’acceptation
 
-Détection correcte sur jeu de test
+Score retourné par catégorie
+
+Décision PASS / BLOCK / REJECT
 
 Performance validée
 
-Version de règles tracée
-
 Edge cases
 
-Secret encodé partiellement
+Réponse longue
 
-Token tronqué
+Réponse partiellement problématique
 
-Faux positif sur suite de chiffres
+Faux positifs
 
-Prompt très long
+Format code ou JSON contenant pattern sensible
 
-🧩 US-GR-SECRET-01.2 — Blocage immédiat & interruption du flux
+🧩 US-GR-OUTPUT-01.2 — Détection fuite PII & secrets en sortie
 🎯 Objectif technique
 
-Interrompre le pipeline avant routage si secret détecté.
+Empêcher le LLM de renvoyer des données sensibles.
 
-Flux
+Détection basée sur :
 
-Guardrails(Input) → BLOCK → Observabilité
+Regex IBAN
+
+Numéros CB
+
+Email
+
+JWT
+
+API keys
+
+Références internes système
 
 Contraintes
 
-Orchestrateur ne doit jamais appeler LLM
+Priorité absolue : fuite = REJECT
 
-Décision non override possible
-
-Niveau classification = SECRET
+Pas d’affichage partiel
 
 Critères d’acceptation
 
-Aucun appel LLM si secret
+Toute fuite détectée → réponse bloquée
 
-État réponse = REJECT
+Secret non loggé
+
+Audit enregistré
+
+Edge cases
+
+Donnée sensible générée par hallucination
+
+Secret déjà présent dans prompt utilisateur
+
+Faux positif sur numéro technique
+
+🧩 US-GR-OUTPUT-01.3 — Politique de scoring & seuils configurables
+🎯 Objectif technique
+
+Permettre à l’opérateur sécurité de définir les seuils de blocage.
+
+Paramétrage :
+
+Seuil toxicité
+
+Seuil violence
+
+Seuil global agrégé
+
+Politique stricte vs tolérante
+
+Contraintes
+
+Modification sans redéploiement
+
+Versioning politique
+
+Journalisation des changements
+
+Critères d’acceptation
+
+Seuil modifiable en runtime
+
+Nouvelle configuration immédiatement effective
+
+Historique conservé
+
+Edge cases
+
+Seuil trop bas → surblocage
+
+Seuil trop haut → fuite non détectée
+
+Modification concurrente
+
+🧩 US-GR-OUTPUT-01.4 — Blocage et réponse utilisateur contrôlée
+🎯 Objectif technique
+
+Fournir un message standardisé en cas de blocage.
+
+Exemple message :
+
+La réponse générée ne peut être affichée car elle contient un contenu non conforme à la politique de sécurité.
+
+Contraintes
+
+Message générique
+
+Pas de détail technique exposé
+
+Internationalisation possible
+
+Critères d’acceptation
+
+Réponse LLM non affichée
+
+trace_id fourni
 
 Code erreur normalisé
 
 Edge cases
 
-Détection multiple secrets
+Blocage en streaming
 
-Tentative répétée utilisateur
+Blocage partiel
 
-Secret détecté en mode streaming
+Répétition utilisateur
 
-🧩 US-GR-SECRET-01.3 — Notification utilisateur contrôlée
+🧩 US-GR-OUTPUT-01.5 — Traçabilité & audit sécurité sortie
 🎯 Objectif technique
 
-Informer l’utilisateur sans exposer la nature exacte du secret.
-
-Exemple message
-
-Votre requête contient des informations sensibles (secrets) et ne peut pas être traitée.
-
-Contraintes
-
-Ne pas afficher le secret détecté
-
-Ne pas révéler pattern exact
-
-Internationalisable
-
-Critères d’acceptation
-
-Message clair
-
-Pas de fuite d’information
-
-trace_id associé
-
-Edge cases
-
-Utilisateur tente contournement volontaire
-
-Interface API vs UI
-
-Multi-erreur simultanée
-
-🧩 US-GR-SECRET-01.4 — Audit & traçabilité sécurité
-🎯 Objectif technique
-
-Permettre analyse sécurité et conformité.
+Permettre analyse post-incident.
 
 Données audit
 
@@ -189,89 +239,38 @@ trace_id
 
 user_id
 
-secret_type_detected
+model_id
 
-rule_id
+catégories détectées
+
+score
+
+décision
 
 timestamp
 
-décision = BLOCK
-
-⚠️ Le secret brut ne doit jamais être stocké.
+⚠️ La réponse brute n’est pas stockée si bloquée.
 
 Contraintes
-
-RGPD compliant
 
 Chiffrement audit store
 
 Conservation configurable
 
+Corrélation entrée/sortie
+
 Critères d’acceptation
 
-100% des blocages tracés
+100% décisions tracées
 
-Dashboard sécurité visible
+Dashboard sécurité disponible
 
 Export conformité possible
 
 Edge cases
 
-Logs incomplets
-
-Désynchronisation trace
+Log manquant
 
 Audit store indisponible
 
-🧩 US-GR-SECRET-01.5 — Administration des règles regex
-🎯 Objectif technique
-
-Permettre à l’administrateur sécurité de gérer les règles.
-
-Périmètre
-
-CRUD règles
-
-Activation / désactivation
-
-Versioning
-
-Test sur prompt simulé
-
-Contraintes
-
-Modification sans redéploiement
-
-Contrôle d’accès strict
-
-Journalisation des changements
-
-Critères d’acceptation
-
-Nouvelle règle effective immédiatement
-
-Historique version disponible
-
-Rollback possible
-
-Edge cases
-
-Règle malformée
-
-Règle trop large → faux positifs massifs
-
-Suppression accidentelle
-
-🔒 Garanties système
-
-La plateforme garantit que :
-
-Aucun secret détecté ne quitte le système
-
-Aucun secret n’est transmis au LLM
-
-Aucun secret n’est stocké
-
-Toute tentative est tracée
-
-Le blocage est systématique et non contournable
+Incohérence trace
