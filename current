@@ -1,172 +1,155 @@
 🧾 USER STORY PRODUIT
-US-MEM-UX-01 — Sauvegarde automatique des conversations
+US-ORCH-MEM-CTX-01 — Injection du contexte conversationnel
 Description
 
-En tant qu’utilisateur de la plateforme IA gouvernée,
-je veux que mes conversations (prompt + réponse LLM) soient sauvegardées automatiquement
-afin de pouvoir les consulter ultérieurement, les reprendre ou retrouver une information.
+En tant que SmartRouter (Orchestrateur),
+je veux récupérer le contexte de la session en cours depuis le MemoryStore
+afin de l’injecter dans l’appel au LLM et maintenir la cohérence conversationnelle.
 
 🔧 SOUS-US TECHNIQUES
-US-MEM-TECH-01 — Écriture automatique de conversation
+US-ORCH-MEM-CTX-TECH-01 — Récupération des N derniers messages
 Description
 
-La plateforme doit enregistrer automatiquement chaque interaction validée (prompt + réponse LLM) dans la mémoire conversationnelle.
+Le SmartRouter doit appeler le MemoryStore pour récupérer les N derniers messages de la session active avant tout appel au LLM.
 
-L’écriture intervient uniquement après :
+Le nombre N :
 
-validation Security Guardrails
+configurable
 
-génération de la réponse LLM
+valeur par défaut = 10
+
+La récupération doit s’effectuer depuis le cache de session.
 
 Périmètre
 
 Inclus :
 
-Création d’un conversation_id
-
-Enregistrement des champs :
-
-conversation_id
-
-user_id
-
-role (user / assistant)
-
-contenu
-
-modèle utilisé
-
-timestamp
-
-Écriture dans cache (TTL 24h)
-
-Écriture en base persistante (rétention 30 jours)
-
-Exclu :
-
-Stockage de données bloquées par Guardrails
-
-Stockage si flux interrompu
-
-Edge cases
-Edge case	Attendu
-Réponse bloquée par Guardrails	Aucune persistance
-Échec écriture cache	Écriture base maintenue + log
-Échec écriture base	Alerte + rollback cache
-Doublon conversation_id	Refus + log anomalie
-Donnée sensible détectée	REJECT + non persistance
-Critères d’acceptation
-
-Toute réponse validée est persistée
-
-Cache TTL = 24h
-
-Base retention = 30 jours
-
-Données supprimées si Guardrails bloque
-
-Logs produits avec trace_id
-
-Aucune donnée sensible persistée
-
-US-MEM-TECH-02 — Lecture & rechargement d’historique
-Description
-
-La plateforme doit permettre à l’utilisateur de consulter ses conversations passées depuis son poste.
-
-Périmètre
-
-Inclus :
-
-Lecture depuis cache si < 24h
-
-Lecture depuis base si > 24h et < 30 jours
+Lecture par conversation_id
 
 Filtrage par user_id
 
-Chargement complet de la conversation
+Récupération des N derniers messages
 
-Réinjection possible dans nouvelle session
+SLA latence < 50 ms
+
+Utilisation prioritaire du cache
 
 Exclu :
 
-Accès à conversation d’un autre utilisateur
+Lecture base persistante (fallback non V0 si non requis)
 
-Accès à conversation supprimée
+Recalcul historique complet
 
 Edge cases
 Edge case	Attendu
-Conversation expirée > 30 jours	Non trouvée
-Conversation supprimée	Non trouvée
-Cache incohérent	Fallback base
-Accès non autorisé	BLOCK
+Session inexistante	Retour tableau vide
+Session expirée	Retour tableau vide
+Cache indisponible	Retour vide + log
+N > nombre total messages	Retour messages disponibles
+Latence > 50ms	Log performance
 Critères d’acceptation
 
-Historique visible depuis UI
+Paramètre N configurable
 
-Rechargement exact des échanges
+Valeur par défaut = 10
 
-Filtrage strict par user_id
+Lecture cache uniquement
 
-Trace consultable dans audit
+Latence mesurée < 50 ms
 
-SLA lecture < 200 ms
+Logs incluant trace_id et conversation_id
 
-US-MEM-TECH-03 — Suppression utilisateur (delete)
+US-ORCH-MEM-CTX-TECH-02 — Formatage du contexte pour LLM
 Description
 
-L’utilisateur peut supprimer une conversation.
-La suppression doit être effective dans le cache et la base.
+Le contexte récupéré doit être transformé au format attendu par le LLM :
+
+[
+  { "role": "system", "content": "..." },
+  { "role": "user", "content": "..." },
+  { "role": "assistant", "content": "..." }
+]
+Périmètre
+
+Inclus :
+
+Transformation en message array
+
+Respect du format LLM provider
+
+Ordonnancement chronologique
+
+Exclu :
+
+Enrichissement sémantique
+
+RAG
+
+Edge cases
+Edge case	Attendu
+Message mal formé	Ignoré + log
+Role inconnu	Normalisé
+Contenu vide	Exclu
+Critères d’acceptation
+
+Format strictement conforme au contrat LLM
+
+Ordre chronologique respecté
+
+Aucune altération du contenu
+
+Audit du payload généré
+
+US-ORCH-MEM-CTX-TECH-03 — Gestion de la fenêtre du modèle
+Description
+
+Si la taille cumulée du contexte dépasse la fenêtre maximale du modèle :
+
+Les messages les plus anciens sont tronqués
+
+Le prompt utilisateur courant est toujours conservé
+
+La cohérence conversationnelle est priorisée
 
 Périmètre
 
 Inclus :
 
-Suppression par conversation_id + user_id
+Calcul tokens estimés
 
-Suppression cache immédiate
+Comparaison à model_context_window
 
-Suppression base immédiate
-
-Log audit obligatoire
+Troncature FIFO (oldest first)
 
 Exclu :
 
-Suppression conversation autre utilisateur
+Résumé automatique (non inclus en V0)
 
-Suppression partielle d’un message
+Compression intelligente
 
 Edge cases
 Edge case	Attendu
-Tentative suppression conversation autre user	BLOCK
-Conversation inexistante	Réponse idempotente
-Échec suppression base	Restauration cache + alerte
-Suppression massive automatisée	Rate limit
+Contexte trop volumineux	Troncature progressive
+Fenêtre modèle inconnue	Valeur par défaut
+Prompt utilisateur dépasse fenêtre	Refus contrôlé
 Critères d’acceptation
 
-Suppression immédiate cache
+Aucun appel LLM ne dépasse la fenêtre modèle
 
-Suppression base confirmée
+Prompt courant toujours présent
 
-Trace RGPD auditée
+Troncature documentée dans logs
 
-Conversation inaccessible après suppression
+Décision traçable
 
-Opération idempotente
+🔐 Contraintes non négociables
 
-📦 Règles de rétention
-Niveau	Stockage	Durée
-Hot	Cache	24h
-Warm	Base	30 jours
-Au-delà	Suppression automatique	
-🔐 Règles clés
+Lecture contexte avant appel LLM
 
-Aucune donnée sensible persistée
+SLA récupération < 50 ms
 
-Suppression utilisateur prioritaire
+Isolation stricte par session
 
-Traçabilité obligatoire
+Aucun mélange inter-utilisateur
 
-Isolation stricte par user_id
-
-Écriture uniquement après validation sécurité
+Traçabilité complète
