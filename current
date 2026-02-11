@@ -1,268 +1,172 @@
-🧩 US-PLAT-RES-01
-Protection des appels externes par Circuit Breaker
-🎯 Description fonctionnelle
-
-En tant qu’opérateur de la plateforme,
-je veux que les appels vers les services externes LLMaaS, RAGaaS et Assistant Companion soient protégés par un mécanisme de circuit breaker,
-afin d’éviter les cascades de pannes en cas d’indisponibilité d’un service.
-
-Le circuit :
-
-S’ouvre après N erreurs consécutives
-
-En état ouvert → ne tente plus d’appeler le service
-
-Retourne immédiatement une erreur contrôlée
-
-Se referme automatiquement après un délai configurable
-
-Stocke son état dans un cache partagé
-
-Journalise chaque changement d’état dans la base d’audit
-
-📦 Périmètre
-Inclus
-
-Circuit breaker par service externe
-
-Seuil d’erreurs consécutives configurable
-
-Timeout configurable
-
-Cache partagé pour l’état
-
-Journalisation des transitions d’état
-
-Gestion des états : CLOSED / OPEN / HALF-OPEN
-
-Exclu
-
-Retry intelligent multi-provider
-
-Load balancing dynamique
-
-SLA contractuel externe
-
-🔁 États du circuit
-État	Description
-CLOSED	Service fonctionnel, appels autorisés
-OPEN	Service considéré indisponible, appels bloqués
-HALF-OPEN	Phase de test pour vérifier reprise
-🔧 Sous-US techniques
-🧩 US-PLAT-RES-01.1 — Détection erreurs consécutives
+🧾 USER STORY PRODUIT
+US-MEM-UX-01 — Sauvegarde automatique des conversations
 Description
 
-La plateforme doit compter les erreurs consécutives (timeout, 5xx, connexion refusée) pour chaque service externe.
+En tant qu’utilisateur de la plateforme IA gouvernée,
+je veux que mes conversations (prompt + réponse LLM) soient sauvegardées automatiquement
+afin de pouvoir les consulter ultérieurement, les reprendre ou retrouver une information.
 
-Edge cases
-
-Erreurs intermittentes
-
-Timeout long bloquant threads
-
-Erreurs non catégorisées
-
-Compteur non réinitialisé après succès
-
-Critères d’acceptation
-
-Compteur d’erreurs par service
-
-Reset du compteur après succès
-
-Seuil N configurable
-
-Log structuré :
-
-service_name
-
-error_type
-
-consecutive_error_count
-
-🧩 US-PLAT-RES-01.2 — Ouverture automatique du circuit
+🔧 SOUS-US TECHNIQUES
+US-MEM-TECH-01 — Écriture automatique de conversation
 Description
 
-Lorsque le seuil N est atteint, le circuit passe en état OPEN.
+La plateforme doit enregistrer automatiquement chaque interaction validée (prompt + réponse LLM) dans la mémoire conversationnelle.
 
-Edge cases
+L’écriture intervient uniquement après :
 
-Seuil mal configuré (0 ou trop élevé)
+validation Security Guardrails
 
-Double ouverture simultanée
+génération de la réponse LLM
 
-Cache indisponible
+Périmètre
 
-Critères d’acceptation
+Inclus :
 
-État OPEN stocké dans cache
+Création d’un conversation_id
 
-Timestamp d’ouverture enregistré
+Enregistrement des champs :
 
-Log audit :
+conversation_id
 
-previous_state
+user_id
 
-new_state=OPEN
+role (user / assistant)
 
-reason=threshold_reached
+contenu
 
-🧩 US-PLAT-RES-01.3 — Blocage immédiat des appels en état OPEN
-Description
-
-En état OPEN, aucun appel n’est transmis au service externe.
-
-Edge cases
-
-Tentative de bypass
-
-Cache expiré
-
-Multiples instances orchestrateur
-
-Critères d’acceptation
-
-Appel bloqué immédiatement
-
-Erreur normalisée retournée :
-
-code=SERVICE_UNAVAILABLE
-
-message explicite
-
-Aucun appel réseau effectué
-
-Log :
-
-service_name
-
-state=OPEN
-
-action=BLOCKED
-
-🧩 US-PLAT-RES-01.4 — Fermeture automatique après délai configurable
-Description
-
-Après un délai configurable (cooldown), le circuit passe en HALF-OPEN et autorise un appel test.
-
-Edge cases
-
-Service toujours indisponible
-
-Délai mal configuré
-
-Race condition entre instances
-
-Critères d’acceptation
-
-Passage automatique en HALF-OPEN
-
-Un seul appel test autorisé
-
-Succès → CLOSED
-
-Échec → OPEN
-
-Logs audit :
-
-previous_state
-
-new_state
-
-recovery_attempt=true
-
-🧩 US-PLAT-RES-01.5 — Stockage de l’état dans un cache partagé
-Description
-
-L’état du circuit est stocké dans un cache distribué afin d’assurer cohérence entre instances.
-
-Edge cases
-
-Cache indisponible
-
-Données expirées
-
-Incohérence multi-instance
-
-Critères d’acceptation
-
-État centralisé
-
-TTL configurable
-
-Fallback en lecture locale si cache indisponible
-
-Log incident si cache inaccessible
-
-🧩 US-PLAT-RES-01.6 — Journalisation des transitions d’état
-Description
-
-Chaque changement d’état doit être journalisé dans la base d’audit.
-
-Edge cases
-
-Base audit indisponible
-
-Log non corrélé
-
-Perte de trace
-
-Critères d’acceptation
-
-Log avec :
-
-service_name
-
-previous_state
-
-new_state
+modèle utilisé
 
 timestamp
 
-trace_id
+Écriture dans cache (TTL 24h)
 
-Requête consultable via dashboard audit
+Écriture en base persistante (rétention 30 jours)
 
-Échec d’écriture audit → log erreur critique
+Exclu :
 
-🔐 Garanties non négociables
+Stockage de données bloquées par Guardrails
 
-Aucun service externe appelé en état OPEN
+Stockage si flux interrompu
 
-Chaque transition d’état traçable
+Edge cases
+Edge case	Attendu
+Réponse bloquée par Guardrails	Aucune persistance
+Échec écriture cache	Écriture base maintenue + log
+Échec écriture base	Alerte + rollback cache
+Doublon conversation_id	Refus + log anomalie
+Donnée sensible détectée	REJECT + non persistance
+Critères d’acceptation
 
-Paramètres configurables sans redéploiement
+Toute réponse validée est persistée
 
-Cohérence multi-instance garantie
+Cache TTL = 24h
 
-Erreurs retournées normalisées
+Base retention = 30 jours
 
-🔎 Flux simplifié
-CALL external_service
-   ↓
-Check circuit state
-   ↓
-IF OPEN → return error
-IF CLOSED → call service
-   ↓
-If error → increment counter
-   ↓
-If counter >= N → OPEN
-   ↓
-After delay → HALF-OPEN → test call
-🧠 Positionnement architecture
+Données supprimées si Guardrails bloque
 
-Ce circuit breaker se situe :
+Logs produits avec trace_id
 
-Orchestrateur
-→ LLMaaS
-→ RAGaaS
-→ Assistant Companion
+Aucune donnée sensible persistée
 
-Il fait partie du data plane de résilience, pas du control plane.
+US-MEM-TECH-02 — Lecture & rechargement d’historique
+Description
 
-Si tu veux, je peux maintenant :
+La plateforme doit permettre à l’utilisateur de consulter ses conversations passées depuis son poste.
 
-fournir un pseudo-code d’implémentation
+Périmètre
 
-proposer un modèle Redis pour stockage d’état
+Inclus :
+
+Lecture depuis cache si < 24h
+
+Lecture depuis base si > 24h et < 30 jours
+
+Filtrage par user_id
+
+Chargement complet de la conversation
+
+Réinjection possible dans nouvelle session
+
+Exclu :
+
+Accès à conversation d’un autre utilisateur
+
+Accès à conversation supprimée
+
+Edge cases
+Edge case	Attendu
+Conversation expirée > 30 jours	Non trouvée
+Conversation supprimée	Non trouvée
+Cache incohérent	Fallback base
+Accès non autorisé	BLOCK
+Critères d’acceptation
+
+Historique visible depuis UI
+
+Rechargement exact des échanges
+
+Filtrage strict par user_id
+
+Trace consultable dans audit
+
+SLA lecture < 200 ms
+
+US-MEM-TECH-03 — Suppression utilisateur (delete)
+Description
+
+L’utilisateur peut supprimer une conversation.
+La suppression doit être effective dans le cache et la base.
+
+Périmètre
+
+Inclus :
+
+Suppression par conversation_id + user_id
+
+Suppression cache immédiate
+
+Suppression base immédiate
+
+Log audit obligatoire
+
+Exclu :
+
+Suppression conversation autre utilisateur
+
+Suppression partielle d’un message
+
+Edge cases
+Edge case	Attendu
+Tentative suppression conversation autre user	BLOCK
+Conversation inexistante	Réponse idempotente
+Échec suppression base	Restauration cache + alerte
+Suppression massive automatisée	Rate limit
+Critères d’acceptation
+
+Suppression immédiate cache
+
+Suppression base confirmée
+
+Trace RGPD auditée
+
+Conversation inaccessible après suppression
+
+Opération idempotente
+
+📦 Règles de rétention
+Niveau	Stockage	Durée
+Hot	Cache	24h
+Warm	Base	30 jours
+Au-delà	Suppression automatique	
+🔐 Règles clés
+
+Aucune donnée sensible persistée
+
+Suppression utilisateur prioritaire
+
+Traçabilité obligatoire
+
+Isolation stricte par user_id
+
+Écriture uniquement après validation sécurité
