@@ -1,264 +1,187 @@
-🧩 US-GR-CLASS-01 — Détection automatique du niveau de classification
+🔐 EPIC GR-SECRET-V0 — Détection & blocage des secrets dans les prompts
+🧩 US-GR-SECRET-01 — Détection et blocage des secrets via règles Regex
 🎯 Description fonctionnelle
 
-En tant qu’opérateur sécurité,
-je veux que chaque prompt soumis soit automatiquement classifié selon un niveau de sensibilité (Public, Internal, Confidential, Secret)
-afin que la plateforme applique les règles de routage et de blocage appropriées.
+En tant qu’opérateur de sécurité,
+je veux que les secrets contenus dans les prompts utilisateurs (API keys, tokens, bearer, mots de passe, numéros de carte bancaire, etc.) soient automatiquement détectés et bloqués via des règles basées sur des patterns Regex
+afin d’éviter toute fuite de secrets vers les modèles LLM.
 
 📦 Périmètre fonctionnel
 
 Inclus :
 
-Analyse systématique de chaque prompt
+Analyse systématique de chaque prompt entrant
 
-Attribution d’un niveau de classification unique
+Détection via regex configurables
 
-Traçabilité de la décision
+Blocage immédiat si secret détecté
 
-Intégration avec le moteur de routage
-
-Blocage automatique niveau Secret
-
-Exclu :
-
-Classification documentaire hors prompt (V1)
-
-Analyse d’image multimodale (V1)
-
-Reclassification manuelle par utilisateur
-
-🏷️ Niveaux de classification
-Niveau	Signification	Action système
-Public	Donnée non sensible	Routage normal
-Internal	Donnée interne entreprise	Routage vers modèles autorisés
-Confidential	Donnée sensible entreprise	Routage restreint
-Secret	Donnée critique / réglementée	Blocage immédiat
-⚙️ Contraintes
-
-Classification obligatoire avant routage
-
-Latence totale < 200 ms
-
-Règles configurables dynamiquement
-
-Pas de stockage du prompt brut en audit
-
-Versionnement du moteur de classification
-
-✅ Critères d’acceptation
-
-Chaque prompt reçoit un niveau explicite
-
-Le niveau Secret déclenche un BLOCK immédiat
-
-Le routage respecte les règles de classification
-
-L’utilisateur est informé en cas de rejet
-
-La décision est tracée
-
-🔧 Sous-US techniques
-🧩 US-GR-CLASS-01.1 — Moteur de classification statique (règles & patterns)
-🎯 Objectif technique
-
-Implémenter une première couche de détection basée sur patterns métiers.
-
-Périmètre
-
-Regex IBAN
-
-Numéros internes
-
-Numéro client
-
-Identifiants réglementaires
-
-Mot-clé "secret", "confidentiel"
-
-Contraintes
-
-Configuration dynamique
-
-Versioning règles
-
-Pas de faux négatif critique
-
-Critères d’acceptation
-
-Match pattern → classification minimale Internal ou plus
-
-Secret détecté → Secret
-
-Règle appliquée tracée
-
-Edge cases
-
-Mot masqué partiellement
-
-Pattern mal configuré
-
-Prompt multilingue
-
-🧩 US-GR-CLASS-01.2 — Classification sémantique avancée (LLM ou modèle dédié)
-🎯 Objectif technique
-
-Utiliser un modèle de classification pour analyser le contexte sémantique.
-
-Périmètre
-
-Analyse contexte
-
-Scoring par niveau
-
-Probabilité par classe
-
-Contraintes
-
-Temps < 150 ms
-
-Modèle versionné
-
-Fail-safe (si indisponible → classification restrictive)
-
-Critères d’acceptation
-
-Score par niveau
-
-Niveau final calculé
-
-Version modèle tracée
-
-Edge cases
-
-Ambiguïté Internal vs Confidential
-
-Prompt très court
-
-Prompt chiffré
-
-🧩 US-GR-CLASS-01.3 — Règles de décision & priorisation
-🎯 Objectif technique
-
-Déterminer le niveau final en combinant règles statiques et modèle.
-
-Règle principale
-
-Le niveau le plus restrictif l’emporte
-
-Règles obligatoires
-
-SECRET → BLOCK immédiat
-
-CONFIDENTIAL → routage restreint
-
-INTERNAL → modèles entreprise uniquement
-
-PUBLIC → routage standard
-
-Contraintes
-
-Décision déterministe
-
-Pas de logique codée en dur
-
-Critères d’acceptation
-
-SECRET → arrêt immédiat
-
-Routing conforme classification
-
-Décision tracée avec justification
-
-Edge cases
-
-Conflit règle vs modèle
-
-Score borderline
-
-Règles modifiées dynamiquement
-
-🧩 US-GR-CLASS-01.4 — Intégration avec PolicyShield (routage conditionnel)
-🎯 Objectif technique
-
-Permettre au moteur de routage de prendre en compte la classification.
-
-Périmètre
-
-Transmission classification à PolicyShield
-
-Validation modèle autorisé
-
-Décision consolidée
-
-Contraintes
-
-Orchestrateur ne décide pas seul
-
-API stable
+Notification utilisateur
 
 Traçabilité complète
 
-Critères d’acceptation
+Stockage des métadonnées de détection (sans stocker le secret)
 
-classification_level transmis
+Exclu :
 
-modèle non autorisé → BLOCK
+Détection sémantique avancée (V1)
 
-Secret → jamais routé
+Détection dans fichiers uploadés (V1)
 
-Edge cases
+Masquage partiel automatique (V1)
 
-Modèle autorisé mais classification erronée
+🧠 Types de secrets à détecter (V0)
+Type	Exemple
+API Key	sk-xxxxxxxx
+Bearer token	Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
+JWT	header.payload.signature
+Mot de passe explicite	password=xxxx
+Numéro carte bancaire	16 chiffres format Visa/Mastercard
+IBAN	FR76 3000 6000 0112 3456 7890 189
+⚙️ Contraintes
 
-Règles modifiées en cours de session
+Détection obligatoire avant tout appel LLM
 
-Double appel API
+Temps d’analyse < 50 ms
 
-🧩 US-GR-CLASS-01.5 — Information utilisateur en cas de rejet
+Règles modifiables sans redéploiement
+
+Pas de stockage du secret brut
+
+Versioning des règles
+
+Détection case insensitive
+
+✅ Critères d’acceptation
+
+100% des prompts analysés
+
+Secret détecté → BLOCK immédiat
+
+Aucun appel LLM si secret détecté
+
+Message utilisateur explicite
+
+Trace audit complète
+
+🔧 Sous-US techniques
+🧩 US-GR-SECRET-01.1 — Implémentation moteur Regex
 🎯 Objectif technique
 
-Informer explicitement l’utilisateur si la requête est bloquée.
+Mettre en place un moteur d’analyse basé sur des patterns Regex configurables.
 
 Périmètre
 
-Message explicite
+Catalogue de patterns
 
-Niveau détecté
+Support multi-pattern
 
-Cause générique (sans exposer règles internes)
+Priorité des règles
 
-Exemple message
+Regex optimisées performance
 
-Votre requête contient des données classifiées SECRET et ne peut pas être traitée par la plateforme.
-
+Exemple patterns (indicatif)
+Bearer\s+[A-Za-z0-9\-\._~\+\/]+=*
+sk-[A-Za-z0-9]{20,}
+(?i)password\s*=\s*.+ 
+\b4[0-9]{12}(?:[0-9]{3})?\b
+\bFR\d{2}\s?\d{4}\s?\d{4}\s?\d{4}\s?\d{4}\s?\d{4}\s?\d{3}\b
 Contraintes
 
-Message compréhensible
+Pas de regex catastrophique (ReDoS safe)
 
-Pas d’exposition de règles internes
+Timeout analyse protégé
 
-Trace liée au trace_id
+Support UTF-8
 
 Critères d’acceptation
 
-Message affiché en cas de blocage
+Détection correcte sur jeu de test
 
-Pas d’appel LLM effectué
+Performance validée
 
-Audit complet enregistré
+Version de règles tracée
 
 Edge cases
 
-Utilisateur tente contournement
+Secret encodé partiellement
 
-Message internationalisé
+Token tronqué
 
-Multi-erreurs simultanées
+Faux positif sur suite de chiffres
 
-🧩 US-GR-CLASS-01.6 — Audit & métriques classification
+Prompt très long
+
+🧩 US-GR-SECRET-01.2 — Blocage immédiat & interruption du flux
 🎯 Objectif technique
 
-Permettre supervision sécurité.
+Interrompre le pipeline avant routage si secret détecté.
+
+Flux
+
+Guardrails(Input) → BLOCK → Observabilité
+
+Contraintes
+
+Orchestrateur ne doit jamais appeler LLM
+
+Décision non override possible
+
+Niveau classification = SECRET
+
+Critères d’acceptation
+
+Aucun appel LLM si secret
+
+État réponse = REJECT
+
+Code erreur normalisé
+
+Edge cases
+
+Détection multiple secrets
+
+Tentative répétée utilisateur
+
+Secret détecté en mode streaming
+
+🧩 US-GR-SECRET-01.3 — Notification utilisateur contrôlée
+🎯 Objectif technique
+
+Informer l’utilisateur sans exposer la nature exacte du secret.
+
+Exemple message
+
+Votre requête contient des informations sensibles (secrets) et ne peut pas être traitée.
+
+Contraintes
+
+Ne pas afficher le secret détecté
+
+Ne pas révéler pattern exact
+
+Internationalisable
+
+Critères d’acceptation
+
+Message clair
+
+Pas de fuite d’information
+
+trace_id associé
+
+Edge cases
+
+Utilisateur tente contournement volontaire
+
+Interface API vs UI
+
+Multi-erreur simultanée
+
+🧩 US-GR-SECRET-01.4 — Audit & traçabilité sécurité
+🎯 Objectif technique
+
+Permettre analyse sécurité et conformité.
 
 Données audit
 
@@ -266,32 +189,89 @@ trace_id
 
 user_id
 
-classification_level
+secret_type_detected
 
-décision
-
-modèle ciblé
+rule_id
 
 timestamp
 
-Métriques
+décision = BLOCK
 
-% Public / Internal / Confidential / Secret
-
-Taux de blocage Secret
-
-Volume par utilisateur
+⚠️ Le secret brut ne doit jamais être stocké.
 
 Contraintes
 
-Pas de stockage prompt brut
-
 RGPD compliant
+
+Chiffrement audit store
+
+Conservation configurable
 
 Critères d’acceptation
 
-100% requêtes classifiées
+100% des blocages tracés
 
-Dashboard sécurité disponible
+Dashboard sécurité visible
 
-Export possible
+Export conformité possible
+
+Edge cases
+
+Logs incomplets
+
+Désynchronisation trace
+
+Audit store indisponible
+
+🧩 US-GR-SECRET-01.5 — Administration des règles regex
+🎯 Objectif technique
+
+Permettre à l’administrateur sécurité de gérer les règles.
+
+Périmètre
+
+CRUD règles
+
+Activation / désactivation
+
+Versioning
+
+Test sur prompt simulé
+
+Contraintes
+
+Modification sans redéploiement
+
+Contrôle d’accès strict
+
+Journalisation des changements
+
+Critères d’acceptation
+
+Nouvelle règle effective immédiatement
+
+Historique version disponible
+
+Rollback possible
+
+Edge cases
+
+Règle malformée
+
+Règle trop large → faux positifs massifs
+
+Suppression accidentelle
+
+🔒 Garanties système
+
+La plateforme garantit que :
+
+Aucun secret détecté ne quitte le système
+
+Aucun secret n’est transmis au LLM
+
+Aucun secret n’est stocké
+
+Toute tentative est tracée
+
+Le blocage est systématique et non contournable
