@@ -1,189 +1,267 @@
-US-ADM-ACCESS-01 — Attribution d’accès par lots
+🧩 US-SEC-GR-01.1 — Filtrage basique par mots-clés
+🎯 Objectif technique
 
-En tant que représentant d’entité
-Je veux attribuer des accès à la plateforme par lots d’utilisateurs
-Afin de accélérer le déploiement de la plateforme auprès de mes équipes sans gérer les accès un par un.
+Implémenter un moteur de filtrage simple basé sur une liste configurable de mots interdits et patterns regex.
 
-🧩 Périmètre fonctionnel
-Inclus
+Périmètre
 
-Attribution d’accès à plusieurs utilisateurs en une seule opération
+Liste noire configurable (DB ou config dynamique)
 
-Association de rôles et de permissions par défaut
+Support regex (IBAN, token, secret)
 
-Support de plusieurs méthodes d’import (liste, fichier, groupe)
+Matching case insensitive
 
-Traçabilité complète des actions d’attribution
+Décision immédiate BLOCK
 
-Exclu
+Contraintes
 
-Authentification des utilisateurs (déjà gérée par le SSO)
+Latence < 10 ms
 
-Création des rôles globaux (définis par l’administrateur plateforme)
+Liste modifiable sans redéploiement
 
-Gestion fine des permissions individuelles après attribution
+Versioning des règles
 
-🛠️ Sous-User Stories techniques
-US-ADM-ACCESS-01-A — Import par lot des utilisateurs
+Critères d’acceptation
 
-Objectif
-Permettre au représentant d’entité de fournir une liste d’utilisateurs à onboarder.
+Un mot interdit déclenche BLOCK
 
-Fonctionnalités
+La règle appliquée est tracée
 
-Import via :
+La liste peut être modifiée dynamiquement
 
-Fichier (CSV / XLS)
-
-Liste d’emails
-
-Groupe issu de l’IdP (si disponible)
-
-Validation du format et des doublons
+Le filtrage est exécuté avant classification avancée
 
 Edge cases
 
-Fichier mal formé ou colonnes manquantes
+Mot partiellement masqué → doit être détecté
 
-Utilisateurs déjà existants
+Regex mal configurée → ne doit pas bloquer système
 
-Emails non reconnus par l’IdP
+Liste vide → PASS contrôlé
 
-Réaction attendue
+🧩 US-SEC-GR-01.2 — Classification avancée (toxicité & catégories)
+🎯 Objectif technique
 
-Import partiel accepté
+Intégrer un moteur de classification capable de scorer les catégories sensibles.
 
-Rapport détaillé des succès / échecs
+Périmètre
 
-US-ADM-ACCESS-01-B — Attribution de rôles par défaut
+Toxicité
 
-Objectif
-Associer automatiquement des rôles et services aux utilisateurs importés.
+Violence
 
-Fonctionnalités
+Harcèlement
 
-Sélection d’un ou plusieurs rôles
+Haine
 
-Application homogène à tout le lot
+Contenu sexuel
 
-Compatibilité avec les règles AUTHZ existantes
+Tentative de jailbreak
 
-Edge cases
+Contraintes
 
-Rôle non autorisé pour l’entité
+Temps max analyse < 200 ms
 
-Rôle supprimé entre configuration et exécution
+Modèle versionné
 
-Réaction attendue
+Score normalisé 0–1
 
-Blocage contrôlé
+Critères d’acceptation
 
-Message explicite + journal d’audit
+Retour score par catégorie
 
-US-ADM-ACCESS-01-C — Validation & simulation avant application
+Retour score global
 
-Objectif
-Permettre au représentant d’entité de vérifier l’impact avant confirmation.
+Trace incluant version modèle
 
-Fonctionnalités
-
-Simulation des accès attribués
-
-Aperçu des services accessibles
-
-Confirmation explicite avant exécution
+Score exploitable pour décision
 
 Edge cases
 
-Simulation différente de l’exécution réelle (règles modifiées entre-temps)
+Modèle indisponible → BLOCK fail-safe
 
-Réaction attendue
+Score ambigu (0.49 / 0.51) → respect strict seuil
 
-Revalidation obligatoire
+Prompt très long → découpage sécurisé
 
-Refus d’exécution si incohérence détectée
+🧩 US-SEC-GR-01.3 — Mécanisme de scoring & seuil configurable
+🎯 Objectif technique
 
-US-ADM-ACCESS-01-D — Audit & traçabilité des attributions
+Implémenter la logique de décision PASS / BLOCK basée sur seuil configurable.
 
-Objectif
-Assurer une traçabilité complète pour sécurité et conformité.
+Périmètre
 
-Fonctionnalités
+Calcul score global (max ou pondération)
 
-Journalisation :
+Seuil configurable par catégorie
 
-Qui a attribué
+Décision consolidée
 
-À qui
+Contraintes
 
-Quand
+Seuil modifiable dynamiquement
 
-Avec quels rôles
+Traçabilité seuil utilisé
 
-Corrélation avec l’entité et le tenant
+Pas de logique codée en dur
+
+Critères d’acceptation
+
+Score ≥ seuil → BLOCK
+
+Score < seuil → PASS
+
+Seuil visible en audit
+
+Modification seuil sans redéploiement
 
 Edge cases
 
-Action partiellement exécutée
+Seuil mal configuré (ex: 1.5) → validation config
 
-Tentative d’attribution non autorisée
+Seuil = 0 → tout bloqué
 
-Réaction attendue
+Seuil = 1 → quasi tout passe
 
-Audit complet
+🧩 US-SEC-GR-01.4 — API de décision Guardrails
+🎯 Objectif technique
 
-Alerte sécurité si nécessaire
+Exposer une API interne stable utilisée par l’Orchestrateur.
 
-US-ADM-ACCESS-01-E — Notification des utilisateurs provisionnés
+Endpoint
+POST /guardrails/analyze
+Entrée
 
-Objectif
-Informer automatiquement chaque utilisateur provisionné qu’il dispose désormais d’un accès à la plateforme.
+prompt
 
-Périmètre fonctionnel
+identity_context
 
-Inclus
+trace_id
 
-Envoi automatique d’un email après provisionnement réussi
+Sortie
 
-Email personnalisé par utilisateur
+decision (PASS / BLOCK / REJECT)
 
-Contenu standardisé :
+category_scores
 
-Confirmation d’accès
+global_score
 
-Lien vers la plateforme
+reason
 
-Instructions de première connexion (SSO)
+rule_version
 
-Support multi-langue (si disponible)
+Contraintes
 
-Exclu
+Temps total < 250 ms
 
-Gestion des boîtes mails utilisateurs
+Idempotence
 
-Relance manuelle des notifications
+Compatible JSON
 
-Gestion du mot de passe (SSO uniquement)
+Critères d’acceptation
 
-Déclenchement
+API appelée avant LLM
 
-Déclenché uniquement après :
+Réponse structurée
 
-Provisionnement réussi
+trace_id propagé
 
-Attribution effective des rôles
+Erreurs normalisées
 
-Un email par utilisateur provisionné
+Edge cases
 
+Timeout → BLOCK
 
-Journalisation :
+JSON invalide → erreur contrôlée
+
+Prompt vide → PASS contrôlé
+
+🧩 US-SEC-GR-01.5 — Audit & stockage des détections
+🎯 Objectif technique
+
+Assurer la traçabilité complète des décisions de sécurité.
+
+Périmètre
+
+Stockage minimal :
+
+trace_id
 
 user_id
 
-email
+catégorie détectée
 
-date d’envoi
+score
 
-statut (SENT / FAILED / SKIPPED)
+décision
 
-Corrélation avec l’opération de provisionnement
+version règle
+
+timestamp
+
+Contraintes
+
+Aucun stockage du prompt complet en clair
+
+RGPD compliant
+
+Exportable
+
+Critères d’acceptation
+
+100% décisions auditées
+
+Consultation possible par opérateur
+
+Export CSV possible
+
+Edge cases
+
+Échec écriture audit → requête bloquée
+
+Volume massif logs → pas de perte
+
+Donnée sensible dans log → interdite
+
+🧩 US-SEC-GR-01.6 — Observabilité & métriques sécurité
+🎯 Objectif technique
+
+Exposer métriques sécurité pour supervision.
+
+Métriques
+
+Taux de blocage
+
+Top catégories
+
+Tentatives jailbreak
+
+Faux positifs estimés
+
+Volume par utilisateur
+
+Contraintes
+
+Temps réel ou quasi réel
+
+Agrégation par période
+
+Non modifiable par utilisateur
+
+Critères d’acceptation
+
+Dashboard disponible
+
+Alertes seuil blocage
+
+Export possible
+
+Edge cases
+
+Pic anormal de blocage → alerte
+
+Aucune donnée → monitoring OK
+
+Erreur métrique → log incident
+
+🔒 Résultat final
