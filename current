@@ -1,502 +1,202 @@
+🧩 US-ORCH-ROUT-01
+Redirection vers le modèle sélectionné par l’utilisateur avec validation catalogue & classification
+🎯 Description fonctionnelle
 
-🧩 US-ORCH-FLOW-01.1 — Implémentation du pipeline séquentiel strict
-1️⃣ Description
+En tant qu’Orchestrateur,
+je veux rediriger la requête vers le modèle LLM explicitement choisi par l’utilisateur
+après :
 
-La plateforme doit implémenter un moteur d’orchestration séquentiel garantissant que chaque requête utilisateur traverse les étapes définies dans un ordre strict, sans possibilité de saut ou d’exécution parallèle non contrôlée.
+Vérification que le modèle existe dans le catalogue interne
 
-Le pipeline constitue le “control plane” obligatoire pour tout traitement IA.
+Validation que le modèle est autorisé pour cet utilisateur (AUTHZ)
 
-2️⃣ Périmètre
+Validation que le modèle est compatible avec le niveau de classification détecté par Security Guardrails
 
-Inclus :
+Application de règles de routage simples basées sur logique if / else
 
-Définition d’un pipeline déterministe
+afin de garantir conformité, sécurité et cohérence de routage.
 
-Ordonnancement strict des étapes
+📦 Périmètre
+Inclus
 
-Gestion d’état de progression
+Lecture du catalogue de modèles
 
-Mécanisme de validation de fin d’étape avant passage à la suivante
+Validation AUTHZ modèle
 
-Gestion de timeout par étape
+Vérification compatibilité classification ↔ modèle
 
-Propagation du trace_id
+Routage déterministe basé sur règles simples
 
-Exclu :
+Journalisation complète décision de routage
 
-Orchestration parallèle
+Exclu
 
-Retry automatique intelligent multi-niveaux
+Routage dynamique basé sur latence/coût
 
-Orchestration événementielle
+Reranking multi-modèle
 
-3️⃣ Edge cases
+A/B testing
 
-Une étape ne retourne pas de réponse (timeout)
+Fallback intelligent multi-provider
 
-Une étape retourne un statut indéfini
+🔎 Règles de routage V0 (logique simple)
 
-Une étape retourne un succès partiel
+Exemple contractuel :
 
-Exécution concurrente sur même conversation_id
+IF model NOT IN catalog → REJECT
+IF model NOT AUTHORIZED → BLOCK
+IF classification == SECRET → BLOCK
+IF classification == CONFIDENTIAL AND model NOT IN confidential_allowed_models → BLOCK
+ELSE → ROUTE to selected model
+🔧 Sous-US techniques
+🧩 US-ORCH-ROUT-01.1 — Vérification catalogue modèle
+Description
 
-Pipeline redémarré après crash
+L’Orchestrateur doit vérifier que le modèle demandé est présent dans le catalogue interne.
 
-4️⃣ Critères d’acceptation
+Edge cases
 
-Aucune étape ne peut être ignorée
+Modèle inexistant
 
-Ordre strict respecté
+Modèle désactivé
 
-Timeout configurable par étape
+Catalogue indisponible
 
-État de la requête journalisé
+Version modèle non supportée
 
-Aucun appel LLM si étape précédente non validée
+Critères d’acceptation
 
-Tests automatisés prouvant impossibilité de contournement
+Requête rejetée si modèle absent
 
-🧩 US-ORCH-FLOW-01.2 — Mécanisme d’interruption sécurisée (Fail-Fast)
-1️⃣ Description
+Message explicite utilisateur
 
-La plateforme doit interrompre immédiatement le flux en cas de décision BLOCK ou REJECT à n’importe quelle étape de sécurité ou d’autorisation.
+Log :
 
-L’interruption doit être propre, traçable et retourner un message utilisateur contrôlé.
+model_requested
 
-2️⃣ Périmètre
+model_status
 
-Inclus :
+decision=REJECT
 
-Interruption automatique si :
+🧩 US-ORCH-ROUT-01.2 — Vérification AUTHZ modèle
+Description
 
-AUTHN échoue
+L’Orchestrateur interroge PolicyShield pour valider que l’utilisateur a le droit d’utiliser ce modèle.
 
-AUTHZ échoue
+Edge cases
 
-Classification = SECRET
+Utilisateur sans rôle adapté
 
-Secret détecté
+Modèle premium non autorisé
 
-Score toxicité > seuil
+Token expiré
 
-Message utilisateur normalisé
+Erreur PolicyShield
 
-Log détaillé de la cause
+Critères d’acceptation
 
-Interdiction d’appel LLM après échec
+Appel AUTHZ obligatoire
 
-Exclu :
+BLOCK si refus
 
-Validation humaine
+Log avec trace_id et decision=DENY
 
-Workflow d’exception manuel
+🧩 US-ORCH-ROUT-01.3 — Validation compatibilité classification ↔ modèle
+Description
 
-3️⃣ Edge cases
+L’Orchestrateur doit vérifier que le modèle choisi est compatible avec le niveau de classification détecté par Guardrails.
 
-Blocage après enrichissement RAG
+Classification supportée :
 
-Blocage en sortie (output filter)
+Public
 
-Erreur technique au moment du blocage
+Internal
 
-Erreur simultanée sécurité + timeout
+Confidential
 
-Double décision contradictoire
+Secret (blocage immédiat)
 
-4️⃣ Critères d’acceptation
+Edge cases
 
-Aucun appel LLM si violation détectée
+Classification SECRET → blocage systématique
 
-Cause du blocage tracée avec code explicite
+Classification manquante
 
-Message utilisateur explicite mais non technique
+Modèle non certifié pour Confidential
 
-Logs exploitables par sécurité
+Incohérence catalogue/classification
 
-Test d’intrusion démontrant l’impossibilité de bypass
+Critères d’acceptation
 
-🧩 US-ORCH-FLOW-01.3 — Journalisation structurée multi-étapes
-1️⃣ Description
+SECRET → rejet immédiat
 
-Chaque étape du pipeline doit produire un log structuré permettant une traçabilité complète de la requête.
+Confidential → autorisé uniquement si modèle certifié
 
-La journalisation doit permettre :
+Décision loggée :
 
-Audit
+classification_level
 
-Debug technique
+model_security_level
 
-Analyse sécurité
+compatibility=true/false
 
-Analyse performance
+🧩 US-ORCH-ROUT-01.4 — Routage déterministe if/else
+Description
 
-2️⃣ Périmètre
+L’Orchestrateur applique des règles simples et déterministes pour effectuer le routage final.
 
-Chaque étape génère :
+Edge cases
 
-trace_id
+Aucun modèle valide restant
 
-span_id
+Conflit entre AUTHZ et classification
 
-étape
+Erreur technique avant routage
 
-statut (SUCCESS / FAIL / BLOCK)
+Critères d’acceptation
 
-temps d’exécution
+Routage unique et déterministe
 
-décision sécurité
+Aucun fallback implicite
 
-modèle utilisé
+Trace complète de décision :
 
-classification détectée
+model_selected
 
-code erreur normalisé
+reason
 
-Centralisation obligatoire dans l’Observabilité.
+rule_applied
 
-3️⃣ Edge cases
+🔐 Garanties non négociables
 
-Perte de corrélation trace_id
+Aucun appel LLM sans validation catalogue
 
-Logs incomplets
+Aucun appel LLM sans AUTHZ
 
-Observabilité indisponible
+Aucun appel LLM pour classification SECRET
 
-Crash avant écriture log
+Décision 100% traçable
 
-Logs non synchronisés entre services
+Aucune règle codée en dur hors configuration
 
-4️⃣ Critères d’acceptation
+🧠 Positionnement dans le pipeline global
 
-100% requêtes corrélables
+Ordre exact :
 
-Aucune étape sans log
+AuthN
 
-Logs consultables via dashboard
+AUTHZ globale
 
-Latence mesurable par étape
+Guardrails (classification + secrets)
 
-Audit exportable
+Lecture mémoire
 
-🧩 US-ORCH-FLOW-01.4 — Gestion conditionnelle du RAG local
-1️⃣ Description
+Profil utilisateur
 
-La plateforme doit exécuter dynamiquement l’enrichissement RAG local uniquement si le flag rag_local_active est activé pour la requête.
+🔎 Validation modèle catalogue
 
-L’étape doit être complètement ignorée sinon.
+🔐 Validation AUTHZ modèle
 
-2️⃣ Périmètre
+🔒 Validation compatibilité classification
 
-Inclus :
-
-Lecture flag RAG
-
-Appel ContextHub search
-
-Injection résultats dans prompt final
-
-Limitation k-top
-
-Gestion reranking simple
-
-Exclu :
-
-RAG fédéré
-
-RAG externe multi-source
-
-Optimisation avancée du prompt
-
-3️⃣ Edge cases
-
-RAG activé mais aucun document trouvé
-
-ContextHub indisponible
-
-Trop de documents retournés
-
-Documents classifiés non autorisés
-
-Temps de réponse trop long
-
-4️⃣ Critères d’acceptation
-
-RAG ignoré si flag désactivé
-
-Réponse contrôlée si aucun document
-
-Injection limitée en taille
-
-Logs indiquant enrichissement actif
-
-Respect classification des documents
-
-🧩 US-ORCH-FLOW-01.5 — Réécriture mémoire gouvernée
-1️⃣ Description
-
-Après réponse validée, la plateforme doit écrire les métadonnées de la conversation dans MemoryStore afin d’assurer la continuité conversationnelle.
-
-Aucune donnée sensible ne doit être persistée.
-
-2️⃣ Périmètre
-
-Inclus :
-
-Écriture après validation sortie
-
-Persistance :
-
-résumé
-
-tags
-
-modèle utilisé
-
-timestamp
-
-TTL configurable
-
-Mise à jour session
-
-Exclu :
-
-Historique complet texte brut
-
-Données classifiées SECRET
-
-Analyse comportementale avancée
-
-3️⃣ Edge cases
-
-Échec d’écriture mémoire
-
-Session expirée
-
-Conflit concurrent
-
-Tentative d’écriture donnée sensible
-
-MemoryStore indisponible
-
-4️⃣ Critères d’acceptation
-
-Écriture uniquement si PASS final
-
-Aucune donnée sensible persistée
-
-TTL respecté
-
-Audit de chaque écriture
-
-Continuité conversationnelle vérifiable
-
-🧩 US-ORCH-FLOW-01.6 — Lecture mémoire conversationnelle
-1️⃣ Description
-
-Avant tout appel LLM, la plateforme doit interroger le MemoryStore afin de récupérer le contexte conversationnel actif (niveau hot en V0) pour enrichir la requête et garantir la cohérence des échanges.
-
-Cette étape est obligatoire avant enrichissement RAG ou appel LLM.
-
-2️⃣ Périmètre
-
-Inclus :
-
-Lecture par conversation_id
-
-Récupération du contexte hot
-
-Validation AUTHZ accès mémoire
-
-Gestion TTL
-
-Injection dans contexte LLM
-
-Exclu :
-
-Warm / Cold (si V0 limité à hot)
-
-Analyse sémantique mémoire
-
-Indexation mémoire
-
-3️⃣ Edge cases
-
-Conversation inexistante
-
-Mémoire expirée (TTL dépassé)
-
-MemoryStore indisponible
-
-Mémoire vide
-
-Accès mémoire non autorisé
-
-4️⃣ Critères d’acceptation
-
-Lecture exécutée avant appel LLM
-
-Aucun appel LLM si lecture mémoire requise mais échoue
-
-Logs contenant :
-
-conversation_id
-
-statut lecture
-
-volume mémoire injecté
-
-Injection mémoire visible dans trace technique
-
-Timeout maîtrisé (< SLA défini)
-
-🧩 US-ORCH-FLOW-01.7 — Récupération historique conversationnel
-1️⃣ Description
-
-La plateforme doit être capable de récupérer l’historique des interactions passées associées à l’utilisateur afin de permettre :
-
-la continuité conversationnelle
-
-la consultation de sessions précédentes
-
-la reprise d’un contexte
-
-Cette récupération peut être partielle (derniers N messages).
-
-2️⃣ Périmètre
-
-Inclus :
-
-Liste des conversations utilisateur
-
-Recherche par date / mot clé
-
-Chargement partiel historique
-
-Filtrage RGPD
-
-Exclu :
-
-Export externe
-
-Analyse comportementale avancée
-
-Archivage long terme
-
-3️⃣ Edge cases
-
-Conversation supprimée (droit à l’oubli)
-
-Historique volumineux
-
-Session corrompue
-
-Historique non cohérent
-
-Accès à conversation d’un autre utilisateur
-
-4️⃣ Critères d’acceptation
-
-Historique accessible uniquement au propriétaire
-
-Conversations supprimées non accessibles
-
-Logs d’accès historisés
-
-Pagination obligatoire
-
-Temps de réponse maîtrisé
-
-🧩 US-ORCH-FLOW-01.8 — Récupération profil utilisateur
-1️⃣ Description
-
-La plateforme doit récupérer les préférences et paramètres du profil utilisateur afin d’adapter dynamiquement le traitement de la requête.
-
-Exemples :
-
-Modèle favori
-
-Langue préférée
-
-Paramètres de style
-
-Activation RAG
-
-Paramètres multimodaux
-
-2️⃣ Périmètre
-
-Inclus :
-
-Lecture profil via identity_context
-
-Injection paramètres dans appel LLM
-
-Validation AUTHZ modèle choisi
-
-Paramétrage par défaut si non défini
-
-Exclu :
-
-Profil comportemental avancé
-
-Personnalisation IA dynamique
-
-Profil multi-tenant complexe
-
-3️⃣ Edge cases
-
-Profil inexistant
-
-Modèle favori non autorisé
-
-Paramètre invalide
-
-Conflit entre préférence utilisateur et politique sécurité
-
-Profil corrompu
-
-4️⃣ Critères d’acceptation
-
-Profil chargé avant décision de routage
-
-Paramètres intégrés dans payload LLM
-
-AUTHZ modèle systématiquement vérifiée
-
-Logs indiquant :
-
-modèle sélectionné
-
-langue
-
-paramètres actifs
-
-Fallback vers paramètres par défaut si anomalie
-
-📌 Pipeline complet mis à jour (ordre réel)
-
-Réception prompt + fichier
-
-Authentification
-
-Autorisation
-
-Analyse sécurité (classification + secrets)
-
-Lecture mémoire conversationnelle
-
-Récupération historique
-
-Récupération profil utilisateur
-
-Enrichissement RAG local si activé
-
-Construction prompt final
-
-Appel LLM (modèle sélectionné)
-
-Analyse réponse LLM
-
-Réécriture mémoire
-
-Journalisation complète
+➡ Routage final vers LLMaaS
