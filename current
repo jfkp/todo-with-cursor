@@ -1,276 +1,502 @@
-EPIC GR-OUTPUT-V0 — Validation de sortie LLM
-🧩 US-GR-OUTPUT-01 — Analyse et blocage des réponses LLM avant restitution utilisateur
-🎯 Description fonctionnelle
 
-En tant qu’opérateur sécurité,
-je veux que chaque réponse générée par le LLM soit analysée avant envoi à l’utilisateur
-afin de bloquer les contenus inappropriés, toxiques ou contenant des fuites de données sensibles.
+🧩 US-ORCH-FLOW-01.1 — Implémentation du pipeline séquentiel strict
+1️⃣ Description
 
-📦 Périmètre fonctionnel
+La plateforme doit implémenter un moteur d’orchestration séquentiel garantissant que chaque requête utilisateur traverse les étapes définies dans un ordre strict, sans possibilité de saut ou d’exécution parallèle non contrôlée.
+
+Le pipeline constitue le “control plane” obligatoire pour tout traitement IA.
+
+2️⃣ Périmètre
 
 Inclus :
 
-Analyse systématique de chaque réponse LLM
+Définition d’un pipeline déterministe
 
-Détection de contenu inapproprié (toxique, haineux, violent, NSFW)
+Ordonnancement strict des étapes
 
-Détection de fuite de données (PII, secrets, données internes)
+Gestion d’état de progression
 
-Scoring de risque
+Mécanisme de validation de fin d’étape avant passage à la suivante
 
-Blocage ou filtrage selon seuil configuré
+Gestion de timeout par étape
 
-Traçabilité complète
+Propagation du trace_id
 
-Message utilisateur contrôlé en cas de blocage
+Exclu :
 
-Exclu (V0) :
+Orchestration parallèle
 
-Re-écriture automatique de la réponse
+Retry automatique intelligent multi-niveaux
 
-Human review
+Orchestration événementielle
 
-Modèle “LLM as judge”
+3️⃣ Edge cases
 
-Analyse multimodale sortie image
+Une étape ne retourne pas de réponse (timeout)
 
-🧠 Types de risques à détecter
-Catégorie	Exemple
-Toxicité	Insultes, harcèlement
-Violence	Incitation, description explicite
-NSFW	Contenu explicite
-Hate speech	Discours haineux
-PII	Email, téléphone, IBAN
-Secret	API key, token
-Données internes	Références système internes
-⚙️ Contraintes
+Une étape retourne un statut indéfini
 
-Analyse obligatoire avant restitution
+Une étape retourne un succès partiel
 
-Temps d’analyse < 100 ms
+Exécution concurrente sur même conversation_id
 
-Analyse synchrone
+Pipeline redémarré après crash
 
-Aucun contournement possible
+4️⃣ Critères d’acceptation
 
-Pas de stockage de contenu sensible
+Aucune étape ne peut être ignorée
 
-Versioning des règles
+Ordre strict respecté
 
-Traçabilité complète
+Timeout configurable par étape
 
-✅ Critères d’acceptation
+État de la requête journalisé
 
-100% des réponses LLM analysées
+Aucun appel LLM si étape précédente non validée
 
-Si score > seuil → BLOCK
+Tests automatisés prouvant impossibilité de contournement
 
-Si fuite détectée → REJECT
+🧩 US-ORCH-FLOW-01.2 — Mécanisme d’interruption sécurisée (Fail-Fast)
+1️⃣ Description
 
-Aucun contenu bloqué n’est affiché
+La plateforme doit interrompre immédiatement le flux en cas de décision BLOCK ou REJECT à n’importe quelle étape de sécurité ou d’autorisation.
 
-Décision tracée avec trace_id
+L’interruption doit être propre, traçable et retourner un message utilisateur contrôlé.
 
-L’utilisateur est informé
+2️⃣ Périmètre
 
-🔧 Sous-US techniques
-🧩 US-GR-OUTPUT-01.1 — Moteur d’analyse contenu sortie
-🎯 Objectif technique
+Inclus :
 
-Mettre en place un moteur de classification des réponses LLM.
+Interruption automatique si :
 
-Mécanismes V0
+AUTHN échoue
 
-Liste mots-clés
+AUTHZ échoue
 
-Regex PII & secrets
+Classification = SECRET
 
-Classification par catégories
+Secret détecté
 
-Score agrégé
+Score toxicité > seuil
 
-Contraintes
+Message utilisateur normalisé
 
-Analyse texte uniquement
+Log détaillé de la cause
 
-Déterministe
+Interdiction d’appel LLM après échec
 
-Pas de dépendance externe obligatoire
+Exclu :
 
-Critères d’acceptation
+Validation humaine
 
-Score retourné par catégorie
+Workflow d’exception manuel
 
-Décision PASS / BLOCK / REJECT
+3️⃣ Edge cases
 
-Performance validée
+Blocage après enrichissement RAG
 
-Edge cases
+Blocage en sortie (output filter)
 
-Réponse longue
+Erreur technique au moment du blocage
 
-Réponse partiellement problématique
+Erreur simultanée sécurité + timeout
 
-Faux positifs
+Double décision contradictoire
 
-Format code ou JSON contenant pattern sensible
+4️⃣ Critères d’acceptation
 
-🧩 US-GR-OUTPUT-01.2 — Détection fuite PII & secrets en sortie
-🎯 Objectif technique
+Aucun appel LLM si violation détectée
 
-Empêcher le LLM de renvoyer des données sensibles.
+Cause du blocage tracée avec code explicite
 
-Détection basée sur :
+Message utilisateur explicite mais non technique
 
-Regex IBAN
+Logs exploitables par sécurité
 
-Numéros CB
+Test d’intrusion démontrant l’impossibilité de bypass
 
-Email
+🧩 US-ORCH-FLOW-01.3 — Journalisation structurée multi-étapes
+1️⃣ Description
 
-JWT
+Chaque étape du pipeline doit produire un log structuré permettant une traçabilité complète de la requête.
 
-API keys
+La journalisation doit permettre :
 
-Références internes système
+Audit
 
-Contraintes
+Debug technique
 
-Priorité absolue : fuite = REJECT
+Analyse sécurité
 
-Pas d’affichage partiel
+Analyse performance
 
-Critères d’acceptation
+2️⃣ Périmètre
 
-Toute fuite détectée → réponse bloquée
-
-Secret non loggé
-
-Audit enregistré
-
-Edge cases
-
-Donnée sensible générée par hallucination
-
-Secret déjà présent dans prompt utilisateur
-
-Faux positif sur numéro technique
-
-🧩 US-GR-OUTPUT-01.3 — Politique de scoring & seuils configurables
-🎯 Objectif technique
-
-Permettre à l’opérateur sécurité de définir les seuils de blocage.
-
-Paramétrage :
-
-Seuil toxicité
-
-Seuil violence
-
-Seuil global agrégé
-
-Politique stricte vs tolérante
-
-Contraintes
-
-Modification sans redéploiement
-
-Versioning politique
-
-Journalisation des changements
-
-Critères d’acceptation
-
-Seuil modifiable en runtime
-
-Nouvelle configuration immédiatement effective
-
-Historique conservé
-
-Edge cases
-
-Seuil trop bas → surblocage
-
-Seuil trop haut → fuite non détectée
-
-Modification concurrente
-
-🧩 US-GR-OUTPUT-01.4 — Blocage et réponse utilisateur contrôlée
-🎯 Objectif technique
-
-Fournir un message standardisé en cas de blocage.
-
-Exemple message :
-
-La réponse générée ne peut être affichée car elle contient un contenu non conforme à la politique de sécurité.
-
-Contraintes
-
-Message générique
-
-Pas de détail technique exposé
-
-Internationalisation possible
-
-Critères d’acceptation
-
-Réponse LLM non affichée
-
-trace_id fourni
-
-Code erreur normalisé
-
-Edge cases
-
-Blocage en streaming
-
-Blocage partiel
-
-Répétition utilisateur
-
-🧩 US-GR-OUTPUT-01.5 — Traçabilité & audit sécurité sortie
-🎯 Objectif technique
-
-Permettre analyse post-incident.
-
-Données audit
+Chaque étape génère :
 
 trace_id
 
-user_id
+span_id
 
-model_id
+étape
 
-catégories détectées
+statut (SUCCESS / FAIL / BLOCK)
 
-score
+temps d’exécution
 
-décision
+décision sécurité
+
+modèle utilisé
+
+classification détectée
+
+code erreur normalisé
+
+Centralisation obligatoire dans l’Observabilité.
+
+3️⃣ Edge cases
+
+Perte de corrélation trace_id
+
+Logs incomplets
+
+Observabilité indisponible
+
+Crash avant écriture log
+
+Logs non synchronisés entre services
+
+4️⃣ Critères d’acceptation
+
+100% requêtes corrélables
+
+Aucune étape sans log
+
+Logs consultables via dashboard
+
+Latence mesurable par étape
+
+Audit exportable
+
+🧩 US-ORCH-FLOW-01.4 — Gestion conditionnelle du RAG local
+1️⃣ Description
+
+La plateforme doit exécuter dynamiquement l’enrichissement RAG local uniquement si le flag rag_local_active est activé pour la requête.
+
+L’étape doit être complètement ignorée sinon.
+
+2️⃣ Périmètre
+
+Inclus :
+
+Lecture flag RAG
+
+Appel ContextHub search
+
+Injection résultats dans prompt final
+
+Limitation k-top
+
+Gestion reranking simple
+
+Exclu :
+
+RAG fédéré
+
+RAG externe multi-source
+
+Optimisation avancée du prompt
+
+3️⃣ Edge cases
+
+RAG activé mais aucun document trouvé
+
+ContextHub indisponible
+
+Trop de documents retournés
+
+Documents classifiés non autorisés
+
+Temps de réponse trop long
+
+4️⃣ Critères d’acceptation
+
+RAG ignoré si flag désactivé
+
+Réponse contrôlée si aucun document
+
+Injection limitée en taille
+
+Logs indiquant enrichissement actif
+
+Respect classification des documents
+
+🧩 US-ORCH-FLOW-01.5 — Réécriture mémoire gouvernée
+1️⃣ Description
+
+Après réponse validée, la plateforme doit écrire les métadonnées de la conversation dans MemoryStore afin d’assurer la continuité conversationnelle.
+
+Aucune donnée sensible ne doit être persistée.
+
+2️⃣ Périmètre
+
+Inclus :
+
+Écriture après validation sortie
+
+Persistance :
+
+résumé
+
+tags
+
+modèle utilisé
 
 timestamp
 
-⚠️ La réponse brute n’est pas stockée si bloquée.
+TTL configurable
 
-Contraintes
+Mise à jour session
 
-Chiffrement audit store
+Exclu :
 
-Conservation configurable
+Historique complet texte brut
 
-Corrélation entrée/sortie
+Données classifiées SECRET
 
-Critères d’acceptation
+Analyse comportementale avancée
 
-100% décisions tracées
+3️⃣ Edge cases
 
-Dashboard sécurité disponible
+Échec d’écriture mémoire
 
-Export conformité possible
+Session expirée
 
-Edge cases
+Conflit concurrent
 
-Log manquant
+Tentative d’écriture donnée sensible
 
-Audit store indisponible
+MemoryStore indisponible
 
-Incohérence trace
+4️⃣ Critères d’acceptation
+
+Écriture uniquement si PASS final
+
+Aucune donnée sensible persistée
+
+TTL respecté
+
+Audit de chaque écriture
+
+Continuité conversationnelle vérifiable
+
+🧩 US-ORCH-FLOW-01.6 — Lecture mémoire conversationnelle
+1️⃣ Description
+
+Avant tout appel LLM, la plateforme doit interroger le MemoryStore afin de récupérer le contexte conversationnel actif (niveau hot en V0) pour enrichir la requête et garantir la cohérence des échanges.
+
+Cette étape est obligatoire avant enrichissement RAG ou appel LLM.
+
+2️⃣ Périmètre
+
+Inclus :
+
+Lecture par conversation_id
+
+Récupération du contexte hot
+
+Validation AUTHZ accès mémoire
+
+Gestion TTL
+
+Injection dans contexte LLM
+
+Exclu :
+
+Warm / Cold (si V0 limité à hot)
+
+Analyse sémantique mémoire
+
+Indexation mémoire
+
+3️⃣ Edge cases
+
+Conversation inexistante
+
+Mémoire expirée (TTL dépassé)
+
+MemoryStore indisponible
+
+Mémoire vide
+
+Accès mémoire non autorisé
+
+4️⃣ Critères d’acceptation
+
+Lecture exécutée avant appel LLM
+
+Aucun appel LLM si lecture mémoire requise mais échoue
+
+Logs contenant :
+
+conversation_id
+
+statut lecture
+
+volume mémoire injecté
+
+Injection mémoire visible dans trace technique
+
+Timeout maîtrisé (< SLA défini)
+
+🧩 US-ORCH-FLOW-01.7 — Récupération historique conversationnel
+1️⃣ Description
+
+La plateforme doit être capable de récupérer l’historique des interactions passées associées à l’utilisateur afin de permettre :
+
+la continuité conversationnelle
+
+la consultation de sessions précédentes
+
+la reprise d’un contexte
+
+Cette récupération peut être partielle (derniers N messages).
+
+2️⃣ Périmètre
+
+Inclus :
+
+Liste des conversations utilisateur
+
+Recherche par date / mot clé
+
+Chargement partiel historique
+
+Filtrage RGPD
+
+Exclu :
+
+Export externe
+
+Analyse comportementale avancée
+
+Archivage long terme
+
+3️⃣ Edge cases
+
+Conversation supprimée (droit à l’oubli)
+
+Historique volumineux
+
+Session corrompue
+
+Historique non cohérent
+
+Accès à conversation d’un autre utilisateur
+
+4️⃣ Critères d’acceptation
+
+Historique accessible uniquement au propriétaire
+
+Conversations supprimées non accessibles
+
+Logs d’accès historisés
+
+Pagination obligatoire
+
+Temps de réponse maîtrisé
+
+🧩 US-ORCH-FLOW-01.8 — Récupération profil utilisateur
+1️⃣ Description
+
+La plateforme doit récupérer les préférences et paramètres du profil utilisateur afin d’adapter dynamiquement le traitement de la requête.
+
+Exemples :
+
+Modèle favori
+
+Langue préférée
+
+Paramètres de style
+
+Activation RAG
+
+Paramètres multimodaux
+
+2️⃣ Périmètre
+
+Inclus :
+
+Lecture profil via identity_context
+
+Injection paramètres dans appel LLM
+
+Validation AUTHZ modèle choisi
+
+Paramétrage par défaut si non défini
+
+Exclu :
+
+Profil comportemental avancé
+
+Personnalisation IA dynamique
+
+Profil multi-tenant complexe
+
+3️⃣ Edge cases
+
+Profil inexistant
+
+Modèle favori non autorisé
+
+Paramètre invalide
+
+Conflit entre préférence utilisateur et politique sécurité
+
+Profil corrompu
+
+4️⃣ Critères d’acceptation
+
+Profil chargé avant décision de routage
+
+Paramètres intégrés dans payload LLM
+
+AUTHZ modèle systématiquement vérifiée
+
+Logs indiquant :
+
+modèle sélectionné
+
+langue
+
+paramètres actifs
+
+Fallback vers paramètres par défaut si anomalie
+
+📌 Pipeline complet mis à jour (ordre réel)
+
+Réception prompt + fichier
+
+Authentification
+
+Autorisation
+
+Analyse sécurité (classification + secrets)
+
+Lecture mémoire conversationnelle
+
+Récupération historique
+
+Récupération profil utilisateur
+
+Enrichissement RAG local si activé
+
+Construction prompt final
+
+Appel LLM (modèle sélectionné)
+
+Analyse réponse LLM
+
+Réécriture mémoire
+
+Journalisation complète
