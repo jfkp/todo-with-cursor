@@ -1,16 +1,26 @@
-🧩 US-PLAT-LLM-01 — Transmission des requêtes vers LLMaas via LiteLLM
+US-PLAT-EMB-01 — Connexion LLMaas Embedding pour recherche sémantique
 🎯 Description
 
-En tant que plateforme, je veux transmettre les requêtes utilisateurs vers les modèles LLMaas déployés via LiteLLM afin de permettre la génération de réponses IA, tout en assurant traçabilité, contrôle des métadonnées, gestion des erreurs, streaming et collecte des métriques de consommation.
+En tant que plateforme, je veux me connecter aux services LLMaas d’embedding afin de générer des vecteurs sémantiques exploitables pour la recherche (RAG, similarité, indexation), tout en garantissant sécurité des connexions, résilience via circuit breaker et performance maîtrisée (<100ms).
 
 📦 Périmètre fonctionnel
 Inclus
 
-Appel LLMaas via LiteLLM (endpoint inference)
+Appel API embedding via LiteLLM ou endpoint direct LLMaas
 
-Support streaming SSE / chunked
+Authentification sécurisée :
 
-Transmission des métadonnées obligatoires :
+mTLS ou
+
+JWT signé
+
+Protection via circuit breaker
+
+Timeout configurable
+
+Latence cible < 100 ms (hors réseau extrême)
+
+Transmission métadonnées :
 
 request_id
 
@@ -18,234 +28,174 @@ user_id_hash
 
 sensitivity
 
-model
-
-Timeout configurable (default = 60s)
+embedding_model
 
 Capture métriques :
 
-input_tokens
-
-output_tokens
-
-total_tokens
-
 latency
 
-Transformation des erreurs techniques en messages utilisateur compréhensibles
+vector_size
 
-Journalisation des appels
+status
 
-Corrélation via trace_id
+Journalisation complète
 
 Exclu
 
-Routage décisionnel (géré par Orchestrateur)
+Indexation vectorielle (gérée par ContextHub)
 
-Guardrails (déjà exécutés en amont)
+Reranking
 
-Caching de réponse
+Guardrails (exécutés en amont)
 
-Retry automatique avancé
+Multi-provider intelligent routing
 
 🔧 Sous-US techniques
-🔹 US-PLAT-LLM-01-T01 — Intégration LiteLLM (Client API)
+🔹 US-PLAT-EMB-01-T01 — Intégration API Embedding
 Description
 
-Implémenter le client d’appel vers LiteLLM pour exécuter inference et embedding.
+Implémenter le client d’appel vers le service d’embedding LLMaas.
 
 Périmètre
 
-Endpoint /chat/completions
+Endpoint /embeddings
 
-Mapping modèle interne → modèle LiteLLM
+Mapping modèle embedding
 
-Injection metadata
+Format standard OpenAI-compatible
 
-Support streaming
+Gestion batch (optionnel)
 
 Edge cases
 
-Modèle non supporté
+Modèle embedding inexistant
 
-Mauvais mapping modèle
+Réponse sans vecteur
 
-Réponse malformée
+Format incorrect
 
-Endpoint LiteLLM indisponible
+Taille vecteur inattendue
 
 Critères d’acceptation
 
-Appel réussi pour modèle valide
+Embedding retourné conforme
 
-Métadonnées correctement injectées
+Taille vecteur validée
 
-Streaming fonctionnel
+request_id propagé
 
-Logs corrélés
+Log technique généré
 
-🔹 US-PLAT-LLM-01-T02 — Transmission des métadonnées
+🔹 US-PLAT-EMB-01-T02 — Authentification sécurisée (mTLS / JWT)
 Description
 
-Garantir que chaque appel transporte les métadonnées nécessaires à la gouvernance.
+Sécuriser les connexions vers LLMaas.
+
+Périmètre
+Option 1 — mTLS
+
+Certificat client installé
+
+Vérification certificat serveur
+
+Option 2 — JWT
+
+Token signé par plateforme
+
+Vérification signature côté LLMaas
+
+Rotation clé supportée
+
+Edge cases
+
+Certificat expiré
+
+JWT expiré
+
+Erreur signature
+
+TLS handshake failure
+
+Critères d’acceptation
+
+Refus immédiat si auth invalide
+
+Aucun appel non authentifié possible
+
+Échec loggué en audit
+
+🔹 US-PLAT-EMB-01-T03 — Circuit Breaker Embedding
+Description
+
+Protéger la plateforme contre les cascades d’erreurs LLMaas.
 
 Périmètre
 
-Payload enrichi :
+Circuit s’ouvre après N erreurs consécutives
 
-{
-  "metadata": {
-    "request_id": "...",
-    "user_id_hash": "...",
-    "sensitivity": "internal",
-    "model": "gpt-4o"
-  }
-}
+État stocké en cache distribué
+
+Ouvert → appel refusé immédiatement
+
+Fermeture automatique après délai configurable
+
+Logs d’ouverture / fermeture
+
 Edge cases
 
-request_id absent
+Service embedding lent
 
-user_id null
+Timeout répété
 
-classification inconnue
+Service retourne erreurs 5xx
+
+Cache indisponible
 
 Critères d’acceptation
 
-Requête refusée si metadata manquante
+Circuit s’ouvre correctement
 
-Toutes les requêtes auditables
+Aucun appel effectué quand ouvert
 
-Hash irréversible du user_id
+Réouverture automatique
 
-🔹 US-PLAT-LLM-01-T03 — Support streaming bout-en-bout
+Logs d’état persistés
+
+🔹 US-PLAT-EMB-01-T04 — Garantie de performance (<100ms)
 Description
 
-Permettre la réception et la retransmission des chunks de réponse en temps réel.
+Assurer une latence d’embedding inférieure à 100ms en conditions nominales.
 
 Périmètre
 
-Support stream=true
+Monitoring latence
 
-Propagation progressive au frontend
+Alerte si >100ms
 
-Gestion fin de flux
+Métriques temps réel
 
-Gestion erreur en streaming
-
-Edge cases
-
-Coupure réseau
-
-Timeout en milieu de flux
-
-Flux incomplet
-
-Critères d’acceptation
-
-Les tokens sont envoyés en continu
-
-En cas d’erreur, message proprement clôturé
-
-Aucune fuite de connexion
-
-🔹 US-PLAT-LLM-01-T04 — Gestion du timeout configurable
-Description
-
-Implémenter un timeout configurable sur les appels LiteLLM.
-
-Périmètre
-
-Default 60 secondes
-
-Paramétrable via config admin
-
-Annulation appel si timeout dépassé
+Option warm-up connexion
 
 Edge cases
 
-Timeout trop court
+Latence réseau externe
 
-Timeout mal configuré
+Modèle saturé
 
-Timeout pendant streaming
-
-Critères d’acceptation
-
-Timeout déclenche erreur contrôlée
-
-Message utilisateur compréhensible
-
-Timeout loggué avec durée
-
-🔹 US-PLAT-LLM-01-T05 — Capture et exposition des métriques
-Description
-
-Collecter les métriques retournées par LiteLLM et les transmettre au module Observabilité.
-
-Périmètre
-
-Extraction :
-
-input_tokens
-
-output_tokens
-
-total_tokens
-
-latency
-
-model utilisé
-
-Edge cases
-
-Absence de métriques dans réponse
-
-Valeurs incohérentes
-
-Latence anormale
+Batch volumineux
 
 Critères d’acceptation
 
-Toutes les réponses incluent métriques
+95e percentile < 100ms
 
-Données stockées en Observabilité
+Dégradation détectée
 
-Corrélées avec request_id
+Alerte déclenchée si dépassement
 
-🔹 US-PLAT-LLM-01-T06 — Transformation des erreurs LiteLLM
+🔹 US-PLAT-EMB-01-T05 — Journalisation & Observabilité
 Description
 
-Capturer les erreurs techniques et les transformer en messages utilisateur compréhensibles.
-
-Périmètre
-
-Mapping erreurs :
-
-Erreur LiteLLM	Message utilisateur
-429	Service temporairement saturé
-401	Problème d’autorisation
-Timeout	Le modèle ne répond pas
-500	Erreur interne IA
-Edge cases
-
-Erreur inconnue
-
-Stack trace exposée
-
-Mauvaise catégorisation
-
-Critères d’acceptation
-
-Aucune erreur technique brute exposée
-
-Message clair et actionnable
-
-Erreur logguée en détail côté backend
-
-🔹 US-PLAT-LLM-01-T07 — Journalisation complète
-Description
-
-Tracer chaque appel LLMaas pour audit et diagnostic.
+Tracer chaque appel embedding pour audit et optimisation.
 
 Périmètre
 
@@ -261,22 +211,54 @@ sensitivity
 
 latency
 
-token usage
+vector_dimension
 
-status (SUCCESS / ERROR)
+circuit_state
+
+status
 
 Edge cases
 
-Log non persisté
+Logs incomplets
 
-Données sensibles dans log
+Données sensibles dans logs
 
-Double écriture
+Corrélation manquante
 
 Critères d’acceptation
 
 100% des appels tracés
 
-Aucun contenu prompt stocké si sensible
+Corrélation possible avec RAG
 
-Logs exploitable par observabilité
+Dashboard latence embedding disponible
+
+🔹 US-PLAT-EMB-01-T06 — Gestion erreurs & fallback
+Description
+
+Normaliser les erreurs embedding.
+
+Périmètre
+
+Mapping erreurs :
+
+Type erreur	Comportement
+Timeout	Erreur contrôlée
+Circuit ouvert	Rejet immédiat
+401	Erreur auth
+5xx	Retry ou fallback
+Edge cases
+
+Erreur intermittente
+
+Embedding partiel
+
+Mauvaise taille vecteur
+
+Critères d’acceptation
+
+Aucun stacktrace exposé
+
+Message standardisé
+
+Log technique détaillé
