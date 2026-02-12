@@ -1,240 +1,282 @@
-US-USER-PREF-01-T01 — Création du modèle de données PostgreSQL
+🧩 US-PLAT-LLM-01 — Transmission des requêtes vers LLMaas via LiteLLM
+🎯 Description
+
+En tant que plateforme, je veux transmettre les requêtes utilisateurs vers les modèles LLMaas déployés via LiteLLM afin de permettre la génération de réponses IA, tout en assurant traçabilité, contrôle des métadonnées, gestion des erreurs, streaming et collecte des métriques de consommation.
+
+📦 Périmètre fonctionnel
+Inclus
+
+Appel LLMaas via LiteLLM (endpoint inference)
+
+Support streaming SSE / chunked
+
+Transmission des métadonnées obligatoires :
+
+request_id
+
+user_id_hash
+
+sensitivity
+
+model
+
+Timeout configurable (default = 60s)
+
+Capture métriques :
+
+input_tokens
+
+output_tokens
+
+total_tokens
+
+latency
+
+Transformation des erreurs techniques en messages utilisateur compréhensibles
+
+Journalisation des appels
+
+Corrélation via trace_id
+
+Exclu
+
+Routage décisionnel (géré par Orchestrateur)
+
+Guardrails (déjà exécutés en amont)
+
+Caching de réponse
+
+Retry automatique avancé
+
+🔧 Sous-US techniques
+🔹 US-PLAT-LLM-01-T01 — Intégration LiteLLM (Client API)
 Description
 
-En tant que plateforme, je veux créer la structure de persistance des préférences utilisateur afin de stocker durablement les configurations associées au user_id SSO.
+Implémenter le client d’appel vers LiteLLM pour exécuter inference et embedding.
 
 Périmètre
 
-Création table user_preferences
+Endpoint /chat/completions
 
-Clé primaire : user_id
+Mapping modèle interne → modèle LiteLLM
 
-Contraintes d’unicité
+Injection metadata
 
-Index sur user_id
-
-Timestamps automatiques
+Support streaming
 
 Edge cases
 
-Tentative insertion doublon user_id
+Modèle non supporté
 
-Migration échouée
+Mauvais mapping modèle
 
-Modification schéma en production
+Réponse malformée
+
+Endpoint LiteLLM indisponible
 
 Critères d’acceptation
 
-Table créée avec contraintes correctes
+Appel réussi pour modèle valide
 
-Un seul enregistrement par user_id possible
+Métadonnées correctement injectées
 
-Index fonctionnel
+Streaming fonctionnel
 
-Script migration versionné
+Logs corrélés
 
-🔹 US-USER-PREF-01-T02 — API Lecture des préférences
+🔹 US-PLAT-LLM-01-T02 — Transmission des métadonnées
 Description
 
-En tant que plateforme, je veux exposer une API permettant de récupérer les préférences associées à un user_id SSO lors de l’authentification.
+Garantir que chaque appel transporte les métadonnées nécessaires à la gouvernance.
 
 Périmètre
 
-Endpoint GET /preferences
+Payload enrichi :
 
-Extraction user_id depuis token SSO
+{
+  "metadata": {
+    "request_id": "...",
+    "user_id_hash": "...",
+    "sensitivity": "internal",
+    "model": "gpt-4o"
+  }
+}
+Edge cases
 
-Lecture PostgreSQL
+request_id absent
 
-Retour JSON structuré
+user_id null
+
+classification inconnue
+
+Critères d’acceptation
+
+Requête refusée si metadata manquante
+
+Toutes les requêtes auditables
+
+Hash irréversible du user_id
+
+🔹 US-PLAT-LLM-01-T03 — Support streaming bout-en-bout
+Description
+
+Permettre la réception et la retransmission des chunks de réponse en temps réel.
+
+Périmètre
+
+Support stream=true
+
+Propagation progressive au frontend
+
+Gestion fin de flux
+
+Gestion erreur en streaming
 
 Edge cases
 
-user_id absent
+Coupure réseau
 
-Préférences inexistantes
+Timeout en milieu de flux
 
-Base indisponible
-
-Token invalide
+Flux incomplet
 
 Critères d’acceptation
 
-API retourne préférences si existantes
+Les tokens sont envoyés en continu
 
-Si inexistantes → création automatique valeurs par défaut
+En cas d’erreur, message proprement clôturé
 
-401 si token invalide
+Aucune fuite de connexion
 
-Logs corrélés avec trace_id
-
-🔹 US-USER-PREF-01-T03 — API Mise à jour des préférences
+🔹 US-PLAT-LLM-01-T04 — Gestion du timeout configurable
 Description
 
-En tant que plateforme, je veux permettre à un utilisateur de modifier ses préférences afin de personnaliser son expérience.
+Implémenter un timeout configurable sur les appels LiteLLM.
 
 Périmètre
 
-Endpoint PUT /preferences
+Default 60 secondes
 
-Validation du modèle choisi (catalogue modèle)
+Paramétrable via config admin
 
-Validation langue autorisée
-
-Mise à jour PostgreSQL
-
-Audit log modification
+Annulation appel si timeout dépassé
 
 Edge cases
 
-Modèle non présent dans catalogue
+Timeout trop court
 
-Tentative modification autre user_id
+Timeout mal configuré
 
-Payload mal formé
-
-Double requête concurrente
+Timeout pendant streaming
 
 Critères d’acceptation
 
-Seul le propriétaire peut modifier ses préférences
+Timeout déclenche erreur contrôlée
 
-Modèle validé contre catalogue
+Message utilisateur compréhensible
 
-Modification auditée
+Timeout loggué avec durée
 
-Retour HTTP 200 si succès
-
-🔹 US-USER-PREF-01-T04 — Chargement automatique à l’authentification
+🔹 US-PLAT-LLM-01-T05 — Capture et exposition des métriques
 Description
 
-En tant que plateforme, je veux charger automatiquement les préférences lors du login afin d’initialiser la session utilisateur.
+Collecter les métriques retournées par LiteLLM et les transmettre au module Observabilité.
 
 Périmètre
 
-Hook post-authentification
+Extraction :
 
-Appel interne API lecture préférences
+input_tokens
 
-Injection dans contexte session
+output_tokens
 
-Transmission au frontend
+total_tokens
+
+latency
+
+model utilisé
 
 Edge cases
 
-Auth réussie mais DB indisponible
+Absence de métriques dans réponse
 
-Préférences corrompues
+Valeurs incohérentes
 
-Timeout DB
+Latence anormale
 
 Critères d’acceptation
 
-Préférences disponibles dans session
+Toutes les réponses incluent métriques
 
-Valeurs par défaut si erreur
+Données stockées en Observabilité
 
-Aucun blocage login
+Corrélées avec request_id
 
-Latence < 100 ms
-
-🔹 US-USER-PREF-01-T05 — Intégration avec catalogue de modèles
+🔹 US-PLAT-LLM-01-T06 — Transformation des erreurs LiteLLM
 Description
 
-En tant que plateforme, je veux valider que le modèle favori existe dans le catalogue afin d’éviter une configuration invalide.
+Capturer les erreurs techniques et les transformer en messages utilisateur compréhensibles.
 
 Périmètre
 
-Vérification contre catalogue interne
+Mapping erreurs :
 
-Gestion modèle désactivé
-
-Mise à jour si modèle supprimé
-
+Erreur LiteLLM	Message utilisateur
+429	Service temporairement saturé
+401	Problème d’autorisation
+Timeout	Le modèle ne répond pas
+500	Erreur interne IA
 Edge cases
 
-Modèle supprimé après sélection
+Erreur inconnue
 
-Catalogue indisponible
+Stack trace exposée
 
-Modèle incompatible avec classification
+Mauvaise catégorisation
 
 Critères d’acceptation
 
-Modèle invalide → refus explicite
+Aucune erreur technique brute exposée
 
-Si modèle supprimé → fallback modèle par défaut
+Message clair et actionnable
 
-Audit événement
+Erreur logguée en détail côté backend
 
-🔹 US-USER-PREF-01-T06 — Audit des modifications
+🔹 US-PLAT-LLM-01-T07 — Journalisation complète
 Description
 
-En tant que plateforme, je veux tracer toute modification des préférences afin d’assurer la traçabilité.
+Tracer chaque appel LLMaas pour audit et diagnostic.
 
 Périmètre
 
-Log action (create/update)
+Logs :
 
-user_id
+request_id
 
-ancien / nouveau modèle
+user_id_hash
 
-timestamp
+model
 
-trace_id
+sensitivity
+
+latency
+
+token usage
+
+status (SUCCESS / ERROR)
 
 Edge cases
 
 Log non persisté
 
-Écriture audit échouée
+Données sensibles dans log
 
-Conflit transactionnel
-
-Critères d’acceptation
-
-Chaque modification génère un log
-
-Logs consultables dans Observabilité
-
-Aucune modification silencieuse
-
-🔹 US-USER-PREF-01-T07 — Valeurs par défaut sécurisées
-Description
-
-En tant que plateforme, je veux appliquer des préférences par défaut si aucune configuration n’existe.
-
-Périmètre
-
-default_model global
-
-langue par défaut
-
-thème par défaut
-
-Edge cases
-
-Modèle par défaut désactivé
-
-Mauvaise configuration système
+Double écriture
 
 Critères d’acceptation
 
-Valeurs par défaut cohérentes
+100% des appels tracés
 
-Aucun utilisateur sans configuration
+Aucun contenu prompt stocké si sensible
 
-Paramétrage configurable par admin
-
-📦 Résultat global
-
-La User Story produit est maintenant découpée en :
-
-7 sous-US techniques
-
-Couvrant persistence, API, validation, audit, intégration catalogue
-
-Sécurisées et traçables
-
-Sans dépendance implicite non définie
+Logs exploitable par observabilité
