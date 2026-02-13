@@ -1,104 +1,61 @@
 US-PROD-V0-05 — Sélection du modèle LLM par l’utilisateur
 1. User Story (formulation produit)
-
 En tant qu’utilisateur de la plateforme IA gouvernée,
 je veux choisir le modèle LLM à utiliser pour ma conversation afin de sélectionner le modèle le plus adapté à mon besoin (qualité, coût, vitesse, spécialisation).
-
+________________________________________
 2. Valeur utilisateur
-
-Maîtrise du comportement et de la qualité des réponses
-
-Adaptation du modèle au contexte métier
-
-Transparence sur les capacités disponibles
-
-Réduction des frustrations liées à un modèle inadapté
-
+•	Maîtrise du comportement et de la qualité des réponses
+•	Adaptation du modèle au contexte métier
+•	Transparence sur les capacités disponibles
+•	Réduction des frustrations liées à un modèle inadapté
+________________________________________
 3. Responsabilité de la plateforme (backend)
-
 La plateforme est responsable de :
-
-Maintenir un catalogue des modèles LLM disponibles
-
-Synchroniser ce catalogue depuis les services LLMaaS
-
-Persister les métadonnées de modèles
-
-Vérifier que l’utilisateur est autorisé à utiliser le modèle choisi
-
-Valider l’existence du modèle dans le catalogue
-
-Transmettre le choix du modèle à l’Orchestrateur
-
-Tracer chaque sélection de modèle
-
+•	Maintenir un catalogue des modèles LLM disponibles
+•	Synchroniser ce catalogue depuis les services LLMaaS
+•	Persister les métadonnées de modèles
+•	Vérifier que l’utilisateur est autorisé à utiliser le modèle choisi
+•	Valider l’existence du modèle dans le catalogue
+•	Transmettre le choix du modèle à l’Orchestrateur
+•	Tracer chaque sélection de modèle
 La plateforme ne gère pas l’affichage UI, uniquement les APIs backend et les contrôles.
-
+________________________________________
 4. Périmètre fonctionnel
 Inclus
-
-Extraction périodique de la liste des modèles depuis le LLMaaS
-
-Persistance du catalogue de modèles
-
-Exposition d’un endpoint pour récupérer les modèles autorisés
-
-Validation du modèle sélectionné par l’utilisateur
-
-Transmission du modèle sélectionné à l’Orchestrateur
-
-Journalisation et audit
-
+•	Extraction périodique de la liste des modèles depuis le LLMaaS
+•	Persistance du catalogue de modèles
+•	Exposition d’un endpoint pour récupérer les modèles autorisés
+•	Validation du modèle sélectionné par l’utilisateur
+•	Transmission du modèle sélectionné à l’Orchestrateur
+•	Journalisation et audit
 Exclu
-
-Comparaison avancée de modèles (benchmarks)
-
-Suggestion automatique du “meilleur” modèle
-
-Gestion de quotas par modèle (V1)
-
-UI de sélection
-
+•	Comparaison avancée de modèles (benchmarks)
+•	Suggestion automatique du “meilleur” modèle
+•	Gestion de quotas par modèle (V1)
+•	UI de sélection
+________________________________________
 5. Données métier manipulées
-
 Pour chaque modèle :
-
-model_id
-
-provider
-
-capabilities (text, vision, embedding, etc.)
-
-max_context_size
-
-status (active / deprecated)
-
-created_at
-
-updated_at
-
+•	model_id
+•	provider
+•	capabilities (text, vision, embedding, etc.)
+•	max_context_size
+•	status (active / deprecated)
+•	created_at
+•	updated_at
 Pour la sélection utilisateur :
-
-user_id
-
-conversation_id
-
-model_id
-
-timestamp
-
+•	user_id
+•	conversation_id
+•	model_id
+•	timestamp
+________________________________________
 6. Règles fonctionnelles clés
-
-Un modèle doit exister dans le catalogue pour être utilisable
-
-Un utilisateur ne peut sélectionner que les modèles autorisés
-
-Le choix du modèle est associé à la conversation
-
-Le modèle sélectionné est transmis tel quel à l’Orchestrateur
-
-Toute sélection est tracée à des fins d’audit
-
+•	Un modèle doit exister dans le catalogue pour être utilisable
+•	Un utilisateur ne peut sélectionner que les modèles autorisés
+•	Le choix du modèle est associé à la conversation
+•	Le modèle sélectionné est transmis tel quel à l’Orchestrateur
+•	Toute sélection est tracée à des fins d’audit
+________________________________________
 7. Edge cases (vision utilisateur)
 Situation	Attente utilisateur
 Modèle inexistant	Refus clair avec message explicite
@@ -106,129 +63,80 @@ Modèle non autorisé	Accès refusé
 Catalogue non synchronisé	Modèles indisponibles
 Modèle déprécié	Refus + suggestion alternative
 Changement de modèle en cours de conversation	Pris en compte pour les appels suivants uniquement
+________________________________________
 8. Critères d’acceptation (produit)
-
-L’utilisateur ne voit que les modèles autorisés
-
-Le modèle sélectionné existe dans le catalogue
-
-La sélection est validée avant exécution
-
-Le choix est transmis à l’Orchestrateur
-
-Toute erreur est explicite et traçable
-
+•	L’utilisateur ne voit que les modèles autorisés
+•	Le modèle sélectionné existe dans le catalogue
+•	La sélection est validée avant exécution
+•	Le choix est transmis à l’Orchestrateur
+•	Toute erreur est explicite et traçable
+________________________________________
 Déclinaison en sous-US techniques (responsabilité plateforme)
+________________________________________
 US-PROD-V0-05-A — Synchronisation du catalogue modèles
-
 Description
 Récupérer périodiquement la liste des modèles disponibles depuis le LLMaaS et la persister.
-
 Edge cases
-
-LLMaaS indisponible
-
-Données incomplètes
-
+•	LLMaaS indisponible
+•	Données incomplètes
 Critères d’acceptation
-
-Synchronisation batch réussie
-
-Catalogue cohérent et horodaté
-
+•	Synchronisation batch réussie
+•	Catalogue cohérent et horodaté
+________________________________________
 US-PROD-V0-05-B — Persistance du catalogue modèles
-
 Description
 Stocker les métadonnées des modèles dans une base de données.
-
 Edge cases
-
-Duplication de modèles
-
-Modèle obsolète
-
+•	Duplication de modèles
+•	Modèle obsolète
 Critères d’acceptation
-
-Clé unique par model_id
-
-Statut de modèle géré
-
+•	Clé unique par model_id
+•	Statut de modèle géré
+________________________________________
 US-PROD-V0-05-C — Filtrage des modèles autorisés
-
 Description
 Restreindre la liste des modèles accessibles selon les droits utilisateur.
-
 Edge cases
-
-Rôle mal configuré
-
-Modèle sans règle explicite
-
+•	Rôle mal configuré
+•	Modèle sans règle explicite
 Critères d’acceptation
-
-Aucun modèle non autorisé accessible
-
-Décision traçable
-
+•	Aucun modèle non autorisé accessible
+•	Décision traçable
+________________________________________
 US-PROD-V0-05-D — Validation du modèle sélectionné
-
 Description
 Valider que le modèle choisi existe et est autorisé avant traitement.
-
 Edge cases
-
-Modèle supprimé récemment
-
-Requête concurrente
-
+•	Modèle supprimé récemment
+•	Requête concurrente
 Critères d’acceptation
-
-Validation stricte
-
-Refus immédiat en cas d’erreur
-
+•	Validation stricte
+•	Refus immédiat en cas d’erreur
+________________________________________
 US-PROD-V0-05-E — Transmission du modèle à l’Orchestrateur
-
 Description
 Inclure le model_id validé dans la requête transmise à l’Orchestrateur.
-
 Edge cases
-
-Modèle non supporté par l’Orchestrateur
-
-Erreur de mapping
-
+•	Modèle non supporté par l’Orchestrateur
+•	Erreur de mapping
 Critères d’acceptation
-
-Modèle transmis sans altération
-
-Erreurs tracées
-
+•	Modèle transmis sans altération
+•	Erreurs tracées
+________________________________________
 US-PROD-V0-05-F — Audit & traçabilité de la sélection
-
 Description
 Journaliser chaque sélection de modèle utilisateur.
-
 Edge cases
-
-Logs manquants
-
-Désynchronisation conversation / modèle
-
+•	Logs manquants
+•	Désynchronisation conversation / modèle
 Critères d’acceptation
-
-Logs exploitables
-
-Corrélation avec conversation_id
-
+•	Logs exploitables
+•	Corrélation avec conversation_id
+________________________________________
 9. Definition of Done (US produit)
+•	Catalogue modèles synchronisé et persistant
+•	Sélection utilisateur validée et sécurisée
+•	Autorisations strictement respectées
+•	Transmission fiable à l’Orchestrateur
+•	Traçabilité complète
 
-Catalogue modèles synchronisé et persistant
-
-Sélection utilisateur validée et sécurisée
-
-Autorisations strictement respectées
-
-Transmission fiable à l’Orchestrateur
-
-Traçabilité complète
