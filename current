@@ -1,136 +1,178 @@
-US-PROD-V0-01 — Authentification via WebSSO
-1. User Story (formulation produit)
-En tant qu’utilisateur de la plateforme IA gouvernée,
-je veux m’authentifier via le WebSSO de mon organisation afin d’accéder à la plateforme sans avoir à créer un nouveau compte, tout en respectant les règles de sécurité et de gouvernance.
+US-PROD-V0-ADM-01 — Gestion des rôles et permissions granulaires
+1. User Story (produit)
+En tant qu’administrateur de la plateforme,
+je veux gérer des rôles avec des permissions granulaires, afin d’adapter précisément les accès aux fonctionnalités selon les besoins des utilisateurs, tout en assurant auditabilité, délégation, héritage hiérarchique et conformité aux juridictions des employés via OPAL.
 ________________________________________
-2. Valeur utilisateur
-•	Accès immédiat sans création de compte
-•	Expérience cohérente avec les outils d’entreprise
-•	Sécurité renforcée
-•	Réduction des frictions d’onboarding
-•	Confiance dans la gestion des identités
+2. Valeur métier
+•	Sécurisation fine des accès
+•	Alignement avec les contraintes juridiques (juridictions)
+•	Gouvernance claire et traçable
+•	Réduction des risques de mauvaise configuration
+•	Scalabilité organisationnelle
 ________________________________________
-3. Responsabilité de la plateforme (backend)
+3. Responsabilité de la plateforme
 La plateforme est responsable de :
-•	Intégrer un mécanisme d’authentification WebSSO (ex : SAML / OIDC)
-•	S’appuyer sur un annuaire d’entreprise (LDAP / IdP)
-•	Gérer le callback d’authentification
-•	Créer et maintenir une session utilisateur
-•	Vérifier la signature de la charte applicative via PolicyShield
-•	Journaliser tous les accès pour audit et conformité
-La plateforme ne fournit pas l’interface de login, uniquement les APIs et flux backend.
+•	La définition et la persistance des rôles et permissions
+•	L’exposition d’APIs d’administration (sans UI)
+•	L’intégration avec OPAL pour enrichir le contexte employé (juridiction, entité)
+•	L’enforcement des permissions sur toutes les fonctionnalités
+•	La traçabilité complète des changements
+•	L’exposition de données pour un dashboard d’administration
 ________________________________________
 4. Périmètre fonctionnel
 Inclus
-•	Redirection vers l’IdP WebSSO
-•	Traitement du callback d’authentification
-•	Validation du token / assertion
-•	Création de session applicative
-•	Association de l’identité SSO à un utilisateur plateforme
-•	Vérification de l’acceptation de la charte applicative
-•	Logging des accès
+•	Rôles standards : user, power_user, analyste, admin, superadmin
+•	Permissions granulaires par fonctionnalité (lecture, écriture, exécution, administration)
+•	CRUD rôles et permissions (administrateur)
+•	Assignation et délégation de rôles
+•	Héritage hiérarchique des rôles
+•	Intégration OPAL (juridiction, entité)
+•	Audit des changements
+•	APIs pour dashboard
 Exclu
-•	Gestion des identités dans l’IdP
-•	Création de comptes manuels
-•	Gestion des mots de passe
-•	MFA (hors scope V0)
+•	Authentification utilisateur (IdP)
+•	UI d’administration
+•	Gestion des identités RH
 ________________________________________
-5. Données métier manipulées
-Identité utilisateur
-•	user_id
-•	sso_subject
-•	email
-•	display_name
-•	groups
-•	roles
-Session
-•	session_id
-•	user_id
-•	issued_at
-•	expires_at
-•	auth_method (WebSSO)
-•	signature_charte (true/false)
+5. Règles fonctionnelles clés
+•	Un utilisateur peut avoir plusieurs rôles
+•	Les permissions sont cumulatives
+•	L’héritage ajoute automatiquement les permissions parentes
+•	Les juridictions OPAL peuvent restreindre certaines permissions
+•	Toute action d’administration est auditée
+•	Le principe du moindre privilège s’applique par défaut
 ________________________________________
-6. Règles fonctionnelles clés
-•	Aucun accès sans authentification WebSSO valide
-•	Le token SSO doit être signé et vérifié
-•	Une session est créée uniquement après authentification réussie
-•	L’accès est conditionné à la signature de la charte applicative
-•	Chaque accès est tracé et auditable
+6. Edge cases (niveau produit)
+Edge case	Attente plateforme
+Suppression d’un rôle actif	Refus ou migration obligatoire
+Rôle incompatible avec juridiction OPAL	Blocage + message explicite
+Délégation non autorisée	Refus + audit
+Conflit héritage / permission directe	Permission la plus restrictive
+Boucle d’héritage	Validation bloquante
+Assignation massive partielle	Transaction atomique
 ________________________________________
-7. Edge cases (vision utilisateur)
-Situation	Attente utilisateur
-Token SSO invalide	Accès refusé avec message explicite
-Token expiré	Nouvelle authentification requise
-Utilisateur non référencé	Accès refusé
-Charte non signée	Accès bloqué avec invitation à signer
-Session expirée	Redirection vers authentification
-Erreur IdP	Message d’erreur contrôlé
+7. Critères d’acceptation (US produit)
+•	Les rôles et permissions sont configurables via API
+•	Les juridictions OPAL sont prises en compte
+•	Les permissions sont appliquées à toutes les fonctionnalités
+•	Les délégations sont contrôlées
+•	Tous les changements sont audités
+•	Les données sont exploitables par un dashboard
 ________________________________________
-8. Critères d’acceptation (produit)
-•	Authentification WebSSO fonctionnelle
-•	Aucune création de compte manuel requise
-•	Session créée et maintenue
-•	Accès bloqué si charte non signée
-•	Tous les accès sont loggés
-•	Conformité sécurité respectée
+Déclinaison en sous-US techniques
 ________________________________________
-Déclinaison en sous-US techniques (responsabilité plateforme)
-________________________________________
-US-PROD-V0-01-A — Intégration WebSSO / IdP
+US-PROD-V0-ADM-01-A — Modélisation rôles, permissions et héritage
 Description
-Permettre la redirection vers l’IdP WebSSO et la récupération des assertions d’identité.
+Définir le modèle de données pour les rôles, permissions et relations hiérarchiques.
+Périmètre
+•	Tables rôles, permissions, relations
+•	Contraintes d’intégrité
 Edge cases
-•	IdP indisponible
-•	Assertion mal formée
+•	Héritage circulaire
+•	Permissions orphelines
 Critères d’acceptation
-•	Redirection fonctionnelle
-•	Assertion reçue et exploitable
+•	Modèle validé
+•	Contraintes appliquées
 ________________________________________
-US-PROD-V0-01-B — Validation du token / assertion SSO
+US-PROD-V0-ADM-01-B — API CRUD rôles & permissions
 Description
-Valider la signature, l’intégrité et la validité temporelle du token SSO.
+Exposer des APIs pour créer, modifier et supprimer rôles et permissions.
+Périmètre
+•	Endpoints REST sécurisés
+•	Validation des payloads
 Edge cases
-•	Signature invalide
-•	Token expiré
+•	Suppression rôle utilisé
+•	Permission dupliquée
 Critères d’acceptation
-•	Tokens invalides rejetés
-•	Motif de rejet tracé
+•	APIs documentées
+•	Validation stricte
+•	Erreurs explicites
 ________________________________________
-US-PROD-V0-01-C — Création et gestion de session applicative
+US-PROD-V0-ADM-01-C — Intégration OPAL (juridictions & entités)
 Description
-Créer une session backend associée à l’utilisateur authentifié.
+Récupérer les informations OPAL (juridiction, entité) pour enrichir le contexte utilisateur.
+Périmètre
+•	Appel API OPAL
+•	Cache des métadonnées employé
 Edge cases
-•	Session expirée
-•	Collision de session
+•	OPAL indisponible
+•	Juridiction inconnue
 Critères d’acceptation
-•	Session unique et traçable
-•	Expiration respectée
+•	Fallback contrôlé
+•	Décision explicable
 ________________________________________
-US-PROD-V0-01-D — Vérification de la charte applicative (PolicyShield)
+US-PROD-V0-ADM-01-D — Assignation & délégation des rôles
 Description
-Vérifier que l’utilisateur a signé la charte applicative avant autorisation d’accès.
+Permettre l’assignation et la délégation des rôles dans des limites contrôlées.
+Périmètre
+•	Assignation individuelle et par lot
+•	Délégation restreinte
 Edge cases
-•	Charte non signée
-•	Version de charte obsolète
+•	Délégation hors périmètre
+•	Assignation contradictoire
 Critères d’acceptation
-•	Accès bloqué si charte non signée
-•	Décision auditable
+•	Vérification droits de l’assignateur
+•	Assignation atomique
 ________________________________________
-US-PROD-V0-01-E — Journalisation des accès
+US-PROD-V0-ADM-01-E — Héritage hiérarchique des rôles
 Description
-Centraliser les logs d’accès et d’authentification pour audit et sécurité.
+Calculer et appliquer automatiquement les permissions héritées.
+Périmètre
+•	Résolution hiérarchique
+•	Calcul des permissions effectives
 Edge cases
-•	Log manquant
+•	Changement de rôle parent
+•	Profondeur excessive
+Critères d’acceptation
+•	Permissions cohérentes
+•	Temps de calcul maîtrisé
+________________________________________
+US-PROD-V0-ADM-01-F — Enforcement des permissions (PolicyShield)
+Description
+Appliquer les décisions d’autorisation sur toutes les APIs fonctionnelles.
+Périmètre
+•	Vérification synchrone
+•	Décision ALLOW / DENY
+Edge cases
+•	Décision indéterminée
+•	Permission manquante
+Critères d’acceptation
+•	Accès bloqué si non autorisé
+•	Décision traçable
+________________________________________
+US-PROD-V0-ADM-01-G — Audit des rôles et permissions
+Description
+Tracer tous les changements et assignations de rôles.
+Périmètre
+•	Logs structurés
+•	Historique consultable
+Edge cases
+•	Log incomplet
 •	Identité non corrélée
 Critères d’acceptation
-•	Logs complets et corrélables
-•	Exploitables par sécurité et audit
+•	Audit exhaustif
+•	Export possible
 ________________________________________
-9. Definition of Done (US produit)
-•	Authentification WebSSO opérationnelle
-•	Sessions sécurisées et traçables
-•	Charte applicative appliquée
-•	Aucun accès non authentifié
-•	Logs centralisés et auditables
+US-PROD-V0-ADM-01-H — APIs pour dashboard de gestion
+Description
+Exposer des APIs de lecture pour alimenter un dashboard d’administration.
+Périmètre
+•	Liste rôles
+•	Permissions effectives
+•	Historique
+Edge cases
+•	Volume élevé
+•	Accès non autorisé
+Critères d’acceptation
+•	Pagination
+•	Accès réservé admins
+________________________________________
+8. Definition of Done (US globale)
+•	CRUD rôles & permissions opérationnels
+•	Intégration OPAL fonctionnelle
+•	Héritage hiérarchique actif
+•	Délégation contrôlée
+•	Enforcement effectif sur les APIs
+•	Audit complet et exploitable
+•	APIs prêtes pour dashboard
 
