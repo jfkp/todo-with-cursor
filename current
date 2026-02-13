@@ -1,143 +1,234 @@
-US-PROD-V0-04 — Consultation des conversations passées
+US-PROD-V0-05 — Sélection du modèle LLM par l’utilisateur
 1. User Story (formulation produit)
+
 En tant qu’utilisateur de la plateforme IA gouvernée,
-je veux consulter la liste de mes conversations passées afin de reprendre une conversation existante ou retrouver une réponse précédente sans avoir à reformuler mes demandes.
-________________________________________
+je veux choisir le modèle LLM à utiliser pour ma conversation afin de sélectionner le modèle le plus adapté à mon besoin (qualité, coût, vitesse, spécialisation).
+
 2. Valeur utilisateur
-•	Retrouver rapidement une information déjà obtenue
-•	Continuité de travail et de réflexion
-•	Capitalisation des échanges avec l’IA
-•	Gain de temps et réduction des requêtes redondantes
-________________________________________
+
+Maîtrise du comportement et de la qualité des réponses
+
+Adaptation du modèle au contexte métier
+
+Transparence sur les capacités disponibles
+
+Réduction des frustrations liées à un modèle inadapté
+
 3. Responsabilité de la plateforme (backend)
+
 La plateforme est responsable de :
-•	Persister les conversations utilisateur
-•	Associer chaque conversation à un utilisateur authentifié
-•	Indexer les conversations pour la recherche
-•	Générer automatiquement un titre lisible
-•	Exposer des mécanismes de pagination
-•	Gérer la suppression logique (soft delete)
-•	Garantir la traçabilité et le respect RGPD
-La plateforme ne gère pas l’affichage UI, uniquement les APIs backend.
-________________________________________
+
+Maintenir un catalogue des modèles LLM disponibles
+
+Synchroniser ce catalogue depuis les services LLMaaS
+
+Persister les métadonnées de modèles
+
+Vérifier que l’utilisateur est autorisé à utiliser le modèle choisi
+
+Valider l’existence du modèle dans le catalogue
+
+Transmettre le choix du modèle à l’Orchestrateur
+
+Tracer chaque sélection de modèle
+
+La plateforme ne gère pas l’affichage UI, uniquement les APIs backend et les contrôles.
+
 4. Périmètre fonctionnel
 Inclus
-•	Stockage des conversations en base de données
-•	Indexation pour recherche textuelle
-•	Génération automatique de titre de conversation
-•	Liste paginée des conversations
-•	Récupération du détail d’une conversation
-•	Suppression logique (soft delete)
-•	Journalisation des accès
+
+Extraction périodique de la liste des modèles depuis le LLMaaS
+
+Persistance du catalogue de modèles
+
+Exposition d’un endpoint pour récupérer les modèles autorisés
+
+Validation du modèle sélectionné par l’utilisateur
+
+Transmission du modèle sélectionné à l’Orchestrateur
+
+Journalisation et audit
+
 Exclu
-•	Interface graphique
-•	Partage de conversations entre utilisateurs
-•	Archivage long terme (> politique V0)
-•	Analyse sémantique avancée de l’historique
-________________________________________
+
+Comparaison avancée de modèles (benchmarks)
+
+Suggestion automatique du “meilleur” modèle
+
+Gestion de quotas par modèle (V1)
+
+UI de sélection
+
 5. Données métier manipulées
-Chaque conversation contient au minimum :
-•	conversation_id
-•	user_id
-•	title (généré automatiquement)
-•	messages[] (prompt / réponse)
-•	model_used
-•	created_at
-•	updated_at
-•	deleted_at (soft delete)
-•	metadata (langue, contexte, etc.)
-________________________________________
+
+Pour chaque modèle :
+
+model_id
+
+provider
+
+capabilities (text, vision, embedding, etc.)
+
+max_context_size
+
+status (active / deprecated)
+
+created_at
+
+updated_at
+
+Pour la sélection utilisateur :
+
+user_id
+
+conversation_id
+
+model_id
+
+timestamp
+
 6. Règles fonctionnelles clés
-•	Une conversation appartient à un seul utilisateur
-•	Seules les conversations non supprimées sont listées
-•	La suppression est logique (soft delete)
-•	Les conversations sont indexées pour recherche rapide
-•	La liste est retournée sous forme paginée
-•	Les accès sont filtrés par identité utilisateur
-________________________________________
+
+Un modèle doit exister dans le catalogue pour être utilisable
+
+Un utilisateur ne peut sélectionner que les modèles autorisés
+
+Le choix du modèle est associé à la conversation
+
+Le modèle sélectionné est transmis tel quel à l’Orchestrateur
+
+Toute sélection est tracée à des fins d’audit
+
 7. Edge cases (vision utilisateur)
 Situation	Attente utilisateur
-Aucune conversation existante	Liste vide, sans erreur
-Recherche sans résultat	Réponse explicite “aucun résultat”
-Conversation supprimée	Non visible dans la liste
-Accès à une conversation d’un autre utilisateur	Refus immédiat
-Volume élevé de conversations	Résultats paginés et rapides
-________________________________________
+Modèle inexistant	Refus clair avec message explicite
+Modèle non autorisé	Accès refusé
+Catalogue non synchronisé	Modèles indisponibles
+Modèle déprécié	Refus + suggestion alternative
+Changement de modèle en cours de conversation	Pris en compte pour les appels suivants uniquement
 8. Critères d’acceptation (produit)
-•	L’utilisateur récupère uniquement ses conversations
-•	Les conversations sont listées de manière paginée
-•	La recherche permet de filtrer efficacement
-•	Chaque conversation a un titre lisible
-•	Une conversation supprimée n’est plus visible
-•	Toutes les actions sont traçables
-________________________________________
-Déclinaison en sous-US techniques (responsabilité plateforme)
-________________________________________
-US-PROD-V0-04-A — Persistance des conversations
-Description
-Permettre à la plateforme de stocker durablement les conversations utilisateur en base de données.
-Edge cases
-•	Échec d’écriture en base
-•	Conversation partiellement persistée
-Critères d’acceptation
-•	Écriture atomique
-•	Aucune conversation corrompue
-________________________________________
-US-PROD-V0-04-B — Génération automatique du titre
-Description
-Générer automatiquement un titre synthétique à partir du contenu initial de la conversation.
-Edge cases
-•	Conversation très courte
-•	Contenu non textuel
-Critères d’acceptation
-•	Titre lisible par défaut
-•	Fallback générique si génération impossible
-________________________________________
-US-PROD-V0-04-C — Indexation pour recherche
-Description
-Indexer les conversations pour permettre la recherche rapide par mots-clés.
-Edge cases
-•	Index désynchronisé
-•	Recherche sur conversation supprimée
-Critères d’acceptation
-•	Recherche uniquement sur conversations actives
-•	Résultats cohérents avec la base
-________________________________________
-US-PROD-V0-04-D — Listing paginé des conversations
-Description
-Exposer un mécanisme de pagination pour la consultation des conversations.
-Edge cases
-•	Page hors bornes
-•	Taille de page excessive
-Critères d’acceptation
-•	Pagination stable
-•	Limites configurables
-________________________________________
-US-PROD-V0-04-E — Soft delete de conversation
-Description
-Permettre à l’utilisateur de supprimer une conversation sans suppression physique immédiate.
-Edge cases
-•	Double suppression
-•	Accès après suppression
-Critères d’acceptation
-•	Conversation masquée immédiatement
-•	Champ deleted_at renseigné
-________________________________________
-US-PROD-V0-04-F — Sécurité & traçabilité des accès
-Description
-Tracer et sécuriser tous les accès aux conversations.
-Edge cases
-•	Tentative d’accès inter-utilisateur
-•	Logs manquants
-Critères d’acceptation
-•	Accès strictement isolé par utilisateur
-•	Logs exploitables en audit
-________________________________________
-9. Definition of Done (US produit)
-•	Conversations persistées et consultables
-•	Recherche fonctionnelle et indexée
-•	Pagination performante
-•	Soft delete opérationnel
-•	Aucun accès non autorisé possible
-•	Traçabilité complète
 
+L’utilisateur ne voit que les modèles autorisés
+
+Le modèle sélectionné existe dans le catalogue
+
+La sélection est validée avant exécution
+
+Le choix est transmis à l’Orchestrateur
+
+Toute erreur est explicite et traçable
+
+Déclinaison en sous-US techniques (responsabilité plateforme)
+US-PROD-V0-05-A — Synchronisation du catalogue modèles
+
+Description
+Récupérer périodiquement la liste des modèles disponibles depuis le LLMaaS et la persister.
+
+Edge cases
+
+LLMaaS indisponible
+
+Données incomplètes
+
+Critères d’acceptation
+
+Synchronisation batch réussie
+
+Catalogue cohérent et horodaté
+
+US-PROD-V0-05-B — Persistance du catalogue modèles
+
+Description
+Stocker les métadonnées des modèles dans une base de données.
+
+Edge cases
+
+Duplication de modèles
+
+Modèle obsolète
+
+Critères d’acceptation
+
+Clé unique par model_id
+
+Statut de modèle géré
+
+US-PROD-V0-05-C — Filtrage des modèles autorisés
+
+Description
+Restreindre la liste des modèles accessibles selon les droits utilisateur.
+
+Edge cases
+
+Rôle mal configuré
+
+Modèle sans règle explicite
+
+Critères d’acceptation
+
+Aucun modèle non autorisé accessible
+
+Décision traçable
+
+US-PROD-V0-05-D — Validation du modèle sélectionné
+
+Description
+Valider que le modèle choisi existe et est autorisé avant traitement.
+
+Edge cases
+
+Modèle supprimé récemment
+
+Requête concurrente
+
+Critères d’acceptation
+
+Validation stricte
+
+Refus immédiat en cas d’erreur
+
+US-PROD-V0-05-E — Transmission du modèle à l’Orchestrateur
+
+Description
+Inclure le model_id validé dans la requête transmise à l’Orchestrateur.
+
+Edge cases
+
+Modèle non supporté par l’Orchestrateur
+
+Erreur de mapping
+
+Critères d’acceptation
+
+Modèle transmis sans altération
+
+Erreurs tracées
+
+US-PROD-V0-05-F — Audit & traçabilité de la sélection
+
+Description
+Journaliser chaque sélection de modèle utilisateur.
+
+Edge cases
+
+Logs manquants
+
+Désynchronisation conversation / modèle
+
+Critères d’acceptation
+
+Logs exploitables
+
+Corrélation avec conversation_id
+
+9. Definition of Done (US produit)
+
+Catalogue modèles synchronisé et persistant
+
+Sélection utilisateur validée et sécurisée
+
+Autorisations strictement respectées
+
+Transmission fiable à l’Orchestrateur
+
+Traçabilité complète
