@@ -1,61 +1,47 @@
-US-PLAT-BE-V0-01 — Exposition d’une API conversationnelle backend (mode synchrone)
+US-PLAT-BE-V0-02 — Streaming des réponses LLM (token par token)
 1. Description
 
-En tant que plateforme IA gouvernée (backend uniquement),
-je dois exposer une API conversationnelle synchrone permettant à des clients externes (UI, applications, assistants) de soumettre des requêtes textuelles afin qu’elles soient validées, gouvernées, orchestrées et routées vers les services IA, puis retournées sous forme de réponse complète.
+En tant que plateforme IA gouvernée (backend),
+je dois permettre aux clients applicatifs de recevoir la réponse du LLM de manière progressive (token par token) afin de réduire la latence perçue et améliorer l’expérience utilisateur finale, sans attendre la fin complète de la génération.
 
-👉 Aucun streaming
-👉 Une requête = une réponse
-👉 La plateforme ne gère pas l’UI
+La plateforme agit comme relai de streaming sécurisé et gouverné, sans logique UI.
 
 2. Finalité plateforme
 
-Offrir un point d’entrée backend unique pour les requêtes IA
+Réduire le temps d’attente perçu
 
-Garantir la sécurité, la conformité et la traçabilité
+Supporter des expériences conversationnelles temps réel
 
-Normaliser les échanges client → IA
+Standardiser le streaming quel que soit le fournisseur LLM
 
-Découpler totalement client / orchestration / exécution
-
-Préparer l’extension vers d’autres modes (streaming, async)
+Garantir que le streaming respecte sécurité, gouvernance et observabilité
 
 3. Périmètre fonctionnel
 Inclus
 
-API REST synchrone
+Streaming token par token
 
-Réception de prompts textuels
+Transmission incrémentale de la réponse
 
-Validation du payload
+Support SSE ou HTTP chunked (abstraction client)
 
-Gestion des sessions conversationnelles
+Propagation du contexte de sécurité et de traçabilité
 
-Appel à l’Orchestrateur
-
-Retour d’une réponse complète
-
-Gestion des erreurs
-
-Observabilité bout-en-bout
+Arrêt immédiat du flux en cas d’incident
 
 Exclu
 
-Streaming
+Rendu UI
 
-Multimodal
+Post-traitement de la réponse côté client
 
-Upload de fichiers
+Rejeu de flux
 
-UI
-
-Prompt suggestion
-
-Agents autonomes
+Streaming multimodal (image/audio)
 
 4. Acteurs backend
 
-Client externe (UI, application métier, assistant)
+Client applicatif (UI, assistant, API consumer)
 
 API Backend
 
@@ -65,183 +51,134 @@ Security Guardrails
 
 Orchestrateur
 
-LLMaaS
+LLMaaS (via LiteLLM)
 
 Observabilité
 
-5. Entrées fonctionnelles (API)
+5. Entrées fonctionnelles
 Champ	Description
 prompt	Texte utilisateur
-model_id	Identifiant du modèle demandé
+model_id	Modèle sélectionné
 session_id	Identifiant de conversation
 user_identity	Identité issue du SSO
+stream	Flag = true
 trace_id	Identifiant de corrélation
-6. Sorties fonctionnelles (API)
-Champ	Description
-response	Réponse générée ou message contrôlé
-session_id	Identifiant de session
-model_used	Modèle réellement utilisé
-status	SUCCESS / BLOCKED / ERROR
-usage	tokens_in, tokens_out, latence
+6. Sorties fonctionnelles (stream)
+Élément	Description
+token	Fragment de texte généré
+event_type	token / end / error
+model_used	Modèle effectif
+usage_partial	Tokens cumulés
+trace_id	Corrélation
 7. Règles fonctionnelles backend
 ID	Règle
-RF-BE-01	Toute requête doit être authentifiée
-RF-BE-02	Toute requête passe par PolicyShield
-RF-BE-03	Toute requête est analysée par Guardrails
-RF-BE-04	Toute requête est orchestrée
-RF-BE-05	Une réponse complète est retournée
-RF-BE-06	Toute requête est tracée
-8. Edge cases (plateforme backend)
+RF-STREAM-01	Le streaming est optionnel
+RF-STREAM-02	Le flux commence après validation complète
+RF-STREAM-03	Les tokens sont transmis dès réception
+RF-STREAM-04	Toute erreur coupe immédiatement le flux
+RF-STREAM-05	Les métadonnées sont enrichies en continu
+RF-STREAM-06	Le flux est observable de bout en bout
+8. Edge cases (plateforme)
 Edge case	Comportement attendu
-Payload invalide	HTTP 400 + message explicite
-Modèle non autorisé	HTTP 403
-Session absente	Création automatique
-Timeout LLM	Erreur contrôlée
-Incident externe	Circuit breaker
-Erreur interne	HTTP 500 normalisé
+Client se déconnecte	Arrêt immédiat du streaming
+Timeout LLM	Événement error + fermeture
+Blocage Guardrails	Aucun token transmis
+Erreur réseau	Flux interrompu proprement
+Token vide	Ignoré
+Débordement buffer	Backpressure appliquée
 9. Critères d’acceptation
 
-L’API REST synchrone est exposée
+Le streaming est activable par paramètre
 
-Les payloads invalides sont rejetés
+Les tokens sont reçus progressivement
 
-Les requêtes valides sont orchestrées
+La réponse finale est signalée explicitement
 
-Les réponses sont complètes (non streamées)
+Les erreurs sont transmises proprement
 
-Les erreurs sont normalisées
+Le flux respecte les règles de sécurité
 
-Chaque requête est observable
+Les métriques sont collectées
 
-Déclinaison en sous-US techniques (backend)
-US-PLAT-BE-01-A — Exposition de l’API conversationnelle synchrone
+Sous-US techniques (backend)
+US-PLAT-BE-02-A — Activation du mode streaming
 
 Description
-La plateforme expose un endpoint REST pour les requêtes conversationnelles synchrones.
-
-Périmètre
-
-Endpoint versionné
-
-Réponse JSON complète
+La plateforme accepte et interprète le paramètre stream=true.
 
 Edge cases
 
-Méthode HTTP invalide
+Flag absent → mode synchrone
 
-Version API non supportée
+Flag invalide → rejet
 
-Critères d’acceptation
+Critères
 
-Endpoint documenté
+Décision correcte du mode d’exécution
 
-Tests contractuels OK
-
-US-PLAT-BE-01-B — Validation des requêtes
+US-PLAT-BE-02-B — Relai du streaming depuis LLMaaS
 
 Description
-La plateforme valide la structure et la cohérence du payload.
-
-Périmètre
-
-prompt, model_id, session_id
+La plateforme relaie le flux tokenisé fourni par LiteLLM.
 
 Edge cases
 
-Prompt vide
+Flux interrompu
 
-Prompt trop long
+LLM non compatible streaming
 
-Critères d’acceptation
+Critères
 
-Rejet immédiat
+Tokens transmis sans altération
 
-Erreurs normalisées
-
-US-PLAT-BE-01-C — Gestion des sessions conversationnelles
+US-PLAT-BE-02-C — Gestion des erreurs en streaming
 
 Description
-La plateforme gère la continuité des conversations via session_id.
-
-Périmètre
-
-Création automatique
-
-Association utilisateur/session
+Toute erreur est propagée comme un événement de flux.
 
 Edge cases
 
-Session inconnue
+Erreur après N tokens
 
-Session expirée
+Timeout intermédiaire
 
-Critères d’acceptation
+Critères
 
-Session persistée
+Flux fermé proprement
 
-Continuité assurée
-
-US-PLAT-BE-01-D — Appel à l’Orchestrateur
+US-PLAT-BE-02-D — Observabilité du streaming
 
 Description
-La plateforme transmet la requête validée à l’Orchestrateur.
-
-Périmètre
-
-Propagation identité & trace_id
-
-Appel synchrone
+Chaque flux est tracé et mesuré.
 
 Edge cases
 
-Orchestrateur indisponible
+Flux non terminé
 
-Critères d’acceptation
+Flux coupé brutalement
 
-Appel unique
+Critères
 
-Temps maîtrisé
+Tokens, latence, erreurs visibles
 
-US-PLAT-BE-01-E — Gestion des erreurs
+US-PLAT-BE-02-E — Sécurité & gouvernance du streaming
 
 Description
-La plateforme capture et transforme toutes les erreurs techniques.
-
-Périmètre
-
-Timeouts
-
-Exceptions
+Le streaming est bloqué si les contrôles échouent.
 
 Edge cases
 
-Erreurs en cascade
+Guardrails output déclenché en cours de flux
 
-Critères d’acceptation
+Critères
 
-Messages utilisateurs compréhensibles
+Arrêt immédiat
 
-Aucun détail interne exposé
+Incident tracé
 
-US-PLAT-BE-01-F — Observabilité backend
-
-Description
-La plateforme journalise toutes les requêtes et réponses.
-
-Périmètre
-
-Logs
-
-Traces
-
-Métriques
-
-Edge cases
-
-Logs manquants
-
-Critères d’acceptation
-
-Corrélation complète
-
-Audit possible
+10. Lien avec les autres US
+Dépendance	Raison
+US-PLAT-BE-V0-01	API synchrone existante
+US-ORCH-V0-xx	Orchestration gouvernée
+US-GR-V0	Sécurité entrée/sortie
+US-OBS-V0	Traçabilité
