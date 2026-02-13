@@ -1,135 +1,136 @@
-US-PROD-V0-06 — Suggestions de prompts pré-configurés
+US-PROD-V0-01 — Authentification via WebSSO
 1. User Story (formulation produit)
 En tant qu’utilisateur de la plateforme IA gouvernée,
-je veux disposer de suggestions de prompts pré-configurés afin de démarrer rapidement une tâche courante sans avoir à rédiger moi-même un prompt.
+je veux m’authentifier via le WebSSO de mon organisation afin d’accéder à la plateforme sans avoir à créer un nouveau compte, tout en respectant les règles de sécurité et de gouvernance.
 ________________________________________
 2. Valeur utilisateur
-•	Gain de temps immédiat
-•	Réduction de l’effort cognitif
-•	Démarrage rapide de cas d’usage standards
-•	Meilleure qualité des prompts initiaux
-•	Moins d’erreurs de formulation
+•	Accès immédiat sans création de compte
+•	Expérience cohérente avec les outils d’entreprise
+•	Sécurité renforcée
+•	Réduction des frictions d’onboarding
+•	Confiance dans la gestion des identités
 ________________________________________
 3. Responsabilité de la plateforme (backend)
 La plateforme est responsable de :
-•	Gérer un catalogue de templates de prompts
-•	Stocker les templates en base de données
-•	Classer les templates par catégorie / usage
-•	Exposer des APIs pour lister et récupérer les templates
-•	Valider les templates avant exposition (sécurité / conformité)
-•	Tracer l’utilisation des templates (observabilité)
-La plateforme ne gère pas l’affichage ni l’UX, uniquement la mise à disposition backend.
+•	Intégrer un mécanisme d’authentification WebSSO (ex : SAML / OIDC)
+•	S’appuyer sur un annuaire d’entreprise (LDAP / IdP)
+•	Gérer le callback d’authentification
+•	Créer et maintenir une session utilisateur
+•	Vérifier la signature de la charte applicative via PolicyShield
+•	Journaliser tous les accès pour audit et conformité
+La plateforme ne fournit pas l’interface de login, uniquement les APIs et flux backend.
 ________________________________________
 4. Périmètre fonctionnel
 Inclus
-•	Stockage des templates de prompts en base
-•	Gestion de catégories (ex : rédaction, résumé, traduction, code, analyse)
-•	Récupération des templates disponibles pour un utilisateur
-•	Injection du template dans une requête utilisateur
-•	Journalisation de l’usage des templates
+•	Redirection vers l’IdP WebSSO
+•	Traitement du callback d’authentification
+•	Validation du token / assertion
+•	Création de session applicative
+•	Association de l’identité SSO à un utilisateur plateforme
+•	Vérification de l’acceptation de la charte applicative
+•	Logging des accès
 Exclu
-•	Génération automatique de templates par IA
-•	Édition de templates par les utilisateurs (V1)
-•	Marketplace de templates
-•	Versioning avancé (V1)
+•	Gestion des identités dans l’IdP
+•	Création de comptes manuels
+•	Gestion des mots de passe
+•	MFA (hors scope V0)
 ________________________________________
 5. Données métier manipulées
-Template de prompt
-•	template_id
-•	title
-•	description
-•	category
-•	prompt_body
-•	language
-•	status (active / disabled)
-•	created_at
-•	updated_at
-Usage
+Identité utilisateur
 •	user_id
-•	template_id
-•	conversation_id
-•	timestamp
+•	sso_subject
+•	email
+•	display_name
+•	groups
+•	roles
+Session
+•	session_id
+•	user_id
+•	issued_at
+•	expires_at
+•	auth_method (WebSSO)
+•	signature_charte (true/false)
 ________________________________________
 6. Règles fonctionnelles clés
-•	Un template doit être actif pour être utilisable
-•	Les templates peuvent être filtrés par catégorie
-•	Les templates exposés respectent les règles de sécurité
-•	L’utilisation d’un template est traçable
-•	Le template est injecté tel quel dans le flux orchestré
+•	Aucun accès sans authentification WebSSO valide
+•	Le token SSO doit être signé et vérifié
+•	Une session est créée uniquement après authentification réussie
+•	L’accès est conditionné à la signature de la charte applicative
+•	Chaque accès est tracé et auditable
 ________________________________________
 7. Edge cases (vision utilisateur)
 Situation	Attente utilisateur
-Aucun template disponible	Message explicite
-Template désactivé	Template non exposé
-Template non conforme	Retiré automatiquement
-Catégorie inexistante	Liste vide
-Template supprimé récemment	Erreur contrôlée
+Token SSO invalide	Accès refusé avec message explicite
+Token expiré	Nouvelle authentification requise
+Utilisateur non référencé	Accès refusé
+Charte non signée	Accès bloqué avec invitation à signer
+Session expirée	Redirection vers authentification
+Erreur IdP	Message d’erreur contrôlé
 ________________________________________
 8. Critères d’acceptation (produit)
-•	Les templates sont accessibles via API
-•	Les templates sont stockés et maintenus en base
-•	Seuls les templates actifs sont exposés
-•	L’utilisation est tracée
-•	Aucune donnée sensible n’est incluse dans les templates
+•	Authentification WebSSO fonctionnelle
+•	Aucune création de compte manuel requise
+•	Session créée et maintenue
+•	Accès bloqué si charte non signée
+•	Tous les accès sont loggés
+•	Conformité sécurité respectée
 ________________________________________
 Déclinaison en sous-US techniques (responsabilité plateforme)
 ________________________________________
-US-PROD-V0-06-A — Stockage des templates de prompts
+US-PROD-V0-01-A — Intégration WebSSO / IdP
 Description
-Stocker les templates de prompts dans une base de données structurée.
+Permettre la redirection vers l’IdP WebSSO et la récupération des assertions d’identité.
 Edge cases
-•	Template incomplet
-•	Conflit d’identifiant
+•	IdP indisponible
+•	Assertion mal formée
 Critères d’acceptation
-•	Schéma validé
-•	Templates persistants et récupérables
+•	Redirection fonctionnelle
+•	Assertion reçue et exploitable
 ________________________________________
-US-PROD-V0-06-B — API de listing des templates
+US-PROD-V0-01-B — Validation du token / assertion SSO
 Description
-Exposer un endpoint permettant de récupérer les templates disponibles.
+Valider la signature, l’intégrité et la validité temporelle du token SSO.
 Edge cases
-•	Aucune catégorie correspondante
-•	Accès non autorisé
+•	Signature invalide
+•	Token expiré
 Critères d’acceptation
-•	Filtrage fonctionnel
-•	Réponse paginée et performante
+•	Tokens invalides rejetés
+•	Motif de rejet tracé
 ________________________________________
-US-PROD-V0-06-C — Filtrage & éligibilité des templates
+US-PROD-V0-01-C — Création et gestion de session applicative
 Description
-Filtrer les templates exposés selon leur statut et règles de conformité.
+Créer une session backend associée à l’utilisateur authentifié.
 Edge cases
-•	Template marqué actif mais non conforme
-•	Erreur de configuration
+•	Session expirée
+•	Collision de session
 Critères d’acceptation
-•	Aucun template non conforme exposé
-•	Décision traçable
+•	Session unique et traçable
+•	Expiration respectée
 ________________________________________
-US-PROD-V0-06-D — Injection du template dans le flux conversationnel
+US-PROD-V0-01-D — Vérification de la charte applicative (PolicyShield)
 Description
-Injecter le contenu du template dans la requête utilisateur avant orchestration.
+Vérifier que l’utilisateur a signé la charte applicative avant autorisation d’accès.
 Edge cases
-•	Template trop long
-•	Conflit avec le prompt utilisateur
+•	Charte non signée
+•	Version de charte obsolète
 Critères d’acceptation
-•	Injection conforme
-•	Prompt final cohérent
+•	Accès bloqué si charte non signée
+•	Décision auditable
 ________________________________________
-US-PROD-V0-06-E — Observabilité & audit d’usage des templates
+US-PROD-V0-01-E — Journalisation des accès
 Description
-Tracer l’utilisation des templates pour audit et amélioration produit.
+Centraliser les logs d’accès et d’authentification pour audit et sécurité.
 Edge cases
-•	Logs manquants
-•	Désynchronisation conversation/template
+•	Log manquant
+•	Identité non corrélée
 Critères d’acceptation
-•	Logs exploitables
-•	Corrélation avec conversation_id
+•	Logs complets et corrélables
+•	Exploitables par sécurité et audit
 ________________________________________
 9. Definition of Done (US produit)
-•	Templates stockés et exposés via API
-•	Filtrage et conformité respectés
-•	Injection fonctionnelle dans les flux
-•	Traçabilité complète
-•	Expérience utilisateur accélérée
-________________________________________
-Si tu veux, je peux maintenant :
+•	Authentification WebSSO opérationnelle
+•	Sessions sécurisées et traçables
+•	Charte applicative appliquée
+•	Aucun accès non authentifié
+•	Logs centralisés et auditables
 
