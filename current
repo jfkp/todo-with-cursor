@@ -1,184 +1,146 @@
-US-PLAT-BE-V0-02 — Streaming des réponses LLM (token par token)
-1. Description
+US-PROD-V0-01 — Accès à un chat IA via interface web
+1. User Story (formulation produit)
 
-En tant que plateforme IA gouvernée (backend),
-je dois permettre aux clients applicatifs de recevoir la réponse du LLM de manière progressive (token par token) afin de réduire la latence perçue et améliorer l’expérience utilisateur finale, sans attendre la fin complète de la génération.
+En tant qu’utilisateur de la plateforme IA gouvernée,
+je veux accéder à une interface de chat web afin de soumettre des prompts textuels aux services IA et obtenir des réponses fiables, sécurisées et traçables.
 
-La plateforme agit comme relai de streaming sécurisé et gouverné, sans logique UI.
+2. Valeur utilisateur
 
-2. Finalité plateforme
+Interagir simplement avec des services IA via un canal conversationnel
 
-Réduire le temps d’attente perçu
+Être guidé et protégé contre les erreurs de saisie
 
-Supporter des expériences conversationnelles temps réel
+Bénéficier d’un service stable même en cas d’erreurs temporaires
 
-Standardiser le streaming quel que soit le fournisseur LLM
+Avoir la garantie que mes requêtes sont correctement prises en charge
 
-Garantir que le streaming respecte sécurité, gouvernance et observabilité
+3. Responsabilité de la plateforme (backend)
 
-3. Périmètre fonctionnel
+La plateforme n’expose pas l’interface web, mais elle est responsable de :
+
+Valider les requêtes issues du chat (payload fonctionnel)
+
+Garantir la cohérence de la session conversationnelle
+
+Gérer les erreurs et les retries de manière transparente
+
+Tracer toutes les requêtes et réponses à des fins d’audit et d’observabilité
+
+4. Périmètre fonctionnel
 Inclus
 
-Streaming token par token
+Réception de prompts textuels
 
-Transmission incrémentale de la réponse
+Validation du payload (prompt, modèle, session)
 
-Support SSE ou HTTP chunked (abstraction client)
+Gestion des erreurs fonctionnelles et techniques
 
-Propagation du contexte de sécurité et de traçabilité
+Gestion des retries contrôlés
 
-Arrêt immédiat du flux en cas d’incident
+Traçabilité complète des requêtes
 
 Exclu
 
-Rendu UI
+Rendu graphique du chat
 
-Post-traitement de la réponse côté client
+Gestion du streaming de réponse (US dédiée)
 
-Rejeu de flux
+Personnalisation de l’interface
 
-Streaming multimodal (image/audio)
+Gestion des pièces jointes (US dédiée)
 
-4. Acteurs backend
+5. Règles fonctionnelles clés
 
-Client applicatif (UI, assistant, API consumer)
+Un prompt doit toujours être associé à une session valide
 
-API Backend
+Le modèle demandé doit être reconnu par la plateforme
 
-PolicyShield
+Toute erreur doit produire une réponse compréhensible pour l’utilisateur
 
-Security Guardrails
+Aucune requête ne doit être traitée sans journalisation
 
-Orchestrateur
+6. Edge cases (vision utilisateur)
+Situation	Attente utilisateur
+Prompt vide	Message clair indiquant l’erreur
+Session inconnue	Invitation à redémarrer une conversation
+Modèle invalide	Message explicite
+Erreur temporaire du service IA	Retry automatique ou message d’indisponibilité
+Erreur persistante	Réponse contrôlée sans blocage du système
+7. Critères d’acceptation (orientés produit)
 
-LLMaaS (via LiteLLM)
+L’utilisateur peut soumettre un prompt textuel
 
-Observabilité
+Les requêtes invalides sont rejetées avec un message clair
 
-5. Entrées fonctionnelles
-Champ	Description
-prompt	Texte utilisateur
-model_id	Modèle sélectionné
-session_id	Identifiant de conversation
-user_identity	Identité issue du SSO
-stream	Flag = true
-trace_id	Identifiant de corrélation
-6. Sorties fonctionnelles (stream)
-Élément	Description
-token	Fragment de texte généré
-event_type	token / end / error
-model_used	Modèle effectif
-usage_partial	Tokens cumulés
-trace_id	Corrélation
-7. Règles fonctionnelles backend
-ID	Règle
-RF-STREAM-01	Le streaming est optionnel
-RF-STREAM-02	Le flux commence après validation complète
-RF-STREAM-03	Les tokens sont transmis dès réception
-RF-STREAM-04	Toute erreur coupe immédiatement le flux
-RF-STREAM-05	Les métadonnées sont enrichies en continu
-RF-STREAM-06	Le flux est observable de bout en bout
-8. Edge cases (plateforme)
-Edge case	Comportement attendu
-Client se déconnecte	Arrêt immédiat du streaming
-Timeout LLM	Événement error + fermeture
-Blocage Guardrails	Aucun token transmis
-Erreur réseau	Flux interrompu proprement
-Token vide	Ignoré
-Débordement buffer	Backpressure appliquée
-9. Critères d’acceptation
+Les erreurs techniques sont gérées sans exposition brute
 
-Le streaming est activable par paramètre
+Les requêtes sont traitées même en cas d’erreur temporaire
 
-Les tokens sont reçus progressivement
+Chaque requête est traçable a posteriori
 
-La réponse finale est signalée explicitement
+Déclinaison en sous-US (responsabilité plateforme)
 
-Les erreurs sont transmises proprement
+Ces sous-US ne sont pas visibles de l’utilisateur, mais nécessaires pour garantir l’expérience.
 
-Le flux respecte les règles de sécurité
-
-Les métriques sont collectées
-
-Sous-US techniques (backend)
-US-PLAT-BE-02-A — Activation du mode streaming
+US-PROD-V0-01-A — Validation du payload conversationnel
 
 Description
-La plateforme accepte et interprète le paramètre stream=true.
+Valider que chaque requête issue du chat contient un prompt valide, un modèle reconnu et une session cohérente.
 
 Edge cases
 
-Flag absent → mode synchrone
+Champ manquant
 
-Flag invalide → rejet
+Payload mal formé
 
-Critères
+Critères d’acceptation
 
-Décision correcte du mode d’exécution
+Toute requête invalide est rejetée proprement
 
-US-PLAT-BE-02-B — Relai du streaming depuis LLMaaS
+Aucune requête invalide n’atteint les services IA
+
+US-PROD-V0-01-B — Gestion des erreurs et retries
 
 Description
-La plateforme relaie le flux tokenisé fourni par LiteLLM.
+Gérer les erreurs des services IA avec des retries contrôlés afin d’éviter les interruptions inutiles pour l’utilisateur.
 
 Edge cases
 
-Flux interrompu
+Timeout service IA
 
-LLM non compatible streaming
+Erreur transitoire
 
-Critères
+Critères d’acceptation
 
-Tokens transmis sans altération
+Retry automatique limité
 
-US-PLAT-BE-02-C — Gestion des erreurs en streaming
+Message utilisateur compréhensible en cas d’échec
+
+US-PROD-V0-01-C — Traçabilité et observabilité des requêtes
 
 Description
-Toute erreur est propagée comme un événement de flux.
+Tracer chaque requête et réponse pour permettre le suivi, l’audit et l’analyse de la plateforme.
 
 Edge cases
 
-Erreur après N tokens
+Log manquant
 
-Timeout intermédiaire
+Trace incomplète
 
-Critères
+Critères d’acceptation
 
-Flux fermé proprement
+Chaque requête est enregistrée
 
-US-PLAT-BE-02-D — Observabilité du streaming
+Les logs sont corrélables par session
 
-Description
-Chaque flux est tracé et mesuré.
+8. Définition of Done (US produit)
 
-Edge cases
+L’utilisateur peut converser via le chat web
 
-Flux non terminé
+Les requêtes sont validées systématiquement
 
-Flux coupé brutalement
+Les erreurs sont gérées sans rupture d’expérience
 
-Critères
+Toutes les requêtes sont traçables
 
-Tokens, latence, erreurs visibles
-
-US-PLAT-BE-02-E — Sécurité & gouvernance du streaming
-
-Description
-Le streaming est bloqué si les contrôles échouent.
-
-Edge cases
-
-Guardrails output déclenché en cours de flux
-
-Critères
-
-Arrêt immédiat
-
-Incident tracé
-
-10. Lien avec les autres US
-Dépendance	Raison
-US-PLAT-BE-V0-01	API synchrone existante
-US-ORCH-V0-xx	Orchestration gouvernée
-US-GR-V0	Sécurité entrée/sortie
-US-OBS-V0	Traçabilité
+Aucun appel IA n’est effectué sans contrôle préalable
