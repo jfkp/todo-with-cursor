@@ -1,92 +1,104 @@
-US-PROD-V0-01 — Accès à un chat IA via interface web
+US-PROD-V0-02 — Affichage progressif des réponses LLM (Streaming)
 1. User Story (formulation produit)
 En tant qu’utilisateur de la plateforme IA gouvernée,
-je veux accéder à une interface de chat web afin de soumettre des prompts textuels aux services IA et obtenir des réponses fiables, sécurisées et traçables.
+je veux voir les réponses du LLM s’afficher progressivement, token par token, afin de ne pas attendre la fin complète de la génération et de pouvoir interrompre ou reprendre la consultation si nécessaire.
 ________________________________________
 2. Valeur utilisateur
-•	Interagir simplement avec des services IA via un canal conversationnel
-•	Être guidé et protégé contre les erreurs de saisie
-•	Bénéficier d’un service stable même en cas d’erreurs temporaires
-•	Avoir la garantie que mes requêtes sont correctement prises en charge
+•	Réduction du temps d’attente perçu
+•	Meilleure fluidité des échanges conversationnels
+•	Capacité à interrompre une réponse trop longue ou non pertinente
+•	Expérience proche d’un échange humain en temps réel
 ________________________________________
 3. Responsabilité de la plateforme (backend)
-La plateforme n’expose pas l’interface web, mais elle est responsable de :
-•	Valider les requêtes issues du chat (payload fonctionnel)
-•	Garantir la cohérence de la session conversationnelle
-•	Gérer les erreurs et les retries de manière transparente
-•	Tracer toutes les requêtes et réponses à des fins d’audit et d’observabilité
+La plateforme est responsable de :
+•	Exposer une capacité de réponse en streaming
+•	Gérer le flux de tokens de manière fiable
+•	Permettre l’interruption volontaire du flux par l’utilisateur
+•	Autoriser une reconnexion à la session sans incohérence
+•	Garantir la traçabilité du flux partiel et final
+La plateforme ne gère pas le rendu UI, uniquement le flux backend.
 ________________________________________
 4. Périmètre fonctionnel
 Inclus
-•	Réception de prompts textuels
-•	Validation du payload (prompt, modèle, session)
-•	Gestion des erreurs fonctionnelles et techniques
-•	Gestion des retries contrôlés
-•	Traçabilité complète des requêtes
+•	Streaming token par token depuis le LLM
+•	Envoi progressif de la réponse
+•	Interruption du flux à la demande utilisateur
+•	Gestion de la reconnexion à une session existante
+•	Journalisation des événements de streaming
 Exclu
-•	Rendu graphique du chat
-•	Gestion du streaming de réponse (US dédiée)
-•	Personnalisation de l’interface
-•	Gestion des pièces jointes (US dédiée)
+•	Rendu graphique du flux
+•	Mise en forme du texte
+•	Analyse de sortie par Guardrails (US séparée)
+•	Multimodalité (US séparée)
 ________________________________________
 5. Règles fonctionnelles clés
-•	Un prompt doit toujours être associé à une session valide
-•	Le modèle demandé doit être reconnu par la plateforme
-•	Toute erreur doit produire une réponse compréhensible pour l’utilisateur
-•	Aucune requête ne doit être traitée sans journalisation
+•	Le streaming est optionnel et explicitement demandé
+•	Chaque token transmis appartient à une session active
+•	Une interruption stoppe immédiatement l’appel LLM
+•	Une reconnexion ne relance pas automatiquement la génération
+•	Le flux partiel est considéré comme une réponse valide
 ________________________________________
 6. Edge cases (vision utilisateur)
 Situation	Attente utilisateur
-Prompt vide	Message clair indiquant l’erreur
-Session inconnue	Invitation à redémarrer une conversation
-Modèle invalide	Message explicite
-Erreur temporaire du service IA	Retry automatique ou message d’indisponibilité
-Erreur persistante	Réponse contrôlée sans blocage du système
+LLM ne supporte pas le streaming	Réponse non streamée avec message clair
+Interruption volontaire	Arrêt immédiat du flux
+Perte de connexion	Possibilité de se reconnecter sans erreur
+Timeout pendant le streaming	Message d’erreur contrôlé
+Flux très long	Possibilité d’interrompre à tout moment
 ________________________________________
 7. Critères d’acceptation (orientés produit)
-•	L’utilisateur peut soumettre un prompt textuel
-•	Les requêtes invalides sont rejetées avec un message clair
-•	Les erreurs techniques sont gérées sans exposition brute
-•	Les requêtes sont traitées même en cas d’erreur temporaire
-•	Chaque requête est traçable a posteriori
+•	L’utilisateur reçoit les tokens progressivement
+•	L’interruption stoppe réellement la génération
+•	Une reconnexion ne provoque pas d’incohérence
+•	Aucun token n’est envoyé hors session valide
+•	Les événements sont exploitables en audit
 ________________________________________
 Déclinaison en sous-US (responsabilité plateforme)
-Ces sous-US ne sont pas visibles de l’utilisateur, mais nécessaires pour garantir l’expérience.
 ________________________________________
-US-PROD-V0-01-A — Validation du payload conversationnel
+US-PROD-V0-02-A — Gestion du streaming LLM
 Description
-Valider que chaque requête issue du chat contient un prompt valide, un modèle reconnu et une session cohérente.
+Permettre à la plateforme de recevoir et relayer les tokens générés par le LLM en continu.
 Edge cases
-•	Champ manquant
-•	Payload mal formé
+•	LLM sans support streaming
+•	Flux interrompu côté fournisseur
 Critères d’acceptation
-•	Toute requête invalide est rejetée proprement
-•	Aucune requête invalide n’atteint les services IA
+•	Tokens transmis dans l’ordre
+•	Flux proprement terminé ou interrompu
 ________________________________________
-US-PROD-V0-01-B — Gestion des erreurs et retries
+US-PROD-V0-02-B — Interruption contrôlée du flux
 Description
-Gérer les erreurs des services IA avec des retries contrôlés afin d’éviter les interruptions inutiles pour l’utilisateur.
+Permettre à l’utilisateur d’interrompre la génération en cours.
 Edge cases
-•	Timeout service IA
-•	Erreur transitoire
+•	Interruption multiple
+•	Interruption tardive (fin proche)
 Critères d’acceptation
-•	Retry automatique limité
-•	Message utilisateur compréhensible en cas d’échec
+•	Appel LLM annulé
+•	Aucune génération résiduelle
 ________________________________________
-US-PROD-V0-01-C — Traçabilité et observabilité des requêtes
+US-PROD-V0-02-C — Reconnexion à une session de streaming
 Description
-Tracer chaque requête et réponse pour permettre le suivi, l’audit et l’analyse de la plateforme.
+Permettre à l’utilisateur de se reconnecter à une session interrompue sans corruption d’état.
 Edge cases
-•	Log manquant
-•	Trace incomplète
+•	Session expirée
+•	Session déjà terminée
 Critères d’acceptation
-•	Chaque requête est enregistrée
-•	Les logs sont corrélables par session
+•	Message clair à l’utilisateur
+•	Aucune reprise automatique non désirée
 ________________________________________
-8. Définition of Done (US produit)
-•	L’utilisateur peut converser via le chat web
-•	Les requêtes sont validées systématiquement
-•	Les erreurs sont gérées sans rupture d’expérience
-•	Toutes les requêtes sont traçables
-•	Aucun appel IA n’est effectué sans contrôle préalable
+US-PROD-V0-02-D — Traçabilité du streaming
+Description
+Tracer les événements de début, interruption et fin de streaming.
+Edge cases
+•	Perte de logs
+•	Événements partiels
+Critères d’acceptation
+•	Logs corrélés à la session
+•	Historique exploitable en audit
+________________________________________
+8. Definition of Done (US produit)
+•	Le streaming fonctionne de bout en bout
+•	L’utilisateur peut interrompre la génération
+•	La reconnexion est gérée proprement
+•	Aucune incohérence de session
+•	Tous les événements sont traçables
 
