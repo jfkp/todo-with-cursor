@@ -1,264 +1,247 @@
-US-PLAT-EMB-01 — Connexion LLMaas Embedding pour recherche sémantique
-🎯 Description
+US-PLAT-BE-V0-01 — Exposition d’une API conversationnelle backend (mode synchrone)
+1. Description
 
-En tant que plateforme, je veux me connecter aux services LLMaas d’embedding afin de générer des vecteurs sémantiques exploitables pour la recherche (RAG, similarité, indexation), tout en garantissant sécurité des connexions, résilience via circuit breaker et performance maîtrisée (<100ms).
+En tant que plateforme IA gouvernée (backend uniquement),
+je dois exposer une API conversationnelle synchrone permettant à des clients externes (UI, applications, assistants) de soumettre des requêtes textuelles afin qu’elles soient validées, gouvernées, orchestrées et routées vers les services IA, puis retournées sous forme de réponse complète.
 
-📦 Périmètre fonctionnel
+👉 Aucun streaming
+👉 Une requête = une réponse
+👉 La plateforme ne gère pas l’UI
+
+2. Finalité plateforme
+
+Offrir un point d’entrée backend unique pour les requêtes IA
+
+Garantir la sécurité, la conformité et la traçabilité
+
+Normaliser les échanges client → IA
+
+Découpler totalement client / orchestration / exécution
+
+Préparer l’extension vers d’autres modes (streaming, async)
+
+3. Périmètre fonctionnel
 Inclus
 
-Appel API embedding via LiteLLM ou endpoint direct LLMaas
+API REST synchrone
 
-Authentification sécurisée :
+Réception de prompts textuels
 
-mTLS ou
+Validation du payload
 
-JWT signé
+Gestion des sessions conversationnelles
 
-Protection via circuit breaker
+Appel à l’Orchestrateur
 
-Timeout configurable
+Retour d’une réponse complète
 
-Latence cible < 100 ms (hors réseau extrême)
+Gestion des erreurs
 
-Transmission métadonnées :
-
-request_id
-
-user_id_hash
-
-sensitivity
-
-embedding_model
-
-Capture métriques :
-
-latency
-
-vector_size
-
-status
-
-Journalisation complète
+Observabilité bout-en-bout
 
 Exclu
 
-Indexation vectorielle (gérée par ContextHub)
+Streaming
 
-Reranking
+Multimodal
 
-Guardrails (exécutés en amont)
+Upload de fichiers
 
-Multi-provider intelligent routing
+UI
 
-🔧 Sous-US techniques
-🔹 US-PLAT-EMB-01-T01 — Intégration API Embedding
+Prompt suggestion
+
+Agents autonomes
+
+4. Acteurs backend
+
+Client externe (UI, application métier, assistant)
+
+API Backend
+
+PolicyShield
+
+Security Guardrails
+
+Orchestrateur
+
+LLMaaS
+
+Observabilité
+
+5. Entrées fonctionnelles (API)
+Champ	Description
+prompt	Texte utilisateur
+model_id	Identifiant du modèle demandé
+session_id	Identifiant de conversation
+user_identity	Identité issue du SSO
+trace_id	Identifiant de corrélation
+6. Sorties fonctionnelles (API)
+Champ	Description
+response	Réponse générée ou message contrôlé
+session_id	Identifiant de session
+model_used	Modèle réellement utilisé
+status	SUCCESS / BLOCKED / ERROR
+usage	tokens_in, tokens_out, latence
+7. Règles fonctionnelles backend
+ID	Règle
+RF-BE-01	Toute requête doit être authentifiée
+RF-BE-02	Toute requête passe par PolicyShield
+RF-BE-03	Toute requête est analysée par Guardrails
+RF-BE-04	Toute requête est orchestrée
+RF-BE-05	Une réponse complète est retournée
+RF-BE-06	Toute requête est tracée
+8. Edge cases (plateforme backend)
+Edge case	Comportement attendu
+Payload invalide	HTTP 400 + message explicite
+Modèle non autorisé	HTTP 403
+Session absente	Création automatique
+Timeout LLM	Erreur contrôlée
+Incident externe	Circuit breaker
+Erreur interne	HTTP 500 normalisé
+9. Critères d’acceptation
+
+L’API REST synchrone est exposée
+
+Les payloads invalides sont rejetés
+
+Les requêtes valides sont orchestrées
+
+Les réponses sont complètes (non streamées)
+
+Les erreurs sont normalisées
+
+Chaque requête est observable
+
+Déclinaison en sous-US techniques (backend)
+US-PLAT-BE-01-A — Exposition de l’API conversationnelle synchrone
+
 Description
-
-Implémenter le client d’appel vers le service d’embedding LLMaas.
+La plateforme expose un endpoint REST pour les requêtes conversationnelles synchrones.
 
 Périmètre
 
-Endpoint /embeddings
+Endpoint versionné
 
-Mapping modèle embedding
-
-Format standard OpenAI-compatible
-
-Gestion batch (optionnel)
+Réponse JSON complète
 
 Edge cases
 
-Modèle embedding inexistant
+Méthode HTTP invalide
 
-Réponse sans vecteur
-
-Format incorrect
-
-Taille vecteur inattendue
+Version API non supportée
 
 Critères d’acceptation
 
-Embedding retourné conforme
+Endpoint documenté
 
-Taille vecteur validée
+Tests contractuels OK
 
-request_id propagé
+US-PLAT-BE-01-B — Validation des requêtes
 
-Log technique généré
-
-🔹 US-PLAT-EMB-01-T02 — Authentification sécurisée (mTLS / JWT)
 Description
-
-Sécuriser les connexions vers LLMaas.
-
-Périmètre
-Option 1 — mTLS
-
-Certificat client installé
-
-Vérification certificat serveur
-
-Option 2 — JWT
-
-Token signé par plateforme
-
-Vérification signature côté LLMaas
-
-Rotation clé supportée
-
-Edge cases
-
-Certificat expiré
-
-JWT expiré
-
-Erreur signature
-
-TLS handshake failure
-
-Critères d’acceptation
-
-Refus immédiat si auth invalide
-
-Aucun appel non authentifié possible
-
-Échec loggué en audit
-
-🔹 US-PLAT-EMB-01-T03 — Circuit Breaker Embedding
-Description
-
-Protéger la plateforme contre les cascades d’erreurs LLMaas.
+La plateforme valide la structure et la cohérence du payload.
 
 Périmètre
 
-Circuit s’ouvre après N erreurs consécutives
-
-État stocké en cache distribué
-
-Ouvert → appel refusé immédiatement
-
-Fermeture automatique après délai configurable
-
-Logs d’ouverture / fermeture
+prompt, model_id, session_id
 
 Edge cases
 
-Service embedding lent
+Prompt vide
 
-Timeout répété
-
-Service retourne erreurs 5xx
-
-Cache indisponible
+Prompt trop long
 
 Critères d’acceptation
 
-Circuit s’ouvre correctement
+Rejet immédiat
 
-Aucun appel effectué quand ouvert
+Erreurs normalisées
 
-Réouverture automatique
+US-PLAT-BE-01-C — Gestion des sessions conversationnelles
 
-Logs d’état persistés
-
-🔹 US-PLAT-EMB-01-T04 — Garantie de performance (<100ms)
 Description
-
-Assurer une latence d’embedding inférieure à 100ms en conditions nominales.
+La plateforme gère la continuité des conversations via session_id.
 
 Périmètre
 
-Monitoring latence
+Création automatique
 
-Alerte si >100ms
-
-Métriques temps réel
-
-Option warm-up connexion
+Association utilisateur/session
 
 Edge cases
 
-Latence réseau externe
+Session inconnue
 
-Modèle saturé
-
-Batch volumineux
+Session expirée
 
 Critères d’acceptation
 
-95e percentile < 100ms
+Session persistée
 
-Dégradation détectée
+Continuité assurée
 
-Alerte déclenchée si dépassement
+US-PLAT-BE-01-D — Appel à l’Orchestrateur
 
-🔹 US-PLAT-EMB-01-T05 — Journalisation & Observabilité
 Description
-
-Tracer chaque appel embedding pour audit et optimisation.
+La plateforme transmet la requête validée à l’Orchestrateur.
 
 Périmètre
 
-Logs :
+Propagation identité & trace_id
 
-request_id
-
-user_id_hash
-
-model
-
-sensitivity
-
-latency
-
-vector_dimension
-
-circuit_state
-
-status
+Appel synchrone
 
 Edge cases
 
-Logs incomplets
-
-Données sensibles dans logs
-
-Corrélation manquante
+Orchestrateur indisponible
 
 Critères d’acceptation
 
-100% des appels tracés
+Appel unique
 
-Corrélation possible avec RAG
+Temps maîtrisé
 
-Dashboard latence embedding disponible
+US-PLAT-BE-01-E — Gestion des erreurs
 
-🔹 US-PLAT-EMB-01-T06 — Gestion erreurs & fallback
 Description
-
-Normaliser les erreurs embedding.
+La plateforme capture et transforme toutes les erreurs techniques.
 
 Périmètre
 
-Mapping erreurs :
+Timeouts
 
-Type erreur	Comportement
-Timeout	Erreur contrôlée
-Circuit ouvert	Rejet immédiat
-401	Erreur auth
-5xx	Retry ou fallback
+Exceptions
+
 Edge cases
 
-Erreur intermittente
-
-Embedding partiel
-
-Mauvaise taille vecteur
+Erreurs en cascade
 
 Critères d’acceptation
 
-Aucun stacktrace exposé
+Messages utilisateurs compréhensibles
 
-Message standardisé
+Aucun détail interne exposé
 
-Log technique détaillé
+US-PLAT-BE-01-F — Observabilité backend
+
+Description
+La plateforme journalise toutes les requêtes et réponses.
+
+Périmètre
+
+Logs
+
+Traces
+
+Métriques
+
+Edge cases
+
+Logs manquants
+
+Critères d’acceptation
+
+Corrélation complète
+
+Audit possible
