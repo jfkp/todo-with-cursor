@@ -1,78 +1,47 @@
 US-PROD-V0-ADM-01 — Gestion des rôles et permissions granulaires
 1. User Story (produit)
-
 En tant qu’administrateur de la plateforme,
 je veux gérer des rôles avec des permissions granulaires, afin d’adapter précisément les accès aux fonctionnalités selon les besoins des utilisateurs, tout en assurant auditabilité, délégation, héritage hiérarchique et conformité aux juridictions des employés via OPAL.
-
+________________________________________
 2. Valeur métier
-
-Sécurisation fine des accès
-
-Alignement avec les contraintes juridiques (juridictions)
-
-Gouvernance claire et traçable
-
-Réduction des risques de mauvaise configuration
-
-Scalabilité organisationnelle
-
+•	Sécurisation fine des accès
+•	Alignement avec les contraintes juridiques (juridictions)
+•	Gouvernance claire et traçable
+•	Réduction des risques de mauvaise configuration
+•	Scalabilité organisationnelle
+________________________________________
 3. Responsabilité de la plateforme
-
 La plateforme est responsable de :
-
-La définition et la persistance des rôles et permissions
-
-L’exposition d’APIs d’administration (sans UI)
-
-L’intégration avec OPAL pour enrichir le contexte employé (juridiction, entité)
-
-L’enforcement des permissions sur toutes les fonctionnalités
-
-La traçabilité complète des changements
-
-L’exposition de données pour un dashboard d’administration
-
+•	La définition et la persistance des rôles et permissions
+•	L’exposition d’APIs d’administration (sans UI)
+•	L’intégration avec OPAL pour enrichir le contexte employé (juridiction, entité)
+•	L’enforcement des permissions sur toutes les fonctionnalités
+•	La traçabilité complète des changements
+•	L’exposition de données pour un dashboard d’administration
+________________________________________
 4. Périmètre fonctionnel
 Inclus
-
-Rôles standards : user, power_user, analyste, admin, superadmin
-
-Permissions granulaires par fonctionnalité (lecture, écriture, exécution, administration)
-
-CRUD rôles et permissions (administrateur)
-
-Assignation et délégation de rôles
-
-Héritage hiérarchique des rôles
-
-Intégration OPAL (juridiction, entité)
-
-Audit des changements
-
-APIs pour dashboard
-
+•	Rôles standards : user, power_user, analyste, admin, superadmin
+•	Permissions granulaires par fonctionnalité (lecture, écriture, exécution, administration)
+•	CRUD rôles et permissions (administrateur)
+•	Assignation et délégation de rôles
+•	Héritage hiérarchique des rôles
+•	Intégration OPAL (juridiction, entité)
+•	Audit des changements
+•	APIs pour dashboard
 Exclu
-
-Authentification utilisateur (IdP)
-
-UI d’administration
-
-Gestion des identités RH
-
+•	Authentification utilisateur (IdP)
+•	UI d’administration
+•	Gestion des identités RH
+________________________________________
 5. Règles fonctionnelles clés
-
-Un utilisateur peut avoir plusieurs rôles
-
-Les permissions sont cumulatives
-
-L’héritage ajoute automatiquement les permissions parentes
-
-Les juridictions OPAL peuvent restreindre certaines permissions
-
-Toute action d’administration est auditée
-
-Le principe du moindre privilège s’applique par défaut
-
+•	Un utilisateur peut avoir plusieurs rôles
+•	Les permissions sont cumulatives
+•	L’héritage ajoute automatiquement les permissions parentes
+•	Les juridictions OPAL peuvent restreindre certaines permissions
+•	Toute action d’administration est auditée
+•	Le principe du moindre privilège s’applique par défaut
+________________________________________
 6. Edge cases (niveau produit)
 Edge case	Attente plateforme
 Suppression d’un rôle actif	Refus ou migration obligatoire
@@ -81,221 +50,129 @@ Délégation non autorisée	Refus + audit
 Conflit héritage / permission directe	Permission la plus restrictive
 Boucle d’héritage	Validation bloquante
 Assignation massive partielle	Transaction atomique
+________________________________________
 7. Critères d’acceptation (US produit)
-
-Les rôles et permissions sont configurables via API
-
-Les juridictions OPAL sont prises en compte
-
-Les permissions sont appliquées à toutes les fonctionnalités
-
-Les délégations sont contrôlées
-
-Tous les changements sont audités
-
-Les données sont exploitables par un dashboard
-
+•	Les rôles et permissions sont configurables via API
+•	Les juridictions OPAL sont prises en compte
+•	Les permissions sont appliquées à toutes les fonctionnalités
+•	Les délégations sont contrôlées
+•	Tous les changements sont audités
+•	Les données sont exploitables par un dashboard
+________________________________________
 Déclinaison en sous-US techniques
+________________________________________
 US-PROD-V0-ADM-01-A — Modélisation rôles, permissions et héritage
 Description
-
 Définir le modèle de données pour les rôles, permissions et relations hiérarchiques.
-
 Périmètre
-
-Tables rôles, permissions, relations
-
-Contraintes d’intégrité
-
+•	Tables rôles, permissions, relations
+•	Contraintes d’intégrité
 Edge cases
-
-Héritage circulaire
-
-Permissions orphelines
-
+•	Héritage circulaire
+•	Permissions orphelines
 Critères d’acceptation
-
-Modèle validé
-
-Contraintes appliquées
-
+•	Modèle validé
+•	Contraintes appliquées
+________________________________________
 US-PROD-V0-ADM-01-B — API CRUD rôles & permissions
 Description
-
 Exposer des APIs pour créer, modifier et supprimer rôles et permissions.
-
 Périmètre
-
-Endpoints REST sécurisés
-
-Validation des payloads
-
+•	Endpoints REST sécurisés
+•	Validation des payloads
 Edge cases
-
-Suppression rôle utilisé
-
-Permission dupliquée
-
+•	Suppression rôle utilisé
+•	Permission dupliquée
 Critères d’acceptation
-
-APIs documentées
-
-Validation stricte
-
-Erreurs explicites
-
+•	APIs documentées
+•	Validation stricte
+•	Erreurs explicites
+________________________________________
 US-PROD-V0-ADM-01-C — Intégration OPAL (juridictions & entités)
 Description
-
 Récupérer les informations OPAL (juridiction, entité) pour enrichir le contexte utilisateur.
-
 Périmètre
-
-Appel API OPAL
-
-Cache des métadonnées employé
-
+•	Appel API OPAL
+•	Cache des métadonnées employé
 Edge cases
-
-OPAL indisponible
-
-Juridiction inconnue
-
+•	OPAL indisponible
+•	Juridiction inconnue
 Critères d’acceptation
-
-Fallback contrôlé
-
-Décision explicable
-
+•	Fallback contrôlé
+•	Décision explicable
+________________________________________
 US-PROD-V0-ADM-01-D — Assignation & délégation des rôles
 Description
-
 Permettre l’assignation et la délégation des rôles dans des limites contrôlées.
-
 Périmètre
-
-Assignation individuelle et par lot
-
-Délégation restreinte
-
+•	Assignation individuelle et par lot
+•	Délégation restreinte
 Edge cases
-
-Délégation hors périmètre
-
-Assignation contradictoire
-
+•	Délégation hors périmètre
+•	Assignation contradictoire
 Critères d’acceptation
-
-Vérification droits de l’assignateur
-
-Assignation atomique
-
+•	Vérification droits de l’assignateur
+•	Assignation atomique
+________________________________________
 US-PROD-V0-ADM-01-E — Héritage hiérarchique des rôles
 Description
-
 Calculer et appliquer automatiquement les permissions héritées.
-
 Périmètre
-
-Résolution hiérarchique
-
-Calcul des permissions effectives
-
+•	Résolution hiérarchique
+•	Calcul des permissions effectives
 Edge cases
-
-Changement de rôle parent
-
-Profondeur excessive
-
+•	Changement de rôle parent
+•	Profondeur excessive
 Critères d’acceptation
-
-Permissions cohérentes
-
-Temps de calcul maîtrisé
-
+•	Permissions cohérentes
+•	Temps de calcul maîtrisé
+________________________________________
 US-PROD-V0-ADM-01-F — Enforcement des permissions (PolicyShield)
 Description
-
 Appliquer les décisions d’autorisation sur toutes les APIs fonctionnelles.
-
 Périmètre
-
-Vérification synchrone
-
-Décision ALLOW / DENY
-
+•	Vérification synchrone
+•	Décision ALLOW / DENY
 Edge cases
-
-Décision indéterminée
-
-Permission manquante
-
+•	Décision indéterminée
+•	Permission manquante
 Critères d’acceptation
-
-Accès bloqué si non autorisé
-
-Décision traçable
-
+•	Accès bloqué si non autorisé
+•	Décision traçable
+________________________________________
 US-PROD-V0-ADM-01-G — Audit des rôles et permissions
 Description
-
 Tracer tous les changements et assignations de rôles.
-
 Périmètre
-
-Logs structurés
-
-Historique consultable
-
+•	Logs structurés
+•	Historique consultable
 Edge cases
-
-Log incomplet
-
-Identité non corrélée
-
+•	Log incomplet
+•	Identité non corrélée
 Critères d’acceptation
-
-Audit exhaustif
-
-Export possible
-
+•	Audit exhaustif
+•	Export possible
+________________________________________
 US-PROD-V0-ADM-01-H — APIs pour dashboard de gestion
 Description
-
 Exposer des APIs de lecture pour alimenter un dashboard d’administration.
-
 Périmètre
-
-Liste rôles
-
-Permissions effectives
-
-Historique
-
+•	Liste rôles
+•	Permissions effectives
+•	Historique
 Edge cases
-
-Volume élevé
-
-Accès non autorisé
-
+•	Volume élevé
+•	Accès non autorisé
 Critères d’acceptation
-
-Pagination
-
-Accès réservé admins
-
+•	Pagination
+•	Accès réservé admins
+________________________________________
 8. Definition of Done (US globale)
+•	CRUD rôles & permissions opérationnels
+•	Intégration OPAL fonctionnelle
+•	Héritage hiérarchique actif
+•	Délégation contrôlée
+•	Enforcement effectif sur les APIs
+•	Audit complet et exploitable
+•	APIs prêtes pour dashboard
 
-CRUD rôles & permissions opérationnels
-
-Intégration OPAL fonctionnelle
-
-Héritage hiérarchique actif
-
-Délégation contrôlée
-
-Enforcement effectif sur les APIs
-
-Audit complet et exploitable
-
-APIs prêtes pour dashboard
