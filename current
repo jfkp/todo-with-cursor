@@ -1,104 +1,127 @@
-US-PROD-V0-02 — Affichage progressif des réponses LLM (Streaming)
+US-PROD-V0-03 — Upload de fichier dans une conversation
 1. User Story (formulation produit)
 En tant qu’utilisateur de la plateforme IA gouvernée,
-je veux voir les réponses du LLM s’afficher progressivement, token par token, afin de ne pas attendre la fin complète de la génération et de pouvoir interrompre ou reprendre la consultation si nécessaire.
+je veux uploader un fichier (PDF, Word, Excel) dans une conversation afin que son contenu puisse être analysé, vectorisé et utilisé par l’IA pour répondre à mes questions de manière contextualisée.
 ________________________________________
 2. Valeur utilisateur
-•	Réduction du temps d’attente perçu
-•	Meilleure fluidité des échanges conversationnels
-•	Capacité à interrompre une réponse trop longue ou non pertinente
-•	Expérience proche d’un échange humain en temps réel
+•	Exploitation directe de documents métier existants
+•	Réponses basées sur le contenu réel des fichiers fournis
+•	Gain de temps (pas de copier/coller manuel)
+•	Continuité conversationnelle enrichie par les documents
 ________________________________________
 3. Responsabilité de la plateforme (backend)
 La plateforme est responsable de :
-•	Exposer une capacité de réponse en streaming
-•	Gérer le flux de tokens de manière fiable
-•	Permettre l’interruption volontaire du flux par l’utilisateur
-•	Autoriser une reconnexion à la session sans incohérence
-•	Garantir la traçabilité du flux partiel et final
-La plateforme ne gère pas le rendu UI, uniquement le flux backend.
+•	Accepter et valider les fichiers uploadés
+•	Associer le fichier à une conversation
+•	Stocker temporairement le fichier
+•	Déclencher les traitements nécessaires (extraction, vectorisation)
+•	Garantir la sécurité, la traçabilité et le nettoyage automatique
+La plateforme ne gère pas l’interface d’upload, uniquement le traitement backend.
 ________________________________________
 4. Périmètre fonctionnel
 Inclus
-•	Streaming token par token depuis le LLM
-•	Envoi progressif de la réponse
-•	Interruption du flux à la demande utilisateur
-•	Gestion de la reconnexion à une session existante
-•	Journalisation des événements de streaming
+•	Upload de fichiers PDF, Word, Excel
+•	Validation du format et de la taille
+•	Stockage temporaire sécurisé
+•	Association à une conversation
+•	Mise à disposition pour ContextHub (RAG local)
+•	Nettoyage automatique des fichiers expirés
+•	Journalisation des opérations
 Exclu
-•	Rendu graphique du flux
-•	Mise en forme du texte
-•	Analyse de sortie par Guardrails (US séparée)
-•	Multimodalité (US séparée)
+•	Rendu UI
+•	Édition de documents
+•	Analyse de sortie LLM
+•	Partage de documents entre utilisateurs (US séparée)
 ________________________________________
 5. Règles fonctionnelles clés
-•	Le streaming est optionnel et explicitement demandé
-•	Chaque token transmis appartient à une session active
-•	Une interruption stoppe immédiatement l’appel LLM
-•	Une reconnexion ne relance pas automatiquement la génération
-•	Le flux partiel est considéré comme une réponse valide
+•	Seuls les formats autorisés sont acceptés
+•	Une taille maximale est imposée
+•	Le fichier est lié à un conversation_id
+•	Le stockage est temporaire
+•	Les fichiers supprimés ou expirés ne sont plus exploitables
+•	Aucun fichier n’est accessible sans autorisation valide
 ________________________________________
 6. Edge cases (vision utilisateur)
 Situation	Attente utilisateur
-LLM ne supporte pas le streaming	Réponse non streamée avec message clair
-Interruption volontaire	Arrêt immédiat du flux
-Perte de connexion	Possibilité de se reconnecter sans erreur
-Timeout pendant le streaming	Message d’erreur contrôlé
-Flux très long	Possibilité d’interrompre à tout moment
+Format non supporté	Rejet clair avec message explicite
+Fichier trop volumineux	Rejet avec indication de limite
+Upload interrompu	Échec contrôlé, aucun état incohérent
+Fichier expiré	Document non utilisable
+Fichier supprimé	Plus aucune réponse basée dessus
 ________________________________________
 7. Critères d’acceptation (orientés produit)
-•	L’utilisateur reçoit les tokens progressivement
-•	L’interruption stoppe réellement la génération
-•	Une reconnexion ne provoque pas d’incohérence
-•	Aucun token n’est envoyé hors session valide
-•	Les événements sont exploitables en audit
+•	Le fichier est accepté uniquement s’il est conforme
+•	Le fichier est associé à la bonne conversation
+•	Le document est exploitable pour le RAG local
+•	Les fichiers expirés sont automatiquement nettoyés
+•	Toutes les opérations sont traçables
 ________________________________________
 Déclinaison en sous-US (responsabilité plateforme)
 ________________________________________
-US-PROD-V0-02-A — Gestion du streaming LLM
+US-PROD-V0-03-A — Validation et réception du fichier
 Description
-Permettre à la plateforme de recevoir et relayer les tokens générés par le LLM en continu.
+Permettre à la plateforme de recevoir un fichier et de valider son format et sa taille.
 Edge cases
-•	LLM sans support streaming
-•	Flux interrompu côté fournisseur
+•	Extension falsifiée
+•	MIME type incorrect
 Critères d’acceptation
-•	Tokens transmis dans l’ordre
-•	Flux proprement terminé ou interrompu
+•	Validation stricte format / taille
+•	Rejet explicite si non conforme
 ________________________________________
-US-PROD-V0-02-B — Interruption contrôlée du flux
+US-PROD-V0-03-B — Stockage temporaire sécurisé
 Description
-Permettre à l’utilisateur d’interrompre la génération en cours.
+Stocker le fichier de manière temporaire et sécurisée.
 Edge cases
-•	Interruption multiple
-•	Interruption tardive (fin proche)
+•	Échec de stockage
+•	Accès non autorisé
 Critères d’acceptation
-•	Appel LLM annulé
-•	Aucune génération résiduelle
+•	Fichier accessible uniquement par la session autorisée
+•	TTL appliqué automatiquement
 ________________________________________
-US-PROD-V0-02-C — Reconnexion à une session de streaming
+US-PROD-V0-03-C — Association du fichier à la conversation
 Description
-Permettre à l’utilisateur de se reconnecter à une session interrompue sans corruption d’état.
+Associer le fichier uploadé à une conversation utilisateur existante.
 Edge cases
-•	Session expirée
-•	Session déjà terminée
+•	Conversation inexistante
+•	Conversation expirée
 Critères d’acceptation
-•	Message clair à l’utilisateur
-•	Aucune reprise automatique non désirée
+•	Lien conversation ↔ fichier garanti
+•	Refus si conversation invalide
 ________________________________________
-US-PROD-V0-02-D — Traçabilité du streaming
+US-PROD-V0-03-D — Mise à disposition pour ContextHub
 Description
-Tracer les événements de début, interruption et fin de streaming.
+Rendre le fichier disponible pour extraction, vectorisation et RAG local.
 Edge cases
-•	Perte de logs
-•	Événements partiels
+•	Extraction impossible
+•	Fichier vide ou corrompu
 Critères d’acceptation
-•	Logs corrélés à la session
-•	Historique exploitable en audit
+•	Échec contrôlé sans bloquer la conversation
+•	État document traçable (READY / ERROR)
+________________________________________
+US-PROD-V0-03-E — Nettoyage et cycle de vie des fichiers
+Description
+Supprimer automatiquement les fichiers expirés ou supprimés par l’utilisateur.
+Edge cases
+•	Nettoyage partiel
+•	Fichier encore référencé
+Critères d’acceptation
+•	Suppression effective stockage + index
+•	Preuve de purge disponible en audit
+________________________________________
+US-PROD-V0-03-F — Traçabilité & audit de l’upload
+Description
+Tracer toutes les actions liées aux fichiers.
+Edge cases
+•	Logs manquants
+•	Corrélation impossible
+Critères d’acceptation
+•	Logs corrélés à user_id et conversation_id
+•	Audit exploitable
 ________________________________________
 8. Definition of Done (US produit)
-•	Le streaming fonctionne de bout en bout
-•	L’utilisateur peut interrompre la génération
-•	La reconnexion est gérée proprement
-•	Aucune incohérence de session
-•	Tous les événements sont traçables
+•	Upload fonctionnel pour formats autorisés
+•	Documents exploitables en RAG local
+•	Stockage temporaire maîtrisé
+•	Nettoyage automatique opérationnel
+•	Traçabilité complète
 
