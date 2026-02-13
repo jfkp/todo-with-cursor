@@ -1,64 +1,40 @@
 US-PROD-V0-01 — Accès à un chat IA via interface web
 1. User Story (formulation produit)
-
 En tant qu’utilisateur de la plateforme IA gouvernée,
 je veux accéder à une interface de chat web afin de soumettre des prompts textuels aux services IA et obtenir des réponses fiables, sécurisées et traçables.
-
+________________________________________
 2. Valeur utilisateur
-
-Interagir simplement avec des services IA via un canal conversationnel
-
-Être guidé et protégé contre les erreurs de saisie
-
-Bénéficier d’un service stable même en cas d’erreurs temporaires
-
-Avoir la garantie que mes requêtes sont correctement prises en charge
-
+•	Interagir simplement avec des services IA via un canal conversationnel
+•	Être guidé et protégé contre les erreurs de saisie
+•	Bénéficier d’un service stable même en cas d’erreurs temporaires
+•	Avoir la garantie que mes requêtes sont correctement prises en charge
+________________________________________
 3. Responsabilité de la plateforme (backend)
-
 La plateforme n’expose pas l’interface web, mais elle est responsable de :
-
-Valider les requêtes issues du chat (payload fonctionnel)
-
-Garantir la cohérence de la session conversationnelle
-
-Gérer les erreurs et les retries de manière transparente
-
-Tracer toutes les requêtes et réponses à des fins d’audit et d’observabilité
-
+•	Valider les requêtes issues du chat (payload fonctionnel)
+•	Garantir la cohérence de la session conversationnelle
+•	Gérer les erreurs et les retries de manière transparente
+•	Tracer toutes les requêtes et réponses à des fins d’audit et d’observabilité
+________________________________________
 4. Périmètre fonctionnel
 Inclus
-
-Réception de prompts textuels
-
-Validation du payload (prompt, modèle, session)
-
-Gestion des erreurs fonctionnelles et techniques
-
-Gestion des retries contrôlés
-
-Traçabilité complète des requêtes
-
+•	Réception de prompts textuels
+•	Validation du payload (prompt, modèle, session)
+•	Gestion des erreurs fonctionnelles et techniques
+•	Gestion des retries contrôlés
+•	Traçabilité complète des requêtes
 Exclu
-
-Rendu graphique du chat
-
-Gestion du streaming de réponse (US dédiée)
-
-Personnalisation de l’interface
-
-Gestion des pièces jointes (US dédiée)
-
+•	Rendu graphique du chat
+•	Gestion du streaming de réponse (US dédiée)
+•	Personnalisation de l’interface
+•	Gestion des pièces jointes (US dédiée)
+________________________________________
 5. Règles fonctionnelles clés
-
-Un prompt doit toujours être associé à une session valide
-
-Le modèle demandé doit être reconnu par la plateforme
-
-Toute erreur doit produire une réponse compréhensible pour l’utilisateur
-
-Aucune requête ne doit être traitée sans journalisation
-
+•	Un prompt doit toujours être associé à une session valide
+•	Le modèle demandé doit être reconnu par la plateforme
+•	Toute erreur doit produire une réponse compréhensible pour l’utilisateur
+•	Aucune requête ne doit être traitée sans journalisation
+________________________________________
 6. Edge cases (vision utilisateur)
 Situation	Attente utilisateur
 Prompt vide	Message clair indiquant l’erreur
@@ -66,81 +42,51 @@ Session inconnue	Invitation à redémarrer une conversation
 Modèle invalide	Message explicite
 Erreur temporaire du service IA	Retry automatique ou message d’indisponibilité
 Erreur persistante	Réponse contrôlée sans blocage du système
+________________________________________
 7. Critères d’acceptation (orientés produit)
-
-L’utilisateur peut soumettre un prompt textuel
-
-Les requêtes invalides sont rejetées avec un message clair
-
-Les erreurs techniques sont gérées sans exposition brute
-
-Les requêtes sont traitées même en cas d’erreur temporaire
-
-Chaque requête est traçable a posteriori
-
+•	L’utilisateur peut soumettre un prompt textuel
+•	Les requêtes invalides sont rejetées avec un message clair
+•	Les erreurs techniques sont gérées sans exposition brute
+•	Les requêtes sont traitées même en cas d’erreur temporaire
+•	Chaque requête est traçable a posteriori
+________________________________________
 Déclinaison en sous-US (responsabilité plateforme)
-
 Ces sous-US ne sont pas visibles de l’utilisateur, mais nécessaires pour garantir l’expérience.
-
+________________________________________
 US-PROD-V0-01-A — Validation du payload conversationnel
-
 Description
 Valider que chaque requête issue du chat contient un prompt valide, un modèle reconnu et une session cohérente.
-
 Edge cases
-
-Champ manquant
-
-Payload mal formé
-
+•	Champ manquant
+•	Payload mal formé
 Critères d’acceptation
-
-Toute requête invalide est rejetée proprement
-
-Aucune requête invalide n’atteint les services IA
-
+•	Toute requête invalide est rejetée proprement
+•	Aucune requête invalide n’atteint les services IA
+________________________________________
 US-PROD-V0-01-B — Gestion des erreurs et retries
-
 Description
 Gérer les erreurs des services IA avec des retries contrôlés afin d’éviter les interruptions inutiles pour l’utilisateur.
-
 Edge cases
-
-Timeout service IA
-
-Erreur transitoire
-
+•	Timeout service IA
+•	Erreur transitoire
 Critères d’acceptation
-
-Retry automatique limité
-
-Message utilisateur compréhensible en cas d’échec
-
+•	Retry automatique limité
+•	Message utilisateur compréhensible en cas d’échec
+________________________________________
 US-PROD-V0-01-C — Traçabilité et observabilité des requêtes
-
 Description
 Tracer chaque requête et réponse pour permettre le suivi, l’audit et l’analyse de la plateforme.
-
 Edge cases
-
-Log manquant
-
-Trace incomplète
-
+•	Log manquant
+•	Trace incomplète
 Critères d’acceptation
-
-Chaque requête est enregistrée
-
-Les logs sont corrélables par session
-
+•	Chaque requête est enregistrée
+•	Les logs sont corrélables par session
+________________________________________
 8. Définition of Done (US produit)
+•	L’utilisateur peut converser via le chat web
+•	Les requêtes sont validées systématiquement
+•	Les erreurs sont gérées sans rupture d’expérience
+•	Toutes les requêtes sont traçables
+•	Aucun appel IA n’est effectué sans contrôle préalable
 
-L’utilisateur peut converser via le chat web
-
-Les requêtes sont validées systématiquement
-
-Les erreurs sont gérées sans rupture d’expérience
-
-Toutes les requêtes sont traçables
-
-Aucun appel IA n’est effectué sans contrôle préalable
