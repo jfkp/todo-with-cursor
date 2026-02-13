@@ -1,142 +1,135 @@
-US-PROD-V0-05 — Sélection du modèle LLM par l’utilisateur
+US-PROD-V0-06 — Suggestions de prompts pré-configurés
 1. User Story (formulation produit)
 En tant qu’utilisateur de la plateforme IA gouvernée,
-je veux choisir le modèle LLM à utiliser pour ma conversation afin de sélectionner le modèle le plus adapté à mon besoin (qualité, coût, vitesse, spécialisation).
+je veux disposer de suggestions de prompts pré-configurés afin de démarrer rapidement une tâche courante sans avoir à rédiger moi-même un prompt.
 ________________________________________
 2. Valeur utilisateur
-•	Maîtrise du comportement et de la qualité des réponses
-•	Adaptation du modèle au contexte métier
-•	Transparence sur les capacités disponibles
-•	Réduction des frustrations liées à un modèle inadapté
+•	Gain de temps immédiat
+•	Réduction de l’effort cognitif
+•	Démarrage rapide de cas d’usage standards
+•	Meilleure qualité des prompts initiaux
+•	Moins d’erreurs de formulation
 ________________________________________
 3. Responsabilité de la plateforme (backend)
 La plateforme est responsable de :
-•	Maintenir un catalogue des modèles LLM disponibles
-•	Synchroniser ce catalogue depuis les services LLMaaS
-•	Persister les métadonnées de modèles
-•	Vérifier que l’utilisateur est autorisé à utiliser le modèle choisi
-•	Valider l’existence du modèle dans le catalogue
-•	Transmettre le choix du modèle à l’Orchestrateur
-•	Tracer chaque sélection de modèle
-La plateforme ne gère pas l’affichage UI, uniquement les APIs backend et les contrôles.
+•	Gérer un catalogue de templates de prompts
+•	Stocker les templates en base de données
+•	Classer les templates par catégorie / usage
+•	Exposer des APIs pour lister et récupérer les templates
+•	Valider les templates avant exposition (sécurité / conformité)
+•	Tracer l’utilisation des templates (observabilité)
+La plateforme ne gère pas l’affichage ni l’UX, uniquement la mise à disposition backend.
 ________________________________________
 4. Périmètre fonctionnel
 Inclus
-•	Extraction périodique de la liste des modèles depuis le LLMaaS
-•	Persistance du catalogue de modèles
-•	Exposition d’un endpoint pour récupérer les modèles autorisés
-•	Validation du modèle sélectionné par l’utilisateur
-•	Transmission du modèle sélectionné à l’Orchestrateur
-•	Journalisation et audit
+•	Stockage des templates de prompts en base
+•	Gestion de catégories (ex : rédaction, résumé, traduction, code, analyse)
+•	Récupération des templates disponibles pour un utilisateur
+•	Injection du template dans une requête utilisateur
+•	Journalisation de l’usage des templates
 Exclu
-•	Comparaison avancée de modèles (benchmarks)
-•	Suggestion automatique du “meilleur” modèle
-•	Gestion de quotas par modèle (V1)
-•	UI de sélection
+•	Génération automatique de templates par IA
+•	Édition de templates par les utilisateurs (V1)
+•	Marketplace de templates
+•	Versioning avancé (V1)
 ________________________________________
 5. Données métier manipulées
-Pour chaque modèle :
-•	model_id
-•	provider
-•	capabilities (text, vision, embedding, etc.)
-•	max_context_size
-•	status (active / deprecated)
+Template de prompt
+•	template_id
+•	title
+•	description
+•	category
+•	prompt_body
+•	language
+•	status (active / disabled)
 •	created_at
 •	updated_at
-Pour la sélection utilisateur :
+Usage
 •	user_id
+•	template_id
 •	conversation_id
-•	model_id
 •	timestamp
 ________________________________________
 6. Règles fonctionnelles clés
-•	Un modèle doit exister dans le catalogue pour être utilisable
-•	Un utilisateur ne peut sélectionner que les modèles autorisés
-•	Le choix du modèle est associé à la conversation
-•	Le modèle sélectionné est transmis tel quel à l’Orchestrateur
-•	Toute sélection est tracée à des fins d’audit
+•	Un template doit être actif pour être utilisable
+•	Les templates peuvent être filtrés par catégorie
+•	Les templates exposés respectent les règles de sécurité
+•	L’utilisation d’un template est traçable
+•	Le template est injecté tel quel dans le flux orchestré
 ________________________________________
 7. Edge cases (vision utilisateur)
 Situation	Attente utilisateur
-Modèle inexistant	Refus clair avec message explicite
-Modèle non autorisé	Accès refusé
-Catalogue non synchronisé	Modèles indisponibles
-Modèle déprécié	Refus + suggestion alternative
-Changement de modèle en cours de conversation	Pris en compte pour les appels suivants uniquement
+Aucun template disponible	Message explicite
+Template désactivé	Template non exposé
+Template non conforme	Retiré automatiquement
+Catégorie inexistante	Liste vide
+Template supprimé récemment	Erreur contrôlée
 ________________________________________
 8. Critères d’acceptation (produit)
-•	L’utilisateur ne voit que les modèles autorisés
-•	Le modèle sélectionné existe dans le catalogue
-•	La sélection est validée avant exécution
-•	Le choix est transmis à l’Orchestrateur
-•	Toute erreur est explicite et traçable
+•	Les templates sont accessibles via API
+•	Les templates sont stockés et maintenus en base
+•	Seuls les templates actifs sont exposés
+•	L’utilisation est tracée
+•	Aucune donnée sensible n’est incluse dans les templates
 ________________________________________
 Déclinaison en sous-US techniques (responsabilité plateforme)
 ________________________________________
-US-PROD-V0-05-A — Synchronisation du catalogue modèles
+US-PROD-V0-06-A — Stockage des templates de prompts
 Description
-Récupérer périodiquement la liste des modèles disponibles depuis le LLMaaS et la persister.
+Stocker les templates de prompts dans une base de données structurée.
 Edge cases
-•	LLMaaS indisponible
-•	Données incomplètes
+•	Template incomplet
+•	Conflit d’identifiant
 Critères d’acceptation
-•	Synchronisation batch réussie
-•	Catalogue cohérent et horodaté
+•	Schéma validé
+•	Templates persistants et récupérables
 ________________________________________
-US-PROD-V0-05-B — Persistance du catalogue modèles
+US-PROD-V0-06-B — API de listing des templates
 Description
-Stocker les métadonnées des modèles dans une base de données.
+Exposer un endpoint permettant de récupérer les templates disponibles.
 Edge cases
-•	Duplication de modèles
-•	Modèle obsolète
+•	Aucune catégorie correspondante
+•	Accès non autorisé
 Critères d’acceptation
-•	Clé unique par model_id
-•	Statut de modèle géré
+•	Filtrage fonctionnel
+•	Réponse paginée et performante
 ________________________________________
-US-PROD-V0-05-C — Filtrage des modèles autorisés
+US-PROD-V0-06-C — Filtrage & éligibilité des templates
 Description
-Restreindre la liste des modèles accessibles selon les droits utilisateur.
+Filtrer les templates exposés selon leur statut et règles de conformité.
 Edge cases
-•	Rôle mal configuré
-•	Modèle sans règle explicite
+•	Template marqué actif mais non conforme
+•	Erreur de configuration
 Critères d’acceptation
-•	Aucun modèle non autorisé accessible
+•	Aucun template non conforme exposé
 •	Décision traçable
 ________________________________________
-US-PROD-V0-05-D — Validation du modèle sélectionné
+US-PROD-V0-06-D — Injection du template dans le flux conversationnel
 Description
-Valider que le modèle choisi existe et est autorisé avant traitement.
+Injecter le contenu du template dans la requête utilisateur avant orchestration.
 Edge cases
-•	Modèle supprimé récemment
-•	Requête concurrente
+•	Template trop long
+•	Conflit avec le prompt utilisateur
 Critères d’acceptation
-•	Validation stricte
-•	Refus immédiat en cas d’erreur
+•	Injection conforme
+•	Prompt final cohérent
 ________________________________________
-US-PROD-V0-05-E — Transmission du modèle à l’Orchestrateur
+US-PROD-V0-06-E — Observabilité & audit d’usage des templates
 Description
-Inclure le model_id validé dans la requête transmise à l’Orchestrateur.
-Edge cases
-•	Modèle non supporté par l’Orchestrateur
-•	Erreur de mapping
-Critères d’acceptation
-•	Modèle transmis sans altération
-•	Erreurs tracées
-________________________________________
-US-PROD-V0-05-F — Audit & traçabilité de la sélection
-Description
-Journaliser chaque sélection de modèle utilisateur.
+Tracer l’utilisation des templates pour audit et amélioration produit.
 Edge cases
 •	Logs manquants
-•	Désynchronisation conversation / modèle
+•	Désynchronisation conversation/template
 Critères d’acceptation
 •	Logs exploitables
 •	Corrélation avec conversation_id
 ________________________________________
 9. Definition of Done (US produit)
-•	Catalogue modèles synchronisé et persistant
-•	Sélection utilisateur validée et sécurisée
-•	Autorisations strictement respectées
-•	Transmission fiable à l’Orchestrateur
+•	Templates stockés et exposés via API
+•	Filtrage et conformité respectés
+•	Injection fonctionnelle dans les flux
 •	Traçabilité complète
+•	Expérience utilisateur accélérée
+________________________________________
+Si tu veux, je peux maintenant :
 
