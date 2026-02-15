@@ -1,0 +1,200 @@
+US-WRT-V0-01 — Reformulation & correction de texte
+1. User Story (produit)
+
+En tant qu’utilisateur de la plateforme,
+je veux reformuler, corriger ou améliorer un texte existant, afin d’augmenter la qualité rédactionnelle (clarté, style, grammaire, ton) de mes communications professionnelles, sans modifier le sens initial du contenu.
+
+2. Valeur utilisateur
+
+Gain de temps sur la rédaction
+
+Amélioration de la qualité linguistique
+
+Réduction des erreurs grammaticales
+
+Adaptation du ton (professionnel, formel, synthétique)
+
+Usage immédiat sans expertise rédactionnelle
+
+3. Responsabilité de la plateforme
+
+La plateforme est responsable de :
+
+Exposer une API de reformulation textuelle
+
+Valider le payload utilisateur
+
+Appliquer les contrôles de sécurité (guardrails input/output)
+
+Router la requête vers un LLM autorisé
+
+Gérer les erreurs, timeouts et retries
+
+Tracer l’opération dans l’observabilité
+
+La plateforme ne fournit pas d’interface UI (hors périmètre).
+
+4. Périmètre fonctionnel
+Inclus
+
+Reformulation
+
+Correction grammaticale
+
+Amélioration du style
+
+Choix du type d’amélioration (optionnel)
+
+Traçabilité complète
+
+Exclu
+
+Traduction multilingue (US dédiée)
+
+Analyse sémantique avancée
+
+Génération de contenu à partir de zéro
+
+5. Entrées fonctionnelles
+Champ	Description
+user_id	Identifiant utilisateur
+session_id	Session courante
+input_text	Texte à améliorer
+improvement_type	reformulation / correction / amélioration
+language	Langue du texte
+model	Modèle LLM sélectionné
+trace_id	Corrélation
+6. Sorties fonctionnelles
+Champ	Description
+improved_text	Texte reformulé
+model_used	Modèle utilisé
+tokens_input	Tokens en entrée
+tokens_output	Tokens en sortie
+latency_ms	Temps de réponse
+trace_id	Corrélation
+7. Règles fonctionnelles
+Règle	Description
+RF-WRT-01	Le sens du texte ne doit pas être altéré
+RF-WRT-02	Le texte est analysé par les guardrails
+RF-WRT-03	Le modèle doit être autorisé pour l’utilisateur
+RF-WRT-04	Les erreurs sont transformées en messages compréhensibles
+RF-WRT-05	Chaque requête est tracée
+8. Edge cases (produit)
+Edge case	Comportement attendu
+Texte vide	Rejet avec message explicite
+Texte trop long	Refus ou troncature contrôlée
+Contenu sensible détecté	Blocage guardrails
+Modèle non autorisé	Rejet AUTHZ
+Timeout LLM	Retry puis erreur utilisateur
+Réponse incohérente	Blocage output
+9. Critères d’acceptation (US produit)
+
+Le texte retourné est linguistiquement amélioré
+
+Le sens original est conservé
+
+Les contrôles sécurité sont appliqués
+
+Les erreurs sont compréhensibles côté utilisateur
+
+Les métriques sont disponibles en observabilité
+
+Déclinaison en sous-US techniques
+US-WRT-V0-01-A — Validation du payload
+Description
+
+Valider le texte, la langue, le modèle et les options d’amélioration avant traitement.
+
+Edge cases
+
+input_text manquant
+
+language invalide
+
+Critères d’acceptation
+
+Rejet explicite
+
+Logs produits
+
+US-WRT-V0-01-B — Analyse sécurité (input)
+Description
+
+Analyser le texte via Security Guardrails (PII, secrets, toxicité).
+
+Edge cases
+
+Faux positif PII
+
+Contenu ambigu
+
+Critères d’acceptation
+
+Blocage si seuil dépassé
+
+Audit stocké
+
+US-WRT-V0-01-C — Routage vers le LLM
+Description
+
+Router la requête vers un modèle autorisé via l’orchestrateur.
+
+Edge cases
+
+Modèle absent du catalogue
+
+Incompatibilité classification
+
+Critères d’acceptation
+
+Routage déterministe
+
+Rejet sécurisé
+
+US-WRT-V0-01-D — Analyse sécurité (output)
+Description
+
+Analyser la réponse LLM avant restitution.
+
+Edge cases
+
+Contenu généré inapproprié
+
+Fuite de données
+
+Critères d’acceptation
+
+Blocage output
+
+Message utilisateur contrôlé
+
+US-WRT-V0-01-E — Observabilité & métriques
+Description
+
+Tracer la requête, la réponse et la consommation.
+
+Edge cases
+
+Trace incomplète
+
+Latence élevée
+
+Critères d’acceptation
+
+Logs complets
+
+Exportable
+
+10. Definition of Done — US-WRT-V0-01
+
+API fonctionnelle
+
+Guardrails input/output actifs
+
+Routage LLM sécurisé
+
+Erreurs maîtrisées
+
+Observabilité complète
+
+Conforme aux règles de gouvernance
