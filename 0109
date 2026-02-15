@@ -1,0 +1,222 @@
+US-CHR-V0-01 — Signature de la charte d’utilisation
+1. User Story (produit)
+
+En tant que plateforme IA gouvernée,
+je veux imposer la signature d’une charte d’utilisation lors de la première connexion d’un utilisateur, afin de formaliser l’acceptation des règles d’usage, de sécurité et de conformité, et de disposer d’une preuve traçable et versionnée de cette acceptation.
+
+2. Valeur métier
+
+Conformité légale et réglementaire
+
+Responsabilisation explicite des utilisateurs
+
+Réduction des risques d’usage non conforme
+
+Traçabilité des engagements utilisateurs
+
+Support aux audits (sécurité, RGPD, conformité)
+
+3. Responsabilité de la plateforme
+
+La plateforme est responsable de :
+
+Gérer les versions de charte
+
+Exposer une API de restitution de statut
+
+Exposer une API de soumission de signature
+
+Bloquer l’accès tant que la charte n’est pas acceptée
+
+Persister une preuve d’acceptation
+
+Tracer toutes les opérations (audit)
+
+La plateforme ne gère pas l’affichage UI de la charte (hors périmètre).
+
+4. Périmètre fonctionnel
+Inclus
+
+Gestion versionnée de la charte
+
+Vérification du statut de signature à l’authentification
+
+API de soumission de signature
+
+Persistance des acceptations
+
+Blocage d’accès si non signée
+
+Audit et traçabilité
+
+Exclu
+
+Rédaction du contenu juridique
+
+UI d’affichage de la charte
+
+Négociation individuelle de clauses
+
+5. Modèle de données (V0)
+Champ	Description
+charter_id	Identifiant de la charte
+charter_version	Version active
+user_id	Identifiant utilisateur
+status	ACCEPTED / NOT_ACCEPTED
+accepted_at	Horodatage
+accepted_ip	IP (optionnel)
+trace_id	Corrélation
+hash	Empreinte du document
+6. Règles fonctionnelles
+Règle	Description
+RF-CHR-01	Toute première connexion nécessite une charte signée
+RF-CHR-02	Une nouvelle version invalide les signatures précédentes
+RF-CHR-03	L’accès est bloqué tant que la charte active n’est pas acceptée
+RF-CHR-04	La signature est immuable
+RF-CHR-05	Toute décision est traçable
+RF-CHR-06	Le statut est vérifiable via API
+7. Edge cases (produit)
+Edge case	Comportement attendu
+Charte inexistante	Accès bloqué + alerte
+Version incohérente	Refus + audit
+Double signature	Ignorée / idempotente
+Requête non authentifiée	Refus AUTH
+Charte mise à jour	Re-signature requise
+Indisponibilité DB	Accès bloqué par défaut
+8. Critères d’acceptation (US produit)
+
+Un utilisateur non signataire est bloqué
+
+Le statut de signature est vérifiable par API
+
+La signature est persistée avec version
+
+Une nouvelle version force la re-signature
+
+Les preuves sont auditables
+
+Aucune action IA n’est possible sans signature
+
+Déclinaison en sous-US techniques
+US-CHR-V0-01-A — Gestion versionnée des chartes
+Description
+
+Permettre de gérer plusieurs versions de charte et d’identifier la version active.
+
+Périmètre
+
+Stockage charte
+
+Activation / désactivation
+
+Edge cases
+
+Deux versions actives
+
+Charte supprimée
+
+Critères d’acceptation
+
+Une seule version active
+
+Historique conservé
+
+US-CHR-V0-01-B — API de restitution du statut de signature
+Description
+
+Exposer une API permettant de connaître le statut de signature d’un utilisateur.
+
+Périmètre
+
+Endpoint REST
+
+Authentification requise
+
+Edge cases
+
+user_id inconnu
+
+Version manquante
+
+Critères d’acceptation
+
+Réponse claire ACCEPTED / NOT_ACCEPTED
+
+US-CHR-V0-01-C — API de soumission de signature
+Description
+
+Permettre à un utilisateur de soumettre l’acceptation de la charte active.
+
+Périmètre
+
+Validation version
+
+Idempotence
+
+Edge cases
+
+Signature multiple
+
+Version obsolète
+
+Critères d’acceptation
+
+Signature persistée
+
+Preuve horodatée
+
+US-CHR-V0-01-D — Blocage d’accès sans signature
+Description
+
+Empêcher tout accès fonctionnel tant que la charte n’est pas acceptée.
+
+Périmètre
+
+Interception post-authentification
+
+Message explicite
+
+Edge cases
+
+Bypass accidentel
+
+Mauvais cache statut
+
+Critères d’acceptation
+
+Aucun flux IA possible sans signature
+
+US-CHR-V0-01-E — Audit & traçabilité des signatures
+Description
+
+Tracer chaque consultation et signature de charte.
+
+Périmètre
+
+Logs structurés
+
+Export conformité
+
+Edge cases
+
+trace_id absent
+
+Log incomplet
+
+Critères d’acceptation
+
+Audit complet
+
+Export possible
+
+9. Definition of Done — US-CHR-V0-01
+
+La signature de charte est obligatoire
+
+Les versions sont gérées proprement
+
+Les accès sont bloqués sans acceptation
+
+Les preuves sont persistées et auditables
+
+La plateforme est conforme juridiquement
