@@ -1,0 +1,228 @@
+US-RAG-V0-01 — Questions / Réponses sur document uploadé
+1. User Story (produit)
+
+En tant qu’utilisateur de la plateforme,
+je veux poser des questions sur un document que j’ai uploadé,
+afin d’obtenir des réponses basées exclusivement sur le contenu réel de ce document.
+
+2. Valeur utilisateur
+
+Compréhension rapide de documents volumineux
+
+Réponses fiables et contextualisées
+
+Réduction du temps de lecture
+
+Confiance dans l’origine des réponses (pas d’hallucination)
+
+Continuité conversationnelle autour d’un même document
+
+3. Responsabilité de la plateforme (backend)
+
+La plateforme est responsable de :
+
+Associer la question à un document uploadé identifié
+
+Valider l’accès utilisateur au document
+
+Interroger ContextHub pour la recherche sémantique
+
+Construire un contexte RAG contrôlé
+
+Router la requête vers un LLM autorisé
+
+Appliquer les Security Guardrails (input & output)
+
+Garantir que la réponse est fondée uniquement sur le document
+
+Tracer l’ensemble du flux dans l’observabilité
+
+⚠️ La plateforme ne génère pas de réponse hors du corpus documentaire fourni.
+
+4. Périmètre fonctionnel
+Inclus
+
+Q&A basé sur documents uploadés
+
+Recherche vectorielle (similarité)
+
+RAG local via ContextHub
+
+Contexte conversationnel
+
+Gestion multi-documents (si autorisé)
+
+Réponses textuelles explicites
+
+Exclu
+
+Recherche web externe
+
+RAG fédéré multi-sources
+
+Enrichissement par connaissances générales
+
+Édition ou modification du document
+
+5. Entrées fonctionnelles
+Champ	Description
+user_id	Identifiant utilisateur
+session_id	Session conversationnelle
+document_id	Identifiant du document
+question	Question utilisateur
+top_k	Nombre de passages récupérés
+model	Modèle LLM
+trace_id	Identifiant de corrélation
+6. Sorties fonctionnelles
+Champ	Description
+answer	Réponse générée
+sources	Passages documentaires utilisés
+document_id	Document référencé
+model_used	Modèle utilisé
+tokens_input	Tokens en entrée
+tokens_output	Tokens en sortie
+latency_ms	Temps de réponse
+trace_id	Corrélation
+7. Règles fonctionnelles
+Règle	Description
+RF-RAG-01	La réponse doit être basée uniquement sur le document
+RF-RAG-02	L’accès au document est contrôlé
+RF-RAG-03	Le RAG précède tout appel LLM
+RF-RAG-04	Les sources doivent être traçables
+RF-RAG-05	Aucune hallucination autorisée
+8. Edge cases (produit)
+Edge case	Comportement attendu
+Document inexistant	Erreur explicite
+Document non autorisé	Blocage AUTHZ
+Document non indexé	Réponse contrôlée
+Aucun passage pertinent	Message “information non trouvée”
+Question hors périmètre	Refus contrôlé
+Timeout recherche	Erreur + audit
+9. Critères d’acceptation (US produit)
+
+La réponse cite uniquement le document
+
+Les passages sources sont identifiables
+
+Aucune information externe n’est injectée
+
+Les erreurs sont explicites
+
+Le flux est totalement traçable
+
+Déclinaison en sous-US techniques
+US-RAG-V0-01-A — Validation & autorisation document
+Description
+
+Valider l’existence du document et l’accès utilisateur.
+
+Edge cases
+
+Document supprimé
+
+Accès refusé
+
+Critères d’acceptation
+
+Blocage AUTHZ
+
+Audit généré
+
+US-RAG-V0-01-B — Recherche sémantique ContextHub
+Description
+
+Récupérer les passages pertinents via recherche vectorielle.
+
+Edge cases
+
+Index manquant
+
+Résultat vide
+
+Critères d’acceptation
+
+top_k respecté
+
+Latence contrôlée
+
+US-RAG-V0-01-C — Construction du contexte RAG
+Description
+
+Assembler les passages dans un prompt structuré.
+
+Edge cases
+
+Contexte trop volumineux
+
+Dépassement fenêtre modèle
+
+Critères d’acceptation
+
+Troncature contrôlée
+
+Ordre conservé
+
+US-RAG-V0-01-D — Appel LLM gouverné
+Description
+
+Appeler un modèle compatible RAG et classification document.
+
+Edge cases
+
+Modèle non autorisé
+
+Modèle incompatible
+
+Critères d’acceptation
+
+Routage déterministe
+
+Timeout configurable
+
+US-RAG-V0-01-E — Analyse sécurité sortie
+Description
+
+Vérifier l’absence de fuite ou hallucination.
+
+Edge cases
+
+Réponse non sourcée
+
+Contenu sensible
+
+Critères d’acceptation
+
+Blocage ou reformulation
+
+Message utilisateur clair
+
+US-RAG-V0-01-F — Observabilité & traçabilité
+Description
+
+Tracer la requête, la recherche, le LLM et les sources.
+
+Edge cases
+
+Trace incomplète
+
+Corrélation manquante
+
+Critères d’acceptation
+
+trace_id bout-en-bout
+
+Export audit possible
+
+10. Definition of Done — US-RAG-V0-01
+
+Q&A document fonctionnel
+
+RAG local opérationnel
+
+Aucune hallucination
+
+Sécurité et autorisations respectées
+
+Sources traçables
+
+Observabilité complète
