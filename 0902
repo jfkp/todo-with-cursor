@@ -1,0 +1,219 @@
+US-IDEA-V0-01 — Génération d’idées contextualisées
+1. User Story (produit)
+
+En tant qu’utilisateur de la plateforme,
+je veux obtenir des idées sur un sujet donné, afin d’alimenter ma réflexion, en tenant compte du contexte de la conversation en cours, sans devoir reformuler ou répéter mes échanges précédents.
+
+2. Valeur utilisateur
+
+Stimulation de la réflexion
+
+Accélération de la phase d’idéation
+
+Continuité naturelle de la conversation
+
+Réponses plus pertinentes grâce au contexte
+
+Réduction des efforts de cadrage
+
+3. Responsabilité de la plateforme
+
+La plateforme est responsable de :
+
+Exposer une API de génération d’idées
+
+Charger le contexte conversationnel
+
+Valider le payload utilisateur
+
+Appliquer les Security Guardrails (input/output)
+
+Router vers un LLM autorisé
+
+Gérer erreurs, timeouts, retries
+
+Tracer l’ensemble du flux dans l’observabilité
+
+La plateforme ne fournit aucune UI.
+
+4. Périmètre fonctionnel
+Inclus
+
+Génération d’idées (liste structurée ou texte)
+
+Prise en compte du contexte conversationnel
+
+Paramétrage du style (optionnel)
+
+Traçabilité complète
+
+Exclu
+
+Évaluation de la qualité des idées
+
+Priorisation ou scoring automatique
+
+Création de plans détaillés (US dédiée)
+
+5. Entrées fonctionnelles
+Champ	Description
+user_id	Identifiant utilisateur
+session_id	Session de conversation
+topic	Sujet sur lequel générer des idées
+idea_type	Brainstorming / pistes / angles
+context_window	Nombre de messages à charger
+model	Modèle LLM sélectionné
+trace_id	Corrélation
+6. Sorties fonctionnelles
+Champ	Description
+ideas	Liste ou texte d’idées générées
+model_used	Modèle utilisé
+tokens_input	Tokens consommés en entrée
+tokens_output	Tokens consommés en sortie
+latency_ms	Temps de réponse
+trace_id	Corrélation
+7. Règles fonctionnelles
+Règle	Description
+RF-IDEA-01	Le contexte conversationnel est chargé avant l’appel LLM
+RF-IDEA-02	Le modèle doit être autorisé pour l’utilisateur
+RF-IDEA-03	Les idées doivent être cohérentes avec le sujet
+RF-IDEA-04	Les guardrails s’appliquent sur input et output
+RF-IDEA-05	Chaque appel est tracé
+8. Edge cases (produit)
+Edge case	Comportement attendu
+Sujet vide	Rejet avec message explicite
+Contexte trop volumineux	Troncature contrôlée
+Contexte absent	Génération sans contexte
+Modèle non autorisé	Rejet AUTHZ
+Contenu sensible détecté	Blocage guardrails
+Timeout LLM	Retry puis erreur utilisateur
+9. Critères d’acceptation (US produit)
+
+Les idées générées sont pertinentes par rapport au sujet
+
+Le contexte conversationnel est pris en compte
+
+Les confirmations sécurité sont respectées
+
+Les erreurs sont compréhensibles
+
+Les métriques sont disponibles en observabilité
+
+Déclinaison en sous-US techniques
+US-IDEA-V0-01-A — Validation du payload
+Description
+
+Valider la présence du sujet, de la session et du modèle.
+
+Edge cases
+
+topic manquant
+
+session invalide
+
+Critères d’acceptation
+
+Rejet explicite
+
+Logs produits
+
+US-IDEA-V0-01-B — Chargement du contexte conversationnel
+Description
+
+Récupérer les N derniers messages depuis le Memory Store.
+
+Edge cases
+
+Session expirée
+
+Contexte vide
+
+Critères d’acceptation
+
+Latence < 50 ms
+
+Contexte formaté pour le LLM
+
+US-IDEA-V0-01-C — Analyse sécurité (input)
+Description
+
+Analyser le sujet et le contexte (PII, toxicité, secrets).
+
+Edge cases
+
+Faux positif
+
+Contenu ambigu
+
+Critères d’acceptation
+
+Blocage si seuil dépassé
+
+Audit enregistré
+
+US-IDEA-V0-01-D — Routage LLM
+Description
+
+Appeler le modèle autorisé via l’orchestrateur.
+
+Edge cases
+
+Modèle absent du catalogue
+
+Incompatibilité classification
+
+Critères d’acceptation
+
+Routage déterministe
+
+Erreurs contrôlées
+
+US-IDEA-V0-01-E — Analyse sécurité (output)
+Description
+
+Analyser les idées générées avant restitution.
+
+Edge cases
+
+Contenu inapproprié
+
+Fuite de données
+
+Critères d’acceptation
+
+Blocage output
+
+Message utilisateur clair
+
+US-IDEA-V0-01-F — Observabilité & audit
+Description
+
+Tracer l’appel, la consommation et les erreurs.
+
+Edge cases
+
+Logs incomplets
+
+Erreur de corrélation
+
+Critères d’acceptation
+
+Traçabilité complète
+
+Export possible
+
+10. Definition of Done — US-IDEA-V0-01
+
+API de génération d’idées disponible
+
+Contexte conversationnel pris en compte
+
+Sécurité appliquée de bout en bout
+
+Routage gouverné
+
+Observabilité complète
+
+Conforme aux exigences de la plateforme IA gouvernée
+
+Si tu veux, je peux maintenant :
