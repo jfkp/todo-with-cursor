@@ -1,0 +1,261 @@
+US-DOC-V0-07 — Génération d’idées et recommandations à partir d’un document
+1. User Story (produit)
+
+En tant qu’utilisateur de la plateforme IA gouvernée, je veux obtenir des idées ou recommandations basées sur un document que j’ai uploadé, afin d’exploiter les informations du document pour enrichir ma réflexion, identifier des pistes d’action ou orienter mes décisions.
+
+2. Valeur utilisateur
+
+Gain de temps dans l’analyse du document
+
+Aide à la réflexion et à la prise de décision
+
+Exploitation directe du contenu réel du document
+
+Réduction du risque d’hallucination par ancrage documentaire
+
+3. Responsabilité de la plateforme (backend)
+
+La plateforme est responsable de :
+
+Vérifier les droits d’accès utilisateur et document
+
+Préparer et sécuriser le contenu documentaire
+
+Construire un prompt contrôlé basé sur le document
+
+Appeler un modèle LLM autorisé
+
+Analyser la réponse générée avant restitution
+
+Assurer la traçabilité complète de l’opération
+
+La plateforme n’expose pas d’interface utilisateur et ne modifie pas le document source.
+
+4. Périmètre fonctionnel
+
+Inclus :
+
+Utilisation d’un document préalablement uploadé
+
+Génération d’idées, recommandations ou pistes de réflexion
+
+Traitement synchrone backend
+
+Journalisation et audit
+
+Exclus :
+
+Enrichissement via sources externes
+
+Modification du document
+
+Stockage des recommandations comme vérité métier
+
+Interface utilisateur
+
+5. Entrées fonctionnelles
+Nom	Description
+user_id	Identifiant utilisateur
+document_id	Identifiant du document
+conversation_id	Identifiant de la conversation
+request_type	ideas / recommendations
+model_preference	Modèle souhaité (optionnel)
+trace_id	Identifiant de traçabilité
+6. Sorties fonctionnelles
+Nom	Description
+recommendations	Idées ou recommandations générées
+document_id	Document source utilisé
+model_used	Modèle réellement utilisé
+decision_status	SUCCESS / BLOCKED / REJECTED
+trace_id	Identifiant de corrélation
+metadata	Tokens, latence, classification
+7. Règles fonctionnelles
+Règle	Description
+RF-DOC-07-01	Seul le contenu du document est utilisé
+RF-DOC-07-02	Toute classification secret entraîne un rejet immédiat
+RF-DOC-07-03	Le modèle doit être autorisé pour le niveau de sensibilité
+RF-DOC-07-04	Toute réponse est analysée avant restitution
+RF-DOC-07-05	Chaque étape produit des logs auditables
+8. Edge cases utilisateur
+
+Document supprimé ou non accessible
+
+Document vide ou non exploitable
+
+Contenu trop volumineux pour le modèle
+
+Document classé secret
+
+Modèle indisponible
+
+Réponse LLM non conforme ou spéculative
+
+9. Critères d’acceptation (US produit)
+
+Les recommandations sont strictement basées sur le document
+
+Aucun contenu externe n’est injecté
+
+Les accès non autorisés sont bloqués
+
+Les rejets sont expliqués à l’utilisateur
+
+L’opération est totalement traçable
+
+Déclinaison en sous-US techniques (backend)
+US-DOC-V0-07-T1 — Vérification des droits d’accès
+
+Description
+La plateforme vérifie que l’utilisateur est autorisé à accéder au document et à la fonctionnalité.
+
+Périmètre
+
+Appel moteur AUTHZ
+
+Vérification document / utilisateur
+
+Edge cases
+
+Accès révoqué
+
+Service AUTHZ indisponible
+
+Critères d’acceptation
+
+Accès refusé sans appel LLM
+
+Décision journalisée
+
+US-DOC-V0-07-T2 — Récupération et préparation du contenu documentaire
+
+Description
+La plateforme récupère et prépare le contenu textuel du document.
+
+Périmètre
+
+Lecture stockage
+
+Nettoyage / normalisation
+
+Edge cases
+
+Extraction partielle
+
+Document vide
+
+Critères d’acceptation
+
+Contenu fidèle au document
+
+Traçabilité document_id
+
+US-DOC-V0-07-T3 — Analyse de sécurité et classification
+
+Description
+La plateforme analyse le contenu afin de détecter données sensibles et classification.
+
+Périmètre
+
+Classification automatique
+
+Application des règles de blocage
+
+Edge cases
+
+Faux positif
+
+Contenu mixte
+
+Critères d’acceptation
+
+Niveau secret bloqué
+
+Décision tracée
+
+US-DOC-V0-07-T4 — Construction du prompt contrôlé
+
+Description
+La plateforme construit un prompt basé sur un template validé.
+
+Périmètre
+
+Template “idées / recommandations”
+
+Encadrement strict des instructions
+
+Edge cases
+
+Document trop court
+
+Critères d’acceptation
+
+Prompt conforme
+
+Aucun prompt libre
+
+US-DOC-V0-07-T5 — Appel LLM autorisé
+
+Description
+La plateforme appelle le modèle autorisé via LLMaaS.
+
+Périmètre
+
+Appel synchrone
+
+Timeout configurable
+
+Edge cases
+
+Timeout
+
+Modèle indisponible
+
+Critères d’acceptation
+
+Erreurs transformées
+
+Métriques collectées
+
+US-DOC-V0-07-T6 — Analyse de la réponse générée
+
+Description
+La plateforme analyse la réponse avant restitution utilisateur.
+
+Périmètre
+
+Filtrage sécurité
+
+Détection fuite données
+
+Edge cases
+
+Hallucination
+
+Contenu non conforme
+
+Critères d’acceptation
+
+Réponse bloquée si non conforme
+
+Blocage audité
+
+US-DOC-V0-07-T7 — Restitution et traçabilité
+
+Description
+La plateforme restitue la réponse validée et trace l’opération.
+
+Périmètre
+
+Association conversation / document
+
+Logs et audit
+
+Edge cases
+
+Échec journalisation
+
+Critères d’acceptation
+
+Réponse retournée avec métadonnées
+
+Traçabilité complète
