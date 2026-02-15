@@ -1,0 +1,235 @@
+US-ONB-V0-01 — Guidage utilisateur par annonces & tooltips
+1. User Story (produit)
+
+En tant que plateforme IA gouvernée,
+je veux guider les utilisateurs dans la découverte des fonctionnalités via des annonces contextuelles (tooltips, banners, messages), afin de faciliter la prise en main, améliorer l’adoption et réduire les erreurs d’usage, tout en permettant une gestion centralisée, ciblée et traçable de ces annonces.
+
+2. Valeur métier
+
+Amélioration de l’adoption utilisateur
+
+Réduction du support et des erreurs d’usage
+
+Accélération de la montée en compétence
+
+Pilotage produit par campagnes ciblées
+
+Mesure de l’efficacité des messages (views)
+
+3. Responsabilité de la plateforme
+
+La plateforme est responsable de :
+
+Fournir une API de récupération des annonces
+
+Gérer les campagnes d’annonces
+
+Permettre le ciblage par rôle
+
+Planifier l’activation/désactivation
+
+Tracer les vues et interactions
+
+Exposer des APIs d’administration
+
+La plateforme ne gère pas l’affichage UI des tooltips (hors périmètre).
+
+4. Périmètre fonctionnel
+Inclus
+
+Annonces contextuelles (tooltips, banners, messages)
+
+API de récupération côté frontend
+
+Dashboard d’administration
+
+Ciblage par rôles
+
+Planification de campagnes
+
+Tracking des vues
+
+Audit des modifications
+
+Exclu
+
+Design graphique des tooltips
+
+Gestion A/B testing avancée
+
+Contenu marketing externe
+
+5. Modèle de données (V0)
+Champ	Description
+announcement_id	Identifiant unique
+title	Titre
+content	Contenu texte
+type	tooltip / banner / message
+target_roles	Rôles ciblés
+start_date	Date début
+end_date	Date fin
+status	DRAFT / ACTIVE / EXPIRED
+view_count	Nombre de vues
+created_by	Admin
+trace_id	Corrélation
+6. Règles fonctionnelles
+Règle	Description
+RF-ONB-01	Une annonce n’est visible que si ACTIVE
+RF-ONB-02	Le ciblage par rôle est strict
+RF-ONB-03	Une annonce expirée n’est jamais retournée
+RF-ONB-04	Chaque vue est tracée
+RF-ONB-05	Les campagnes sont planifiables
+RF-ONB-06	Les modifications sont auditées
+7. Edge cases (produit)
+Edge case	Comportement attendu
+Annonce sans rôle	Non diffusée
+Campagne expirée	Ignorée
+Rôle inconnu	Annonce filtrée
+Tracking indisponible	Affichage autorisé + alerte
+Volume élevé d’annonces	Pagination / limitation
+Conflit de dates	Refus création
+8. Critères d’acceptation (US produit)
+
+Les utilisateurs reçoivent uniquement les annonces ciblées
+
+Les annonces respectent la planification
+
+Les vues sont comptabilisées
+
+Les admins peuvent gérer les campagnes
+
+Toutes les actions sont auditables
+
+Déclinaison en sous-US techniques
+US-ONB-V0-01-A — API de récupération des annonces
+Description
+
+Exposer une API permettant au frontend de récupérer les annonces actives pour un utilisateur donné.
+
+Périmètre
+
+Filtrage par rôle
+
+Filtrage par date
+
+Pagination
+
+Edge cases
+
+Aucun rôle fourni
+
+Aucune annonce active
+
+Critères d’acceptation
+
+Retour JSON structuré
+
+Annonces pertinentes uniquement
+
+US-ONB-V0-01-B — Administration des annonces
+Description
+
+Permettre aux administrateurs de créer, modifier et supprimer des annonces.
+
+Périmètre
+
+CRUD annonces
+
+Gestion statut
+
+Edge cases
+
+Suppression d’annonce active
+
+Modification hors plage
+
+Critères d’acceptation
+
+APIs sécurisées
+
+Historique conservé
+
+US-ONB-V0-01-C — Planification & ciblage de campagnes
+Description
+
+Permettre de planifier des campagnes avec ciblage par rôle.
+
+Périmètre
+
+Dates début/fin
+
+Rôles multiples
+
+Edge cases
+
+Dates invalides
+
+Rôle non existant
+
+Critères d’acceptation
+
+Activation automatique
+
+Ciblage respecté
+
+US-ONB-V0-01-D — Tracking des vues d’annonces
+Description
+
+Tracer chaque vue d’annonce pour mesurer l’adoption.
+
+Périmètre
+
+Compteur de vues
+
+Association user_id / announcement_id
+
+Edge cases
+
+Vue multiple rapide
+
+User anonyme
+
+Critères d’acceptation
+
+Comptage fiable
+
+Données exploitables
+
+US-ONB-V0-01-E — Audit & observabilité
+Description
+
+Tracer toutes les actions liées aux annonces.
+
+Périmètre
+
+Création
+
+Modification
+
+Consultation
+
+Edge cases
+
+trace_id absent
+
+Log partiel
+
+Critères d’acceptation
+
+Logs complets
+
+Export conformité
+
+9. Definition of Done — US-ONB-V0-01
+
+Les annonces sont administrables
+
+Les campagnes sont planifiables
+
+Le ciblage par rôle fonctionne
+
+Les vues sont tracées
+
+Aucun affichage hors périmètre
+
+La plateforme est observable et auditable
