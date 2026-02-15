@@ -1,0 +1,217 @@
+US-DOC-V0-03 — Synthèse d’un document uploadé
+1. User Story (produit)
+
+En tant qu’utilisateur de la plateforme,
+je veux obtenir une synthèse claire et concise d’un document que j’ai uploadé,
+afin d’en extraire rapidement l’essentiel sans lire l’intégralité du contenu.
+
+2. Valeur utilisateur
+
+Gain de temps sur la lecture de documents longs
+
+Accès rapide aux points clés
+
+Aide à la décision
+
+Compréhension accélérée de contenus complexes
+
+Utilisation dans des contextes professionnels (rapport, note, briefing)
+
+3. Responsabilité de la plateforme (backend)
+
+La plateforme est responsable de :
+
+Associer la demande de synthèse à un document uploadé identifié
+
+Vérifier les droits d’accès utilisateur au document
+
+Extraire le contenu textuel via ContextHub
+
+Construire un prompt de synthèse structuré
+
+Appeler un LLM autorisé et compatible
+
+Appliquer les Security Guardrails sur l’entrée et la sortie
+
+Garantir que la synthèse est fidèle au document
+
+Tracer l’intégralité du flux dans l’observabilité
+
+⚠️ La plateforme ne complète pas la synthèse avec des informations externes.
+
+4. Périmètre fonctionnel
+Inclus
+
+Synthèse mono-document
+
+Résumé fidèle au contenu source
+
+Synthèse courte ou structurée (paragraphes / bullet points)
+
+Traçabilité complète
+
+Exclu
+
+Recherche web
+
+RAG externe
+
+Comparaison entre documents
+
+Réécriture créative du contenu
+
+5. Entrées fonctionnelles
+Champ	Description
+user_id	Identifiant utilisateur
+session_id	Identifiant de session
+document_id	Identifiant du document
+summary_type	courte / détaillée
+model	Modèle LLM
+trace_id	Identifiant de corrélation
+6. Sorties fonctionnelles
+Champ	Description
+summary	Synthèse du document
+document_id	Document résumé
+summary_type	Type de synthèse
+model_used	Modèle utilisé
+latency_ms	Temps de réponse
+trace_id	Corrélation
+7. Règles fonctionnelles
+Règle	Description
+RF-DOC-SUM-01	La synthèse repose uniquement sur le document
+RF-DOC-SUM-02	L’accès au document est validé avant traitement
+RF-DOC-SUM-03	Le contenu est extrait via ContextHub
+RF-DOC-SUM-04	La synthèse ne doit pas introduire d’informations nouvelles
+RF-DOC-SUM-05	Toute synthèse est tracée et auditable
+8. Edge cases (produit)
+Edge case	Comportement attendu
+Document inexistant	Erreur explicite
+Accès non autorisé	Blocage AUTHZ
+Document trop volumineux	Troncature contrôlée
+Document vide	Message utilisateur clair
+Contenu non textuel	Synthèse impossible
+Timeout LLM	Erreur contrôlée + audit
+9. Critères d’acceptation (US produit)
+
+La synthèse est fidèle au document
+
+Aucun contenu externe n’est ajouté
+
+Le format demandé est respecté
+
+Les erreurs sont compréhensibles
+
+Le flux est entièrement traçable
+
+Déclinaison en sous-US techniques
+US-DOC-V0-03-A — Validation & autorisation document
+
+Description
+Vérifier l’existence du document et les droits utilisateur.
+
+Edge cases
+
+Document supprimé
+
+Accès refusé
+
+Critères d’acceptation
+
+Blocage immédiat
+
+Audit des refus
+
+US-DOC-V0-03-B — Extraction du contenu
+
+Description
+Extraire le texte du document via ContextHub.
+
+Edge cases
+
+Extraction partielle
+
+Format non supporté
+
+Critères d’acceptation
+
+Contenu textuel exploitable
+
+Erreur contrôlée sinon
+
+US-DOC-V0-03-C — Construction du prompt de synthèse
+
+Description
+Construire un prompt de résumé structuré selon le type demandé.
+
+Edge cases
+
+Prompt trop long
+
+Type de synthèse inconnu
+
+Critères d’acceptation
+
+Prompt valide
+
+Paramètres contrôlés
+
+US-DOC-V0-03-D — Appel LLM gouverné
+
+Description
+Appeler un modèle compatible synthèse documentaire.
+
+Edge cases
+
+Modèle non autorisé
+
+Timeout
+
+Critères d’acceptation
+
+Routage conforme
+
+Timeout configurable
+
+US-DOC-V0-03-E — Validation sécurité de la sortie
+
+Description
+Analyser la synthèse générée avant exposition utilisateur.
+
+Edge cases
+
+Hallucination détectée
+
+Données sensibles exposées
+
+Critères d’acceptation
+
+Blocage ou message explicite
+
+Journalisation
+
+US-DOC-V0-03-F — Observabilité & audit
+
+Description
+Tracer la synthèse et les métadonnées associées.
+
+Edge cases
+
+Trace incomplète
+
+Critères d’acceptation
+
+trace_id bout-en-bout
+
+Export audit possible
+
+10. Definition of Done — US-DOC-V0-03
+
+Synthèse documentaire opérationnelle
+
+Résumé fidèle et compréhensible
+
+Aucun enrichissement externe
+
+Sécurité respectée
+
+Observabilité complète
