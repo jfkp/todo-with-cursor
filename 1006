@@ -157,3 +157,208 @@ classification_level
 Historique consultable par administrateur
 
 Exploitable pour conformité et sécurité
+
+US-DOC-V0-06-T1 — Validation & extraction du contenu document
+Description
+
+En tant que plateforme, je veux valider le document et extraire le texte des passages ciblés afin de fournir une base fiable et exploitable pour la reformulation.
+
+Périmètre
+
+Validation format (PDF, DOCX, XLSX)
+
+Vérification taille maximale
+
+Extraction textuelle
+
+Gestion des encodages
+
+Edge cases
+
+Document corrompu
+
+Passage non trouvé
+
+Format non supporté
+
+Critères d’acceptation
+
+Le texte extrait correspond exactement au passage demandé
+
+Les formats non valides sont rejetés avec message explicite
+
+L’extraction est tracée (document_id, taille, durée)
+
+🔹 US-DOC-V0-06-T2 — Vérification des autorisations d’accès document
+Description
+
+En tant que plateforme, je veux vérifier que l’utilisateur est autorisé à accéder au document et à la fonctionnalité de reformulation, afin de garantir le moindre privilège.
+
+Périmètre
+
+Appel moteur RBAC via PolicyShield
+
+Vérification document ↔ utilisateur
+
+Vérification droit “reformulation”
+
+Edge cases
+
+Document appartenant à un autre utilisateur
+
+Rôle insuffisant
+
+Règles RBAC indisponibles
+
+Critères d’acceptation
+
+Accès refusé si non autorisé
+
+Décision tracée dans l’audit
+
+Aucune requête LLM si refus
+
+🔹 US-DOC-V0-06-T3 — Analyse de sécurité & classification du contenu
+Description
+
+En tant que plateforme, je veux analyser le contenu à reformuler afin de détecter PII, secrets et niveau de classification, et bloquer les contenus interdits.
+
+Périmètre
+
+Détection PII / secrets (regex + règles)
+
+Classification automatique (public → secret)
+
+Décision de blocage ou autorisation
+
+Edge cases
+
+Faux positif de classification
+
+Contenu mixte (public + secret)
+
+Ambiguïté de classification
+
+Critères d’acceptation
+
+Niveau secret → blocage immédiat
+
+L’utilisateur est informé du rejet
+
+Les détections sont journalisées
+
+🔹 US-DOC-V0-06-T4 — Construction du prompt de reformulation contrôlée
+Description
+
+En tant que plateforme, je veux construire un prompt de reformulation strictement contrôlé, afin de garantir l’absence de modification de sens.
+
+Périmètre
+
+Prompt template sécurisé
+
+Instructions explicites :
+
+pas d’ajout
+
+pas de résumé
+
+pas de changement de fond
+
+Paramétrage style (correction / amélioration)
+
+Edge cases
+
+Prompt trop long
+
+Langue non supportée par le modèle
+
+Critères d’acceptation
+
+Le prompt est conforme au template validé
+
+Aucune instruction libre non contrôlée
+
+Prompt traçable (hash)
+
+🔹 US-DOC-V0-06-T5 — Appel LLMaaS pour reformulation
+Description
+
+En tant que plateforme, je veux appeler le LLM autorisé via LLMaaS afin d’obtenir la reformulation du texte.
+
+Périmètre
+
+Appel via LiteLLM
+
+Transmission des métadonnées (user_id_hash, classification, model)
+
+Timeout configurable
+
+Edge cases
+
+Timeout LLM
+
+Modèle indisponible
+
+Erreur fournisseur
+
+Critères d’acceptation
+
+Les erreurs sont transformées en messages utilisateur clairs
+
+Aucun retry infini
+
+Les métriques sont collectées (latence, tokens)
+
+🔹 US-DOC-V0-06-T6 — Analyse de la réponse LLM (post-guardrail)
+Description
+
+En tant que plateforme, je veux analyser la réponse générée afin de détecter tout contenu inapproprié ou fuite de données avant restitution.
+
+Périmètre
+
+Filtrage toxicité
+
+Vérification PII sortante
+
+Blocage ou acceptation
+
+Edge cases
+
+Reformulation introduisant une donnée sensible
+
+Réponse vide ou incohérente
+
+Critères d’acceptation
+
+Toute réponse non conforme est bloquée
+
+L’événement est audité
+
+Aucun contenu non validé n’est exposé
+
+🔹 US-DOC-V0-06-T7 — Restitution & traçabilité de la reformulation
+Description
+
+En tant que plateforme, je veux restituer le texte reformulé et tracer l’opération, afin d’assurer auditabilité et exploitation future.
+
+Périmètre
+
+Retour du texte reformulé
+
+Association conversation / document
+
+Journalisation complète
+
+Edge cases
+
+Échec d’écriture audit
+
+Session expirée
+
+Critères d’acceptation
+
+Le texte est retourné avec métadonnées
+
+L’audit contient trace_id, model_used, règles appliquées
+
+L’opération est visible côté admin
