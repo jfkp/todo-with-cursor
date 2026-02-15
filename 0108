@@ -1,0 +1,256 @@
+US-FBK-V0-01 — Collecte et exploitation du feedback utilisateur sur les réponses LLM
+1. User Story (produit)
+
+En tant que plateforme IA gouvernée,
+je veux permettre aux utilisateurs de fournir un feedback sur chaque réponse générée par un LLM, afin de mesurer la qualité des réponses, d’identifier les problèmes récurrents et d’améliorer le pilotage, la gouvernance et l’évaluation des services IA.
+
+2. Valeur métier
+
+Mesure continue de la qualité perçue des réponses IA
+
+Détection des modèles ou parcours problématiques
+
+Amélioration de la gouvernance et du routage
+
+Support aux décisions produit et sécurité
+
+Base factuelle pour audits et arbitrages
+
+3. Responsabilité de la plateforme
+
+La plateforme est responsable de :
+
+Exposer une API de soumission de feedback
+
+Associer chaque feedback à un message LLM précis
+
+Persister le feedback de manière fiable et traçable
+
+Garantir l’intégrité et l’unicité du feedback
+
+Fournir des capacités de consultation et d’analyse
+
+Exposer un dashboard pour les administrateurs
+
+La plateforme ne décide pas du scoring qualité final (hors V0).
+
+4. Périmètre fonctionnel
+Inclus
+
+API de soumission de feedback utilisateur
+
+Association feedback ↔ message_id ↔ conversation_id
+
+Stockage persistant (base de données)
+
+Métadonnées : user_id, timestamp, modèle, route
+
+API de consultation pour les administrateurs
+
+Dashboard de visualisation (via backend)
+
+Traçabilité et audit
+
+Exclu
+
+Modification automatique du modèle
+
+Réentraînement
+
+Réponse en temps réel au feedback
+
+Gamification utilisateur
+
+5. Modèle de feedback (V0)
+Champ	Description
+feedback_id	Identifiant unique
+message_id	Message LLM évalué
+conversation_id	Conversation associée
+user_id	Identité utilisateur
+rating	👍 / 👎 ou score numérique
+comment	Texte optionnel
+timestamp	Horodatage
+model	Modèle utilisé
+route	Parcours IA
+trace_id	Corrélation
+6. Règles fonctionnelles
+Règle	Description
+RF-FBK-01	Un feedback est toujours lié à un message LLM
+RF-FBK-02	Un utilisateur ne peut donner qu’un feedback par message
+RF-FBK-03	Le feedback est immuable après soumission
+RF-FBK-04	Le feedback est stocké de façon persistante
+RF-FBK-05	Les feedbacks sont consultables uniquement par rôles autorisés
+RF-FBK-06	Toute soumission est tracée
+7. Edge cases (produit)
+Edge case	Comportement attendu
+message_id inexistant	Rejet (400)
+feedback déjà soumis	Rejet contrôlé
+utilisateur non authentifié	Rejet AUTH
+commentaire malformé	Rejet validation
+pic de feedback automatisé	Rate limit
+perte DB	Retry + alerte
+suppression conversation	Feedback conservé (audit)
+8. Critères d’acceptation (US produit)
+
+Un utilisateur peut soumettre un feedback sur une réponse LLM
+
+Le feedback est lié à un message précis
+
+Le feedback est persisté avec métadonnées complètes
+
+Les administrateurs peuvent consulter et analyser les feedbacks
+
+Les feedbacks sont traçables et audités
+
+Aucun feedback ne peut être modifié après soumission
+
+Déclinaison en sous-US techniques
+US-FBK-V0-01-A — API de soumission de feedback
+Description
+
+Exposer une API backend permettant la soumission d’un feedback utilisateur.
+
+Périmètre
+
+Endpoint REST
+
+Validation payload
+
+Edge cases
+
+message_id invalide
+
+payload incomplet
+
+Critères d’acceptation
+
+API fonctionnelle
+
+Réponses normalisées
+
+US-FBK-V0-01-B — Persistance du feedback
+Description
+
+Stocker durablement le feedback dans une base de données.
+
+Périmètre
+
+Schéma structuré
+
+Indexation par message_id, user_id
+
+Edge cases
+
+Conflit d’unicité
+
+Indisponibilité DB
+
+Critères d’acceptation
+
+Feedback persisté
+
+Reprise sur erreur
+
+US-FBK-V0-01-C — Association feedback ↔ message ↔ conversation
+Description
+
+Garantir la cohérence entre feedback, message et conversation.
+
+Périmètre
+
+Vérification référentielle
+
+Corrélation trace_id
+
+Edge cases
+
+Message supprimé
+
+Conversation soft-deleted
+
+Critères d’acceptation
+
+Lien maintenu
+
+Données cohérentes
+
+US-FBK-V0-01-D — API de consultation des feedbacks (admin)
+Description
+
+Permettre aux administrateurs d’accéder aux feedbacks collectés.
+
+Périmètre
+
+API filtrée (date, modèle, score)
+
+Pagination
+
+Edge cases
+
+Accès non autorisé
+
+Volume élevé
+
+Critères d’acceptation
+
+Accès sécurisé
+
+Performance acceptable
+
+US-FBK-V0-01-E — Dashboard feedback qualité
+Description
+
+Exposer les indicateurs de qualité via un dashboard consommant les APIs.
+
+Périmètre
+
+Agrégation backend
+
+Indicateurs clés
+
+Edge cases
+
+Données incomplètes
+
+Retard de calcul
+
+Critères d’acceptation
+
+Indicateurs visibles
+
+Données cohérentes
+
+US-FBK-V0-01-F — Traçabilité & audit des feedbacks
+Description
+
+Tracer chaque soumission et consultation de feedback.
+
+Périmètre
+
+Logs structurés
+
+Audit trail
+
+Edge cases
+
+Log manquant
+
+trace_id absent
+
+Critères d’acceptation
+
+Audit complet
+
+Export possible
+
+9. Definition of Done — US-FBK-V0-01
+
+Les feedbacks utilisateurs sont collectables
+
+Les données sont persistées et traçables
+
+Les administrateurs disposent d’une vue exploitable
+
+Aucun feedback n’est modifiable
+
+La plateforme mesure la qualité sans impacter l’exécution IA
