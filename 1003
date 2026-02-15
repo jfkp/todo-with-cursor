@@ -1,0 +1,221 @@
+US-DOC-V0-02 — Analyse approfondie d’un document uploadé (insights)
+1. User Story (produit)
+
+En tant qu’utilisateur de la plateforme,
+je veux analyser un document que j’ai uploadé (analyse thématique, structurelle et critique),
+afin d’extraire des insights clés, synthèses et points d’attention sur son contenu.
+
+2. Valeur utilisateur
+
+Compréhension rapide de documents complexes
+
+Mise en évidence des thèmes majeurs
+
+Identification des forces, faiblesses et zones ambiguës
+
+Aide à la prise de décision
+
+Gain de temps sur l’analyse manuelle
+
+3. Responsabilité de la plateforme (backend)
+
+La plateforme est responsable de :
+
+Associer l’analyse à un document uploadé identifié
+
+Vérifier l’accès utilisateur au document
+
+Extraire le contenu textuel depuis ContextHub
+
+Construire des prompts d’analyse structurés
+
+Appeler un LLM autorisé et compatible
+
+Appliquer les Security Guardrails (entrée / sortie)
+
+Garantir que l’analyse est fondée uniquement sur le document
+
+Tracer l’ensemble du flux dans l’observabilité
+
+⚠️ La plateforme ne complète pas le document par des connaissances externes.
+
+4. Périmètre fonctionnel
+Inclus
+
+Analyse thématique (sujets, concepts clés)
+
+Analyse structurelle (sections, logique, organisation)
+
+Analyse critique (forces, limites, incohérences)
+
+Synthèse d’insights
+
+Analyse mono-document
+
+Exclu
+
+Recherche web externe
+
+Comparaison multi-documents
+
+Réécriture du document
+
+RAG fédéré
+
+5. Entrées fonctionnelles
+Champ	Description
+user_id	Identifiant utilisateur
+session_id	Session conversationnelle
+document_id	Identifiant du document
+analysis_type	thématique / structurelle / critique
+model	Modèle LLM
+trace_id	Identifiant de corrélation
+6. Sorties fonctionnelles
+Champ	Description
+insights	Résultats de l’analyse
+themes	Thèmes identifiés
+structure	Structure détectée
+critical_points	Forces / faiblesses
+document_id	Document analysé
+model_used	Modèle utilisé
+latency_ms	Temps de réponse
+trace_id	Corrélation
+7. Règles fonctionnelles
+Règle	Description
+RF-DOC-AN-01	L’analyse repose uniquement sur le document
+RF-DOC-AN-02	L’accès au document est contrôlé
+RF-DOC-AN-03	Le contenu est extrait via ContextHub
+RF-DOC-AN-04	Les types d’analyse sont explicites
+RF-DOC-AN-05	Toute sortie est auditée
+8. Edge cases (produit)
+Edge case	Comportement attendu
+Document inexistant	Erreur explicite
+Accès non autorisé	Blocage AUTHZ
+Document trop volumineux	Troncature contrôlée
+Contenu non textuel	Message “analyse non possible”
+Analyse vide	Message utilisateur clair
+Timeout LLM	Erreur + audit
+9. Critères d’acceptation (US produit)
+
+L’analyse correspond au type demandé
+
+Aucun contenu externe n’est ajouté
+
+Les insights sont structurés et lisibles
+
+Les erreurs sont explicites
+
+Le flux est entièrement traçable
+
+Déclinaison en sous-US techniques
+US-DOC-V0-02-A — Validation & autorisation document
+Description
+
+Vérifier l’existence du document et les droits utilisateur.
+
+Edge cases
+
+Document supprimé
+
+Accès refusé
+
+Critères d’acceptation
+
+Blocage immédiat
+
+Journal d’audit
+
+US-DOC-V0-02-B — Extraction du contenu
+Description
+
+Extraire le texte via ContextHub.
+
+Edge cases
+
+Extraction partielle
+
+Format non supporté
+
+Critères d’acceptation
+
+Contenu textuel exploitable
+
+Erreur contrôlée sinon
+
+US-DOC-V0-02-C — Construction des prompts d’analyse
+Description
+
+Construire des prompts adaptés au type d’analyse.
+
+Edge cases
+
+Prompt trop long
+
+Type inconnu
+
+Critères d’acceptation
+
+Prompt structuré
+
+Validation des paramètres
+
+US-DOC-V0-02-D — Appel LLM gouverné
+Description
+
+Appeler un modèle compatible analyse documentaire.
+
+Edge cases
+
+Modèle non autorisé
+
+Timeout
+
+Critères d’acceptation
+
+Routage validé
+
+Timeout configurable
+
+US-DOC-V0-02-E — Analyse sécurité sortie
+Description
+
+Vérifier absence de fuite ou hallucination.
+
+Edge cases
+
+Contenu sensible détecté
+
+Analyse hors périmètre
+
+Critères d’acceptation
+
+Blocage ou reformulation
+
+Message explicite
+
+US-DOC-V0-02-F — Observabilité & traçabilité
+Description
+
+Tracer l’analyse et ses résultats.
+
+Edge cases
+
+Trace manquante
+
+Critères d’acceptation
+
+trace_id bout-en-bout
+
+Export audit possible
+
+10. Definition of Done — US-DOC-V0-02
+
+Analyse documentaire fonctionnelle
+
+Résultats structurés et compréhensibles
+
+Aucune hallucination
+
+Sécurité respectée
+
+Observabilité complète
