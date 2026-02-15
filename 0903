@@ -1,0 +1,109 @@
+US-CONTENT-V0-01 — Génération de contenu structuré
+1. User Story (produit)
+
+En tant qu’utilisateur de la plateforme,
+je veux générer automatiquement un contenu structuré (email, rapport, note, compte-rendu),
+afin de gagner du temps et produire des livrables professionnels cohérents et exploitables.
+
+2. Valeur utilisateur
+
+Gain de productivité immédiat
+
+Réduction de l’effort rédactionnel
+
+Contenu structuré et réutilisable
+
+Continuité avec le contexte conversationnel
+
+Adaptation au type de livrable attendu
+
+3. Responsabilité de la plateforme (backend)
+
+La plateforme est responsable de :
+
+Exposer une API de génération de contenu
+
+Valider le payload utilisateur (type, objectif, contexte)
+
+Charger le contexte conversationnel et le profil utilisateur
+
+Appliquer les Security Guardrails (input / output)
+
+Vérifier les droits d’accès au modèle
+
+Router vers un LLM autorisé
+
+Gérer timeouts, retries, erreurs
+
+Tracer l’appel dans la base d’observabilité
+
+⚠️ La plateforme n’expose aucune UI et ne gère pas la mise en forme finale côté front.
+
+4. Périmètre fonctionnel
+Inclus
+
+Génération de contenu long ou court
+
+Types supportés : email, rapport, note
+
+Prise en compte du contexte conversationnel
+
+Paramétrage du ton (formel, neutre, synthétique)
+
+Traçabilité complète
+
+Exclu
+
+Validation humaine du contenu
+
+Envoi d’email ou publication
+
+Workflow d’approbation
+
+Mise en page riche (HTML avancé)
+
+5. Entrées fonctionnelles
+Champ	Description
+user_id	Identifiant utilisateur
+session_id	Session conversationnelle
+content_type	email / rapport / note
+objective	Objectif du contenu
+instructions	Contraintes ou consignes
+tone	Formel / neutre / synthétique
+model	Modèle LLM sélectionné
+trace_id	Corrélation
+6. Sorties fonctionnelles
+Champ	Description
+content	Contenu généré
+content_type	Type généré
+model_used	Modèle utilisé
+tokens_input	Tokens en entrée
+tokens_output	Tokens en sortie
+latency_ms	Temps de réponse
+trace_id	Corrélation
+7. Règles fonctionnelles
+Règle	Description
+RF-CONT-01	Le type de contenu est obligatoire
+RF-CONT-02	Le contexte conversationnel est chargé avant génération
+RF-CONT-03	Le modèle doit être autorisé pour l’utilisateur
+RF-CONT-04	Les guardrails s’appliquent sur input et output
+RF-CONT-05	Toute génération est auditée
+8. Edge cases (produit)
+Edge case	Comportement attendu
+Type de contenu inconnu	Rejet avec message explicite
+Instructions vides	Génération générique
+Contexte trop volumineux	Troncature contrôlée
+Modèle non autorisé	Blocage AUTHZ
+Contenu sensible détecté	Blocage sécurité
+Timeout LLM	Retry puis erreur utilisateur
+9. Critères d’acceptation (US produit)
+
+Le contenu correspond au type demandé
+
+Le contexte est pris en compte
+
+Les règles de sécurité sont respectées
+
+Les erreurs sont compréhensibles
+
+Les métriques sont disponibles en observabilité
