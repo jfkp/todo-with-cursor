@@ -1,0 +1,159 @@
+US-DOC-V0-06 — Reformulation & correction de passages d’un document
+1. User Story
+
+En tant qu’utilisateur de la plateforme,
+je veux reformuler et corriger des passages d’un document,
+afin d’améliorer la qualité rédactionnelle (orthographe, grammaire, style, clarté) tout en préservant strictement le sens du contenu original.
+
+2. Objectif fonctionnel
+
+Permettre à un utilisateur d’améliorer un document existant en demandant au système de :
+
+corriger les fautes linguistiques,
+
+reformuler le texte pour plus de clarté ou de fluidité,
+
+adapter le style (professionnel, neutre, synthétique),
+sans modifier le fond ni introduire de nouvelles informations.
+
+3. Responsabilités de la plateforme (backend)
+
+La plateforme doit :
+
+Valider l’entrée
+
+Document existant ou passages ciblés
+
+Format supporté (PDF, Word, Excel → texte)
+
+Taille et volume autorisés
+
+Contrôler les accès
+
+Vérifier que l’utilisateur est autorisé à accéder au document
+
+Vérifier que le modèle sélectionné est autorisé pour cet utilisateur
+
+Analyser la sécurité
+
+Détection de données sensibles (PII, secrets)
+
+Classification automatique du contenu
+
+Blocage immédiat si niveau secret
+
+Préparer la requête LLM
+
+Construire un prompt de reformulation contrôlé
+
+Inclure des instructions strictes :
+
+pas d’ajout de contenu
+
+pas de modification de sens
+
+pas de résumé implicite
+
+Appeler le LLM
+
+Via LLMaaS autorisé
+
+Avec métadonnées de traçabilité
+
+Analyser la sortie
+
+Vérifier conformité, toxicité, fuite de données
+
+Bloquer ou corriger si nécessaire
+
+Restituer le résultat
+
+Texte reformulé
+
+Association au document et à la conversation
+
+Journalisation complète
+
+4. Périmètre fonctionnel
+Inclus
+
+Reformulation de passages sélectionnés
+
+Correction orthographique et grammaticale
+
+Amélioration du style rédactionnel
+
+Support multilingue (selon modèles)
+
+Traçabilité et audit
+
+Exclu
+
+Modification du sens métier
+
+Ajout d’informations externes
+
+Réécriture créative libre
+
+Résumé automatique (US distincte)
+
+5. Entrées
+Nom	Description
+document_id	Identifiant du document
+text_selection	Passage(s) à reformuler
+reformulation_type	Correction / amélioration / style
+language	Langue cible
+identity_context	Utilisateur, rôles
+conversation_id	Session active
+trace_id	Corrélation
+6. Sorties
+Nom	Description
+reformulated_text	Texte corrigé / reformulé
+quality_notes	Indications de correction
+model_used	Modèle utilisé
+audit_metadata	Horodatage, règles appliquées
+7. Règles fonctionnelles
+Règle	Description
+RF-DOC-REF-01	Le sens original ne doit jamais être modifié
+RF-DOC-REF-02	Aucun contenu nouveau ne peut être ajouté
+RF-DOC-REF-03	Le niveau de classification doit être respecté
+RF-DOC-REF-04	Un contenu classé secret est bloqué
+RF-DOC-REF-05	Toute reformulation est traçable
+8. Edge cases (cas limites)
+Situation	Attente plateforme
+Passage vide	Erreur fonctionnelle claire
+Document supprimé	Refus avec message explicite
+Contenu sensible détecté	Blocage + justification
+Texte trop volumineux	Découpage ou refus contrôlé
+Sortie LLM incohérente	Blocage + log audit
+9. Critères d’acceptation
+
+Le texte retourné conserve strictement le sens original
+
+Les fautes sont corrigées de manière fiable
+
+Le style est amélioré sans réécriture abusive
+
+Aucun contenu sensible n’est exposé
+
+Chaque requête est auditée et traçable
+
+Les erreurs sont explicites côté utilisateur
+
+10. Traçabilité & audit
+
+Logs structurés :
+
+trace_id
+
+user_id
+
+document_id
+
+model_used
+
+classification_level
+
+Historique consultable par administrateur
+
+Exploitable pour conformité et sécurité
