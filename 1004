@@ -1,0 +1,220 @@
+US-DOC-V0-04 — Génération de contenu à partir d’un document
+1. User Story (produit)
+
+En tant qu’utilisateur de la plateforme,
+je veux générer un contenu structuré (email, note ou rapport) à partir d’un document que j’ai uploadé,
+afin de réutiliser efficacement les informations du document dans mes communications professionnelles.
+
+2. Valeur utilisateur
+
+Gain de temps dans la rédaction
+
+Réutilisation fidèle d’un contenu existant
+
+Standardisation des livrables (email, note, rapport)
+
+Réduction des erreurs de reformulation
+
+Amélioration de la productivité
+
+3. Responsabilité de la plateforme (backend)
+
+La plateforme est responsable de :
+
+Vérifier l’existence et l’autorisation d’accès au document
+
+Extraire le contenu textuel du document via ContextHub
+
+Permettre le choix du type de contenu à générer
+
+Construire un prompt de génération structuré et contrôlé
+
+Appeler un LLM autorisé, compatible avec la classification détectée
+
+Appliquer les Security Guardrails sur l’entrée et la sortie
+
+Garantir que le contenu généré est strictement basé sur le document
+
+Assurer une traçabilité complète de l’opération
+
+⚠️ La plateforme n’ajoute aucune information externe au document source.
+
+4. Périmètre fonctionnel
+Inclus
+
+Génération de contenu à partir d’un document unique
+
+Types supportés : email, note, rapport
+
+Contenu structuré (titres, paragraphes, ton professionnel)
+
+Traçabilité complète
+
+Exclu
+
+Recherche web
+
+RAG externe
+
+Fusion de plusieurs documents
+
+Création créative non basée sur le document
+
+5. Entrées fonctionnelles
+Champ	Description
+user_id	Identifiant utilisateur
+session_id	Identifiant de session
+document_id	Identifiant du document
+content_type	email | note | rapport
+tone	formel / neutre / synthétique
+model	Modèle LLM
+trace_id	Identifiant de corrélation
+6. Sorties fonctionnelles
+Champ	Description
+generated_content	Contenu généré
+content_type	Type de contenu
+document_id	Document source
+model_used	Modèle utilisé
+latency_ms	Temps de réponse
+trace_id	Corrélation
+7. Règles fonctionnelles
+Règle	Description
+RF-DOC-GEN-01	Le contenu généré repose uniquement sur le document
+RF-DOC-GEN-02	L’accès au document est validé avant génération
+RF-DOC-GEN-03	Le type de contenu détermine la structure du prompt
+RF-DOC-GEN-04	Aucune information externe ne doit être ajoutée
+RF-DOC-GEN-05	Toute génération est auditable
+8. Edge cases (produit)
+Edge case	Comportement attendu
+Document inexistant	Erreur explicite
+Accès non autorisé	Blocage AUTHZ
+Document trop volumineux	Troncature contrôlée
+Type de contenu inconnu	Erreur utilisateur claire
+Document non textuel	Génération impossible
+Timeout LLM	Erreur contrôlée + audit
+9. Critères d’acceptation (US produit)
+
+Le contenu généré est fidèle au document
+
+Le format demandé est respecté
+
+Le ton est appliqué correctement
+
+Aucun contenu externe n’est ajouté
+
+Les erreurs sont compréhensibles
+
+Le flux est entièrement traçable
+
+Déclinaison en sous-US techniques
+US-DOC-V0-04-A — Validation & autorisation document
+
+Description
+Vérifier l’existence du document et les droits utilisateur.
+
+Edge cases
+
+Document supprimé
+
+Accès interdit
+
+Critères d’acceptation
+
+Blocage immédiat
+
+Décision auditable
+
+US-DOC-V0-04-B — Extraction du contenu documentaire
+
+Description
+Extraire le texte exploitable via ContextHub.
+
+Edge cases
+
+Extraction partielle
+
+Encodage incorrect
+
+Critères d’acceptation
+
+Texte exploitable
+
+Erreur contrôlée sinon
+
+US-DOC-V0-04-C — Construction du prompt de génération
+
+Description
+Construire un prompt structuré selon le type de contenu (email, note, rapport).
+
+Edge cases
+
+Prompt trop long
+
+Paramètres invalides
+
+Critères d’acceptation
+
+Prompt conforme
+
+Paramètres validés
+
+US-DOC-V0-04-D — Appel LLM gouverné
+
+Description
+Appeler un modèle compatible génération de contenu.
+
+Edge cases
+
+Modèle non autorisé
+
+Incompatibilité classification
+
+Critères d’acceptation
+
+Routage conforme
+
+Refus explicite sinon
+
+US-DOC-V0-04-E — Validation sécurité de la sortie
+
+Description
+Analyser le contenu généré avant exposition.
+
+Edge cases
+
+Données sensibles exposées
+
+Contenu non conforme
+
+Critères d’acceptation
+
+Blocage ou message explicite
+
+Journalisation complète
+
+US-DOC-V0-04-F — Observabilité & audit
+
+Description
+Tracer la génération et ses métadonnées.
+
+Edge cases
+
+Trace absente ou incomplète
+
+Critères d’acceptation
+
+trace_id bout-en-bout
+
+Export audit disponible
+
+10. Definition of Done — US-DOC-V0-04
+
+Génération de contenu opérationnelle
+
+Fidélité stricte au document
+
+Types email / note / rapport supportés
+
+Sécurité respectée
+
+Observabilité complète
