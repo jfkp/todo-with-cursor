@@ -1,0 +1,231 @@
+US-CODE-V0-01 — Génération de code simple
+1. User Story (produit)
+
+En tant qu’utilisateur de la plateforme,
+je veux générer automatiquement du code simple
+afin d’automatiser des tâches courantes sans écrire moi-même le code.
+
+Langages minimum supportés : Python, SQL, VBA, JavaScript.
+
+2. Valeur utilisateur
+
+Accélération de l’automatisation
+
+Réduction des erreurs de syntaxe
+
+Support multi-langages standard
+
+Code exploitable immédiatement
+
+Continuité avec le contexte conversationnel
+
+3. Responsabilité de la plateforme (backend)
+
+La plateforme est responsable de :
+
+Exposer une API de génération de code
+
+Valider les paramètres (langage, objectif, contraintes)
+
+Charger le contexte conversationnel
+
+Appliquer les Security Guardrails (input / output)
+
+Vérifier l’autorisation d’accès au modèle
+
+Router vers un LLM compatible code
+
+Normaliser la sortie code
+
+Tracer l’appel dans la base d’observabilité
+
+⚠️ La plateforme ne compile pas, n’exécute pas et ne valide pas fonctionnellement le code généré.
+
+4. Périmètre fonctionnel
+Inclus
+
+Génération de scripts simples
+
+Langages : Python, SQL, VBA, JavaScript
+
+Prise en compte du contexte conversationnel
+
+Paramétrage du style (commenté / minimal)
+
+Détection de code dangereux
+
+Exclu
+
+Exécution du code
+
+Déploiement
+
+Accès système
+
+Génération de malware ou exploits
+
+Gestion de dépendances externes
+
+5. Entrées fonctionnelles
+Champ	Description
+user_id	Identifiant utilisateur
+session_id	Session conversationnelle
+language	python / sql / vba / javascript
+objective	Tâche à automatiser
+constraints	Contraintes (performance, simplicité)
+style	Commenté / minimal
+model	Modèle LLM
+trace_id	Corrélation
+6. Sorties fonctionnelles
+Champ	Description
+code	Code généré
+language	Langage du code
+model_used	Modèle utilisé
+warnings	Avertissements éventuels
+tokens_input	Tokens en entrée
+tokens_output	Tokens en sortie
+latency_ms	Temps de réponse
+trace_id	Corrélation
+7. Règles fonctionnelles
+Règle	Description
+RF-CODE-01	Le langage est obligatoire
+RF-CODE-02	Le code est généré en texte brut
+RF-CODE-03	Le contexte conversationnel est injecté
+RF-CODE-04	Le modèle doit supporter la génération de code
+RF-CODE-05	Tout code est analysé avant restitution
+8. Edge cases (produit)
+Edge case	Comportement attendu
+Langage non supporté	Rejet explicite
+Objectif ambigu	Demande de clarification
+Code potentiellement dangereux	Blocage sécurité
+Script trop long	Troncature contrôlée
+Modèle non autorisé	Blocage AUTHZ
+Timeout LLM	Retry puis erreur utilisateur
+9. Critères d’acceptation (US produit)
+
+Le code correspond au langage demandé
+
+Le code est lisible et structuré
+
+Les règles de sécurité sont respectées
+
+Les erreurs sont compréhensibles
+
+Les métriques sont disponibles
+
+Déclinaison en sous-US techniques
+US-CODE-V0-01-A — Validation du payload
+Description
+
+Valider langage, objectif, style et contraintes.
+
+Edge cases
+
+Langage manquant
+
+Langage non reconnu
+
+Critères d’acceptation
+
+Rejet explicite
+
+Log structuré
+
+US-CODE-V0-01-B — Chargement du contexte
+Description
+
+Récupérer les N derniers messages depuis le Memory Store.
+
+Edge cases
+
+Session inexistante
+
+Contexte vide
+
+Critères d’acceptation
+
+Latence < 50 ms
+
+Format compatible LLM
+
+US-CODE-V0-01-C — Analyse sécurité (input)
+Description
+
+Analyser la demande (commandes système, accès réseau, secrets).
+
+Edge cases
+
+Tentative d’accès OS
+
+Injection malveillante
+
+Critères d’acceptation
+
+Blocage si violation
+
+Audit persistant
+
+US-CODE-V0-01-D — Routage vers LLM compatible code
+Description
+
+Sélectionner un modèle autorisé et adapté à la génération de code.
+
+Edge cases
+
+Modèle incompatible code
+
+Incompatibilité classification
+
+Critères d’acceptation
+
+Routage déterministe
+
+Timeout configurable
+
+US-CODE-V0-01-E — Analyse sécurité (output code)
+Description
+
+Analyser le code généré (dangerosité, appels interdits).
+
+Edge cases
+
+Appels système détectés
+
+Code obscurci
+
+Critères d’acceptation
+
+Blocage ou avertissement
+
+Message utilisateur clair
+
+US-CODE-V0-01-F — Observabilité & audit
+Description
+
+Tracer requête, génération, métriques et erreurs.
+
+Edge cases
+
+Trace absente
+
+Log incomplet
+
+Critères d’acceptation
+
+trace_id corrélé
+
+Export possible
+
+10. Definition of Done — US-CODE-V0-01
+
+API de génération de code disponible
+
+Support Python / SQL / VBA / JavaScript
+
+Sécurité appliquée input & output
+
+Routage gouverné
+
+Observabilité complète
+
+Conforme aux principes de la plateforme IA gouvernée
