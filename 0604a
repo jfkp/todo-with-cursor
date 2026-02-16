@@ -1,0 +1,141 @@
+US-WEB-V0-01 — Enrichissement des requêtes par recherche web basique
+1. User Story (produit)
+
+En tant qu’utilisateur, je veux enrichir mes requêtes avec des recherches web basiques, afin d’obtenir des informations actualisées qui complètent les connaissances du LLM.
+
+2. Valeur utilisateur
+
+Accès à des informations récentes et à jour
+
+Réponses plus fiables sur des sujets d’actualité
+
+Meilleure compréhension du contexte externe
+
+Transparence grâce aux citations des sources web
+
+Réduction des réponses obsolètes ou approximatives
+
+3. Responsabilité de la plateforme (backend)
+
+La plateforme est responsable de :
+
+Interroger des APIs de recherche web externes (ex. Bing, Google)
+
+Extraire et normaliser les résultats (titre, snippet, URL)
+
+Sélectionner les résultats les plus pertinents (top-k)
+
+Injecter les extraits web dans le contexte envoyé au LLM
+
+Associer les citations web à la réponse générée
+
+Gérer les erreurs, quotas et indisponibilités des APIs
+
+Tracer et auditer l’ensemble du processus
+
+La plateforme ne fournit pas un moteur de recherche direct, mais un mécanisme d’enrichissement contextuel pour les appels LLM.
+
+4. Périmètre fonctionnel
+Inclus
+
+Intégration d’APIs de recherche web (Bing / Google)
+
+Extraction basique des résultats (titre, snippet, URL)
+
+Limitation du nombre de résultats (top-k = 5)
+
+Nettoyage et normalisation du contenu
+
+Injection du contexte web dans l’appel LLM
+
+Ajout de citations web dans la réponse finale
+
+Journalisation des appels web et de leur usage
+
+Exclu
+
+Indexation ou stockage long terme du contenu web
+
+Crawl web avancé
+
+Recherche web autonome côté utilisateur
+
+Personnalisation avancée des moteurs de recherche
+
+5. Entrées fonctionnelles
+Nom	Description
+user_id	Identifiant utilisateur
+session_id	Identifiant de session
+prompt	Requête utilisateur
+enable_web_search	Booléen d’activation de la recherche web
+web_query	Requête web dérivée du prompt
+trace_id	Identifiant de corrélation
+model_id	Modèle LLM sélectionné
+6. Sorties fonctionnelles
+Nom	Description
+enriched_prompt	Prompt enrichi avec contexte web
+web_sources	Liste des sources web (titre, URL)
+llm_response	Réponse générée par le LLM
+citations	Références web associées à la réponse
+audit_metadata	Métadonnées d’audit (API utilisée, latence, nb résultats)
+7. Règles fonctionnelles
+Règle	Description
+RF-WEB-01	La recherche web est optionnelle et explicitement activée
+RF-WEB-02	Le nombre de résultats est limité à top-k = 5
+RF-WEB-03	Seuls les titres et snippets sont injectés (pas le contenu complet)
+RF-WEB-04	Le contexte web est injecté avant l’appel LLM
+RF-WEB-05	Les sources web doivent être citées dans la réponse
+RF-WEB-06	En cas d’échec de la recherche web, la génération continue sans enrichissement
+RF-WEB-07	Aucun contenu web n’est persisté au-delà de la requête
+8. Edge cases utilisateur
+Situation	Comportement attendu
+API de recherche indisponible	Continuer sans enrichissement web
+Quota API dépassé	Désactiver enrichissement + log
+Aucun résultat pertinent	Réponse LLM sans contexte web
+Résultats contradictoires	Fournir citations multiples
+Réponse trop volumineuse	Tronquer les snippets
+Contenu web sensible	Blocage via Guardrails avant injection
+9. Critères d’acceptation (US produit)
+
+L’utilisateur peut activer ou non la recherche web
+
+Les résultats web sont bien injectés dans le prompt LLM
+
+Le nombre de résultats est limité à 5
+
+Les sources web sont citées dans la réponse
+
+Une indisponibilité web n’empêche pas la génération
+
+Tous les appels sont tracés et auditables
+
+Déclinaison en sous-US techniques
+US-WEB-V0-01-T1 — Intégration API de recherche web
+
+Connexion Bing / Google
+
+Gestion quotas, timeouts, retries
+
+US-WEB-V0-01-T2 — Extraction & normalisation des résultats
+
+Parsing titre, snippet, URL
+
+Nettoyage HTML / caractères spéciaux
+
+US-WEB-V0-01-T3 — Sélection et limitation top-k
+
+Classement des résultats
+
+Limitation stricte à 5 résultats
+
+US-WEB-V0-01-T4 — Injection du contexte web dans le prompt
+
+Formatage compatible LLM
+
+Séparation claire contexte / prompt utilisateur
+
+US-WEB-V0-01-T5 — Citations et audit
+
+Association sources ↔ réponse
+
+Logs : latence, moteur, nb résultats
