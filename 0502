@@ -1,0 +1,236 @@
+US-MEM-V0-03 — Gestion des sessions utilisateur en cache
+1. User Story (produit)
+
+En tant que Memory Store de la plateforme IA gouvernée, je veux gérer les sessions utilisateur dans un cache, afin de maintenir l’état actif des utilisateurs de manière performante, sécurisée et observable, tout en supportant expiration, invalidation et refresh des sessions.
+
+2. Valeur utilisateur
+
+Sessions réactives et fluides
+
+Continuité d’usage sans reconnexion fréquente
+
+Déconnexion automatique en cas d’inactivité
+
+Sécurité renforcée des accès
+
+3. Responsabilité de la plateforme (backend)
+
+La plateforme est responsable de :
+
+Stocker l’état de session en cache
+
+Gérer le cycle de vie des sessions
+
+Implémenter expiration et invalidation
+
+Supporter refresh token
+
+Exposer des métriques de session
+
+Garantir traçabilité et sécurité
+
+La plateforme ne gère pas l’interface utilisateur.
+
+4. Périmètre fonctionnel
+Inclus
+
+Création de session
+
+Lecture de session active
+
+Expiration automatique (TTL)
+
+Invalidation explicite
+
+Refresh token
+
+Stockage en cache distribué
+
+Métriques de sessions
+
+Logs et audit
+
+Exclu
+
+Gestion des identités (IdP)
+
+UI de session
+
+Gestion des mots de passe
+
+Authentification primaire
+
+5. Entrées fonctionnelles
+Nom	Description
+session_id	Identifiant de session
+user_id	Identifiant utilisateur
+refresh_token	Jeton de rafraîchissement
+access_token	Jeton d’accès
+ttl	Durée de vie
+trace_id	Identifiant de corrélation
+action	create / refresh / invalidate
+6. Sorties fonctionnelles
+Nom	Description
+session_status	ACTIVE / EXPIRED / INVALID
+expires_at	Date d’expiration
+refreshed	true / false
+trace_id	Corrélation
+metrics	Données d’usage
+7. Règles fonctionnelles
+Règle	Description
+RF-MEM-SES-01	Toute session est stockée en cache
+RF-MEM-SES-02	Une session a un TTL configurable
+RF-MEM-SES-03	Une session expirée est invalide
+RF-MEM-SES-04	Le refresh renouvelle TTL
+RF-MEM-SES-05	L’invalidation est immédiate
+RF-MEM-SES-06	Les sessions sont liées à user_id
+RF-MEM-SES-07	Toute opération est tracée
+RF-MEM-SES-08	Aucune donnée sensible n’est loggée
+8. Edge cases utilisateur
+
+Session expirée lors d’une action
+
+Refresh token invalide
+
+Session inexistante
+
+Invalidation concurrente
+
+Cache indisponible
+
+Tentative d’accès après logout
+
+TTL mal configuré
+
+9. Critères d’acceptation (US produit)
+
+Les sessions sont créées et lues depuis le cache
+
+L’expiration automatique fonctionne
+
+Le refresh token prolonge la session
+
+L’invalidation coupe immédiatement l’accès
+
+Les métriques de session sont visibles
+
+Les logs sont corrélés via trace_id
+
+Les performances respectent les SLA
+
+Déclinaison en sous-US techniques
+US-MEM-V0-03-T1 — Stockage de session en cache
+
+Description
+Implémenter le stockage des sessions dans un cache distribué (ex : Redis).
+
+Périmètre
+
+Key = session_id
+
+Value = état session
+
+Edge cases
+
+Cache indisponible
+
+Critères d’acceptation
+
+Lecture/écriture < 10 ms
+
+US-MEM-V0-03-T2 — Expiration & TTL
+
+Description
+Gérer l’expiration automatique des sessions.
+
+Périmètre
+
+TTL configurable
+
+Expiration native cache
+
+Edge cases
+
+TTL nul ou négatif
+
+Critères d’acceptation
+
+Session expirée non utilisable
+
+US-MEM-V0-03-T3 — Invalidation de session
+
+Description
+Permettre l’invalidation explicite (logout, sécurité).
+
+Périmètre
+
+Suppression cache
+
+Action traçable
+
+Edge cases
+
+Invalidation double
+
+Critères d’acceptation
+
+Accès refusé immédiatement
+
+US-MEM-V0-03-T4 — Refresh token
+
+Description
+Renouveler la session sans reconnexion complète.
+
+Périmètre
+
+Vérification refresh_token
+
+Nouveau TTL
+
+Edge cases
+
+Refresh expiré
+
+Critères d’acceptation
+
+Session prolongée sans rupture
+
+US-MEM-V0-03-T5 — Observabilité des sessions
+
+Description
+Publier métriques et logs de session.
+
+Périmètre
+
+Sessions actives
+
+Expirations
+
+Refresh
+
+Edge cases
+
+Métriques manquantes
+
+Critères d’acceptation
+
+Dashboards exploitables
+
+US-MEM-V0-03-T6 — Sécurité & audit
+
+Description
+Tracer toutes les actions session.
+
+Périmètre
+
+Logs structurés
+
+Aucune donnée sensible
+
+Edge cases
+
+Trace manquante
+
+Critères d’acceptation
+
+Audit complet disponible
