@@ -1,0 +1,227 @@
+US-CH-V0-RAGaaS-02 — Recherche documentaire et monitoring d’usage via RAGaaS
+1. User Story (produit)
+
+En tant que ContextHub, je veux interroger le service RAGaaS pour rechercher des contenus indexés et récupérer les chunks pertinents, tout en collectant des métriques d’usage, afin d’optimiser les performances RAG, les coûts et la qualité des réponses.
+
+2. Valeur utilisateur
+
+Accès à une recherche RAG performante et mutualisée
+
+Réponses plus pertinentes grâce à une récupération optimisée
+
+Maîtrise des coûts et de l’usage RAG
+
+Amélioration continue des performances RAG
+
+Transparence sur l’utilisation des ressources
+
+3. Responsabilité de la plateforme (backend)
+
+La plateforme (ContextHub) est responsable de :
+
+Transmettre les requêtes de recherche à RAGaaS
+
+Récupérer les chunks pertinents (retrieve)
+
+Appliquer les paramètres de recherche (top-k, score)
+
+Collecter et centraliser les métriques d’usage RAGaaS
+
+Logger chaque requête RAG
+
+Exposer les données de monitoring à l’observabilité (et éventuellement au dashboard)
+
+La plateforme ne réalise pas la recherche vectorielle elle-même.
+
+4. Périmètre fonctionnel
+Inclus
+
+Envoi de requêtes de recherche (search query) à RAGaaS
+
+Récupération des chunks pertinents
+
+Paramétrage top-k et seuil de score
+
+Logging des requêtes RAG
+
+Collecte des métriques d’usage RAGaaS
+
+Agrégation des métriques (latence, volume, erreurs)
+
+Exposition vers l’observabilité
+
+Dashboard optionnel (lecture seule)
+
+Exclu
+
+Génération de réponses LLM
+
+Reranking avancé
+
+Indexation de documents
+
+Stockage long terme des chunks
+
+5. Entrées fonctionnelles
+Nom	Description
+query	Requête utilisateur normalisée
+rag_index_id	Identifiant de l’index RAGaaS
+top_k	Nombre de chunks attendus
+score_threshold	Seuil de pertinence
+user_id	Identifiant utilisateur
+conversation_id	Identifiant de session
+trace_id	Identifiant de corrélation
+request_metadata	Contexte (langue, modèle cible, classification)
+6. Sorties fonctionnelles
+Nom	Description
+retrieved_chunks	Liste des chunks retournés
+chunk_metadata	Source, page, score
+usage_metrics	Tokens RAG, volume requêtes
+latency_ms	Temps de réponse RAGaaS
+error_reason	Message d’erreur éventuel
+audit_metadata	Horodatage, index utilisé
+trace_id	Corrélation
+7. Règles fonctionnelles
+Règle	Description
+RF-RAGaaS-SEARCH-01	Toute recherche passe par RAGaaS
+RF-RAGaaS-SEARCH-02	Le top-k est configurable
+RF-RAGaaS-SEARCH-03	Les chunks sous le seuil sont exclus
+RF-RAGaaS-SEARCH-04	Chaque requête est loggée
+RF-RAGaaS-SEARCH-05	Les métriques d’usage sont collectées
+RF-RAGaaS-SEARCH-06	Les erreurs RAGaaS sont normalisées
+RF-RAGaaS-SEARCH-07	Le temps de réponse est mesuré
+RF-RAGaaS-SEARCH-08	Les données sont corrélées par trace_id
+8. Edge cases utilisateur
+
+Aucun chunk pertinent retourné
+
+Index RAG inexistant ou supprimé
+
+Service RAGaaS indisponible
+
+Latence excessive
+
+Quota RAGaaS dépassé
+
+Paramètres de recherche invalides
+
+Timeout fournisseur
+
+9. Critères d’acceptation (US produit)
+
+Les requêtes sont transmises à RAGaaS
+
+Les chunks pertinents sont récupérés et structurés
+
+Les scores et sources sont fournis
+
+Les métriques d’usage sont collectées
+
+La latence est mesurée et tracée
+
+Les erreurs sont gérées sans impact global
+
+Les données sont exploitables dans l’observabilité
+
+Déclinaison en sous-US techniques
+US-CH-V0-RAGaaS-02-T1 — Envoi de requête de recherche RAGaaS
+
+Description
+Envoyer une requête normalisée vers RAGaaS.
+
+Périmètre
+
+Mapping query → API RAGaaS
+
+Edge cases
+
+Query vide
+
+Critères d’acceptation
+
+Requête acceptée par RAGaaS
+
+US-CH-V0-RAGaaS-02-T2 — Récupération des chunks
+
+Description
+Récupérer et structurer les chunks retournés.
+
+Périmètre
+
+Parsing réponse
+
+Edge cases
+
+Chunks incomplets
+
+Critères d’acceptation
+
+Chunks exploitables par l’Orchestrateur
+
+US-CH-V0-RAGaaS-02-T3 — Paramétrage top-k & scoring
+
+Description
+Appliquer les règles de pertinence.
+
+Périmètre
+
+top-k, score_threshold
+
+Edge cases
+
+Paramètre hors borne
+
+Critères d’acceptation
+
+Résultats cohérents
+
+US-CH-V0-RAGaaS-02-T4 — Collecte métriques d’usage
+
+Description
+Collecter métriques RAGaaS.
+
+Périmètre
+
+Latence, volume, erreurs
+
+Edge cases
+
+Métrique manquante
+
+Critères d’acceptation
+
+Métriques visibles dans observabilité
+
+US-CH-V0-RAGaaS-02-T5 — Logging & audit des requêtes
+
+Description
+Tracer chaque requête RAG.
+
+Périmètre
+
+Logs structurés
+
+Edge cases
+
+Log partiel
+
+Critères d’acceptation
+
+Requête auditée
+
+US-CH-V0-RAGaaS-02-T6 — Dashboard optionnel RAGaaS
+
+Description
+Exposer un tableau de suivi d’usage.
+
+Périmètre
+
+Lecture seule
+
+Edge cases
+
+Données incomplètes
+
+Critères d’acceptation
+
+Visualisation disponible
