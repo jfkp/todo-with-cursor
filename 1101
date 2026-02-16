@@ -1,0 +1,236 @@
+US-CONV-V0-02 — Recherche et navigation dans l’historique des conversations
+1. User Story (produit)
+
+En tant qu’utilisateur de la plateforme IA gouvernée, je veux naviguer dans l’historique de mes conversations avec des capacités de recherche et de filtrage, afin de retrouver rapidement une conversation passée ou une réponse spécifique.
+
+2. Valeur utilisateur
+
+Gain de temps pour retrouver une information
+
+Continuité de travail sur des conversations existantes
+
+Meilleure exploitabilité des échanges passés
+
+Réduction des prompts redondants
+
+3. Responsabilité de la plateforme (backend)
+
+La plateforme est responsable de :
+
+Persister les conversations et leurs métadonnées
+
+Indexer les conversations pour la recherche
+
+Exposer des API de consultation, recherche et filtrage
+
+Garantir l’isolation stricte par utilisateur
+
+Appliquer les règles RGPD (soft delete, suppression)
+
+Journaliser chaque accès
+
+La plateforme ne fournit pas d’interface graphique et ne décide pas de l’affichage.
+
+4. Périmètre fonctionnel
+Inclus
+
+Consultation de la liste des conversations utilisateur
+
+Recherche textuelle dans les conversations
+
+Filtres (date, modèle, statut, mot-clé)
+
+Pagination des résultats
+
+Reprise d’une conversation existante
+
+Exclu
+
+Recherche inter-utilisateurs
+
+Analyse sémantique avancée (V0)
+
+Export massif
+
+Recommandation automatique de conversations
+
+5. Entrées fonctionnelles
+Nom	Description
+user_id	Identifiant utilisateur
+search_query	Texte de recherche (optionnel)
+filters	Date, modèle, statut
+page	Numéro de page
+page_size	Taille de page
+trace_id	Identifiant de corrélation
+6. Sorties fonctionnelles
+Nom	Description
+conversations	Liste paginée des conversations
+conversation_id	Identifiant conversation
+title	Titre auto-généré
+last_updated	Dernière activité
+metadata	Modèle, statut
+pagination	Total, page courante
+trace_id	Identifiant de traçabilité
+7. Règles fonctionnelles
+Règle	Description
+RF-CONV-02-01	Un utilisateur ne voit que ses conversations
+RF-CONV-02-02	Les conversations supprimées ne sont pas visibles
+RF-CONV-02-03	La recherche est limitée au périmètre utilisateur
+RF-CONV-02-04	Les résultats sont paginés
+RF-CONV-02-05	Chaque accès est journalisé
+8. Edge cases utilisateur
+
+Aucun résultat trouvé
+
+Conversation supprimée (RGPD)
+
+Index indisponible temporairement
+
+Paramètres de recherche invalides
+
+Volume élevé de conversations
+
+9. Critères d’acceptation (US produit)
+
+L’utilisateur peut rechercher par mot-clé
+
+Les filtres restreignent correctement les résultats
+
+Les conversations supprimées sont invisibles
+
+Les résultats sont paginés et ordonnés
+
+Chaque accès est traçable
+
+Déclinaison en sous-US techniques (backend)
+US-CONV-V0-02-T1 — Persistance des conversations
+
+Description
+La plateforme stocke les conversations et métadonnées associées.
+
+Périmètre
+
+Base relationnelle
+
+Soft delete
+
+Edge cases
+
+Échec d’écriture
+
+Données incomplètes
+
+Critères d’acceptation
+
+Conversation persistée
+
+Suppression logique fonctionnelle
+
+US-CONV-V0-02-T2 — Indexation pour la recherche
+
+Description
+La plateforme indexe les conversations pour permettre la recherche textuelle.
+
+Périmètre
+
+Index texte
+
+Synchronisation base / index
+
+Edge cases
+
+Index désynchronisé
+
+Rebuild nécessaire
+
+Critères d’acceptation
+
+Recherche fonctionnelle
+
+Résultats cohérents
+
+US-CONV-V0-02-T3 — API de recherche et filtrage
+
+Description
+La plateforme expose une API de recherche paginée et filtrée.
+
+Périmètre
+
+Query params
+
+Pagination
+
+Edge cases
+
+Filtres incompatibles
+
+Page hors bornes
+
+Critères d’acceptation
+
+Résultats filtrés correctement
+
+Pagination stable
+
+US-CONV-V0-02-T4 — Génération de titre automatique
+
+Description
+La plateforme génère un titre court pour chaque conversation.
+
+Périmètre
+
+Génération simple basée sur le premier message
+
+Edge cases
+
+Prompt vide
+
+Langue non détectée
+
+Critères d’acceptation
+
+Titre lisible
+
+Fallback par défaut
+
+US-CONV-V0-02-T5 — Sécurité & isolation des accès
+
+Description
+La plateforme garantit l’isolation stricte par utilisateur.
+
+Périmètre
+
+Vérification user_id
+
+AuthZ systématique
+
+Edge cases
+
+Tentative d’accès croisé
+
+Critères d’acceptation
+
+Accès refusé
+
+Tentative auditée
+
+US-CONV-V0-02-T6 — Traçabilité & audit
+
+Description
+La plateforme trace chaque consultation et recherche.
+
+Périmètre
+
+Logs structurés
+
+Audit store
+
+Edge cases
+
+Échec de journalisation
+
+Critères d’acceptation
+
+Logs complets
+
+Corrélation via trace_id
