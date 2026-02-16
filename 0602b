@@ -1,0 +1,200 @@
+US-DOC-V0-RAG-01 — Question/Réponse sur document par recherche sémantique
+1. User Story (produit)
+
+En tant qu’utilisateur, je veux poser des questions sur un document que j’ai uploadé afin d’obtenir des réponses basées sur la recherche sémantique réelle du contenu, avec des citations précises des sources (page, section).
+
+2. Valeur utilisateur
+
+Réponses fiables ancrées dans le document réel
+
+Compréhension rapide de documents volumineux
+
+Transparence grâce aux citations de sources
+
+Réduction des hallucinations du LLM
+
+3. Responsabilité de la plateforme (backend)
+
+La plateforme est responsable de :
+
+Effectuer une recherche sémantique sur les embeddings du document
+
+Appliquer une similarité cosine pour sélectionner les passages pertinents
+
+Construire un contexte RAG contrôlé (top-k)
+
+Injecter ce contexte dans l’appel LLM
+
+Exiger et restituer les citations (page / section / chunk)
+
+Tracer l’ensemble du flux
+
+La plateforme n’expose aucune UI.
+
+4. Périmètre fonctionnel
+Inclus
+
+Recherche vectorielle par similarité cosine
+
+Top-k retrieval (k configurable, par défaut 3–5)
+
+Construction du contexte RAG
+
+Appel LLM avec contexte injecté
+
+Génération de réponse avec citations
+
+Traçabilité bout-en-bout
+
+Exclu
+
+OCR
+
+Reranking avancé
+
+Recherche web
+
+Enrichissement externe
+
+5. Entrées fonctionnelles
+Nom	Description
+user_id	Identifiant utilisateur
+document_id	Document ciblé
+question	Question utilisateur
+top_k	Nombre de chunks à récupérer (3–5)
+similarity_metric	cosine
+model_id	Modèle LLM sélectionné
+trace_id	Identifiant de corrélation
+6. Sorties fonctionnelles
+Nom	Description
+answer	Réponse générée par le LLM
+sources	Liste des sources citées
+source_metadata	page, section, chunk_id
+retrieved_chunks	Passages utilisés
+trace_id	Corrélation
+confidence	Optionnel (score de couverture)
+7. Règles fonctionnelles
+Règle	Description
+RF-RAG-01	La recherche utilise la similarité cosine
+RF-RAG-02	Le top-k est limité entre 3 et 5
+RF-RAG-03	Seuls les chunks du document ciblé sont utilisés
+RF-RAG-04	Le contexte injecté est strictement contrôlé
+RF-RAG-05	Chaque réponse doit inclure des citations
+RF-RAG-06	Aucune réponse sans passage source
+RF-RAG-07	Les métadonnées page/section sont obligatoires
+RF-RAG-08	Toute requête est traçable
+8. Edge cases utilisateur
+
+Document non indexé
+
+Document supprimé ou purgé
+
+Aucune similarité significative trouvée
+
+Question trop vague ou hors sujet
+
+Trop de chunks pertinents → limitation top-k
+
+Contexte dépassant la fenêtre du modèle
+
+Modèle LLM indisponible
+
+9. Critères d’acceptation (US produit)
+
+La réponse est basée uniquement sur les passages retrouvés
+
+Les sources (page / section) sont visibles
+
+Le top-k respecte la configuration
+
+Aucune hallucination hors document
+
+Le flux est entièrement traçable
+
+En absence de résultats, une réponse contrôlée est fournie
+
+Déclinaison en sous-US techniques
+US-DOC-V0-RAG-01-T1 — Recherche vectorielle
+
+Description
+Exécuter une recherche sémantique sur l’index vectoriel du document.
+
+Périmètre
+
+Similarité cosine
+
+Edge cases
+
+Index indisponible
+
+Critères d’acceptation
+
+Liste ordonnée de chunks retournée
+
+US-DOC-V0-RAG-01-T2 — Top-k retrieval
+
+Description
+Limiter le nombre de chunks retournés.
+
+Périmètre
+
+k configurable (3–5)
+
+Edge cases
+
+Moins de k chunks disponibles
+
+Critères d’acceptation
+
+Aucun dépassement top-k
+
+US-DOC-V0-RAG-01-T3 — Construction du contexte RAG
+
+Description
+Assembler le contexte injecté au LLM.
+
+Périmètre
+
+Concaténation contrôlée
+
+Edge cases
+
+Contexte trop long
+
+Critères d’acceptation
+
+Respect de la fenêtre du modèle
+
+US-DOC-V0-RAG-01-T4 — Appel LLM avec citations
+
+Description
+Appeler le LLM en imposant les citations de sources.
+
+Périmètre
+
+Prompt système contraint
+
+Edge cases
+
+Réponse sans citation
+
+Critères d’acceptation
+
+Réponse rejetée si citations absentes
+
+US-DOC-V0-RAG-01-T5 — Restitution & traçabilité
+
+Description
+Retourner réponse + sources + audit.
+
+Périmètre
+
+Logs, métriques
+
+Edge cases
+
+Corrélation manquante
+
+Critères d’acceptation
+
+trace_id présent partout
