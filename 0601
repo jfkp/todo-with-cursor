@@ -1,0 +1,241 @@
+US-CH-V0-EXTRACT-01 — Extraction et indexation de contenu documentaire pour RAG
+1. User Story (produit)
+
+En tant que ContextHub, je veux extraire le contenu textuel d’un fichier uploadé afin de l’indexer pour des usages RAG, pour permettre aux utilisateurs d’obtenir des réponses basées sur le contenu réel de leurs documents.
+
+2. Valeur utilisateur
+
+Exploitation intelligente des documents uploadés
+
+Réponses factuelles et contextualisées
+
+Réduction des hallucinations du LLM
+
+Accès rapide à l’information pertinente
+
+3. Responsabilité de la plateforme (backend)
+
+La plateforme (ContextHub) est responsable de :
+
+Parser les documents uploadés (PDF, Word, Excel, etc.)
+
+Extraire le texte exploitable
+
+Découper le contenu en chunks adaptés au RAG
+
+Vectoriser les chunks via un service d’embedding
+
+Stocker les vecteurs et métadonnées
+
+Gérer le stockage temporaire du document source
+
+Nettoyer automatiquement les fichiers expirés
+
+Gérer et tracer les erreurs
+
+Aucune logique UI n’est incluse.
+
+4. Périmètre fonctionnel
+Inclus
+
+Parsing multi-format (PDF, DOCX, XLSX, etc.)
+
+Extraction de texte brut
+
+Chunking configurable
+
+Vectorisation via LLMaaS / embedding service
+
+Stockage des embeddings
+
+Extraction et stockage de métadonnées
+
+Stockage temporaire du document source
+
+Nettoyage automatique par tâche planifiée (cron)
+
+Gestion des erreurs et traçabilité
+
+Exclu
+
+Interface d’upload
+
+Recherche RAG (query-time)
+
+Reranking
+
+OCR avancé
+
+Enrichissement sémantique automatique
+
+5. Entrées fonctionnelles
+Nom	Description
+document_id	Identifiant du document uploadé
+user_id	Identifiant utilisateur
+file_path	Emplacement temporaire du fichier
+file_type	Type MIME du fichier
+trace_id	Identifiant de corrélation
+chunking_config	Taille et recouvrement des chunks
+6. Sorties fonctionnelles
+Nom	Description
+chunks	Liste des chunks textuels
+embeddings	Vecteurs générés
+metadata	Métadonnées document
+index_status	SUCCESS / PARTIAL / ERROR
+error_details	Détails en cas d’échec
+trace_id	Corrélation
+7. Règles fonctionnelles
+Règle	Description
+RF-CH-01	Le document doit être parsé selon son type
+RF-CH-02	Le texte est nettoyé avant chunking
+RF-CH-03	Les chunks respectent la taille configurée
+RF-CH-04	Chaque chunk est vectorisé indépendamment
+RF-CH-05	Les métadonnées sont associées à chaque chunk
+RF-CH-06	Le document source est stocké temporairement
+RF-CH-07	Les fichiers expirés sont supprimés automatiquement
+RF-CH-08	Toute erreur est tracée
+RF-CH-09	Aucune donnée sensible n’est exposée hors périmètre
+8. Edge cases utilisateur
+
+Document vide ou non lisible
+
+Format non supporté
+
+Erreur de parsing partielle
+
+Fichier trop volumineux
+
+Timeout du service d’embedding
+
+Échec de vectorisation sur certains chunks
+
+Document supprimé avant indexation
+
+Cron de nettoyage en échec
+
+9. Critères d’acceptation (US produit)
+
+Le texte est extrait avec succès pour les formats supportés
+
+Les documents sont découpés en chunks exploitables
+
+Les embeddings sont générés et stockés
+
+Les métadonnées sont correctement associées
+
+Le document source est stocké temporairement puis supprimé
+
+Les erreurs sont gérées sans bloquer la plateforme
+
+Toutes les opérations sont traçables
+
+Déclinaison en sous-US techniques
+US-CH-V0-EXTRACT-01-T1 — Parsing de documents
+
+Description
+Implémenter le parsing selon le type de document.
+
+Périmètre
+
+PDF / DOCX / XLSX
+
+Edge cases
+
+Parsing partiel
+
+Critères d’acceptation
+
+Texte extrait ou erreur explicite
+
+US-CH-V0-EXTRACT-01-T2 — Nettoyage et chunking
+
+Description
+Nettoyer le texte et le découper en chunks.
+
+Périmètre
+
+Taille configurable
+
+Overlap optionnel
+
+Edge cases
+
+Texte trop court ou trop long
+
+Critères d’acceptation
+
+Chunks conformes à la configuration
+
+US-CH-V0-EXTRACT-01-T3 — Vectorisation (embeddings)
+
+Description
+Vectoriser les chunks via un service LLMaaS.
+
+Périmètre
+
+Appel embedding API
+
+Edge cases
+
+Timeout embedding
+
+Critères d’acceptation
+
+Embeddings générés ou erreur tracée
+
+US-CH-V0-EXTRACT-01-T4 — Stockage & métadonnées
+
+Description
+Stocker embeddings et métadonnées associées.
+
+Périmètre
+
+Index vectoriel
+
+Métadonnées document
+
+Edge cases
+
+Incohérence d’index
+
+Critères d’acceptation
+
+Indexation exploitable pour RAG
+
+US-CH-V0-EXTRACT-01-T5 — Stockage temporaire & nettoyage
+
+Description
+Gérer le cycle de vie du document source.
+
+Périmètre
+
+Stockage temporaire
+
+Cron de purge
+
+Edge cases
+
+Fichier non supprimé
+
+Critères d’acceptation
+
+Aucun fichier expiré conservé
+
+US-CH-V0-EXTRACT-01-T6 — Observabilité & erreurs
+
+Description
+Tracer toutes les étapes du pipeline.
+
+Périmètre
+
+Logs structurés
+
+Codes d’erreur
+
+Edge cases
+
+Logs manquants
+
+Critères d’acceptation
+
+Pipeline entièrement observable
