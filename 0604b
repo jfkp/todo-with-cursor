@@ -1,0 +1,141 @@
+US-WEB-V0-02 — Filtrage et sécurisation des recherches web
+1. User Story (produit)
+
+En tant qu’utilisateur, je veux que les recherches web soient filtrées et sécurisées, afin de respecter les contraintes de sécurité et de conformité de la plateforme et d’obtenir uniquement des informations issues de sources autorisées et fiables.
+
+2. Valeur utilisateur
+
+Accès à des informations web fiables et maîtrisées
+
+Réduction du risque de contenus malveillants ou non conformes
+
+Meilleure qualité des réponses enrichies
+
+Transparence sur l’origine des informations utilisées
+
+Confiance accrue dans la plateforme
+
+3. Responsabilité de la plateforme (backend)
+
+La plateforme est responsable de :
+
+Filtrer les résultats web via une whitelist de domaines autorisés
+
+Appliquer un ranking avancé des résultats (pertinence, fiabilité)
+
+Bloquer les sources non conformes ou non approuvées
+
+Permettre à un administrateur de configurer les règles de filtrage
+
+Gérer les erreurs, retries et indisponibilités des APIs web
+
+Exposer des métriques détaillées sur l’usage et le filtrage
+
+Journaliser toutes les décisions de filtrage et de sécurité
+
+La plateforme agit comme point de contrôle de confiance, l’utilisateur ne pouvant pas contourner ces règles.
+
+4. Périmètre fonctionnel
+Inclus
+
+Whitelist de domaines web configurables
+
+Exclusion automatique des sources non autorisées
+
+Ranking avancé des résultats (pondération par domaine)
+
+Paramétrage admin (ajout / retrait de domaines)
+
+Logging détaillé des décisions de filtrage
+
+Métriques d’usage et de rejet
+
+Gestion des erreurs et mécanismes de retry
+
+Exclu
+
+Crawl ou scan de contenu web en profondeur
+
+Analyse sémantique complète des pages web
+
+Apprentissage automatique des règles de filtrage
+
+Gestion de blacklist dynamique par l’utilisateur
+
+5. Entrées fonctionnelles
+Nom	Description
+user_id	Identifiant utilisateur
+session_id	Identifiant de session
+prompt	Requête utilisateur
+web_query	Requête envoyée au moteur de recherche
+allowed_domains	Liste des domaines autorisés
+trace_id	Identifiant de corrélation
+admin_policy_version	Version de la politique active
+6. Sorties fonctionnelles
+Nom	Description
+filtered_results	Résultats web filtrés et classés
+rejected_sources	Sources exclues avec motif
+enriched_prompt	Prompt enrichi avec résultats sécurisés
+audit_metadata	Décisions de filtrage, règles appliquées
+metrics	Compteurs usage / rejet / latence
+7. Règles fonctionnelles
+Règle	Description
+RF-WEB-SEC-01	Seuls les domaines présents dans la whitelist sont autorisés
+RF-WEB-SEC-02	Les résultats non autorisés sont exclus avant injection LLM
+RF-WEB-SEC-03	Le ranking favorise les domaines les plus fiables
+RF-WEB-SEC-04	Les règles sont administrables sans redéploiement
+RF-WEB-SEC-05	Toute exclusion est tracée avec un motif explicite
+RF-WEB-SEC-06	En cas d’erreur web, la requête continue sans enrichissement
+RF-WEB-SEC-07	Aucun contenu web n’est persisté durablement
+8. Edge cases utilisateur
+Situation	Comportement attendu
+Tous les résultats hors whitelist	Génération sans enrichissement web
+Domaine autorisé indisponible	Retry puis fallback
+Mauvaise configuration admin	Blocage contrôlé + alerte
+Résultat web malformé	Exclusion + journalisation
+API web lente	Timeout + réponse dégradée
+Tentative de contournement	Blocage + audit sécurité
+9. Critères d’acceptation (US produit)
+
+Les recherches web respectent strictement la whitelist
+
+Les résultats non autorisés ne sont jamais injectés au LLM
+
+Le ranking améliore la pertinence des sources
+
+L’administrateur peut modifier les règles sans interruption
+
+Les métriques et logs sont exploitables
+
+Les erreurs web n’empêchent pas la génération de réponse
+
+Déclinaison en sous-US techniques
+US-WEB-V0-02-T1 — Gestion de la whitelist de domaines
+
+CRUD whitelist
+
+Versioning des règles
+
+US-WEB-V0-02-T2 — Filtrage & ranking des résultats web
+
+Exclusion automatique
+
+Pondération par domaine
+
+US-WEB-V0-02-T3 — Paramétrage administrateur
+
+API de configuration
+
+Validation des règles
+
+US-WEB-V0-02-T4 — Observabilité & métriques web
+
+Compteurs rejet / autorisé
+
+Latence et taux d’erreur
+
+US-WEB-V0-02-T5 — Résilience & gestion des erreurs
+
+Retry configurables
+
+Fallback sans enrichissement
