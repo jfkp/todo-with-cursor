@@ -1,0 +1,252 @@
+US-IMG-V0-01 — Analyse d’image par le LLM
+1. User Story (produit)
+
+En tant qu’utilisateur de la plateforme IA gouvernée, je veux uploader une image et poser des questions à son sujet, afin d’analyser son contenu et d’en extraire des informations pertinentes.
+
+2. Valeur utilisateur
+
+Exploitation de contenus visuels (documents scannés, graphiques, photos)
+
+Analyse contextualisée sans ressaisie manuelle
+
+Accès aux capacités multimodales des modèles IA
+
+Meilleure compréhension et prise de décision
+
+3. Responsabilité de la plateforme (backend)
+
+La plateforme est responsable de :
+
+Valider le fichier image (format, taille)
+
+Valider le prompt utilisateur
+
+Vérifier que le modèle sélectionné supporte le multimodal
+
+Appliquer les Security Guardrails sur l’image et le prompt
+
+Orchestrer l’appel vers le LLM multimodal
+
+Gérer les erreurs du modèle ou d’incompatibilité
+
+Journaliser l’ensemble du flux (audit & observabilité)
+
+La plateforme ne fournit aucune interface utilisateur.
+
+4. Périmètre fonctionnel
+Inclus
+
+Upload d’image (PNG, JPG, JPEG)
+
+Association image + prompt utilisateur
+
+Sélection explicite du modèle par l’utilisateur
+
+Vérification des droits d’accès au modèle
+
+Analyse Guardrails (image + prompt)
+
+Appel LLM multimodal
+
+Retour de la réponse textuelle
+
+Exclu
+
+OCR avancé dédié
+
+Annotation graphique
+
+Traitement vidéo
+
+Stockage long terme des images
+
+5. Entrées fonctionnelles
+Nom	Description
+user_id	Identifiant utilisateur
+image_file	Fichier image
+image_metadata	Taille, type MIME
+prompt	Question utilisateur
+model_id	Modèle sélectionné
+session_id	Identifiant de session
+trace_id	Identifiant de corrélation
+6. Sorties fonctionnelles
+Nom	Description
+response_text	Analyse produite par le LLM
+model_used	Modèle réellement utilisé
+decision	PASS / BLOCK / REJECT
+error	Erreur fonctionnelle éventuelle
+trace_id	Identifiant de traçabilité
+7. Règles fonctionnelles
+Règle	Description
+RF-IMG-01	Le format image doit être valide
+RF-IMG-02	Le modèle doit supporter le multimodal
+RF-IMG-03	Le modèle doit être autorisé pour l’utilisateur
+RF-IMG-04	Guardrails analysent image et prompt avant appel
+RF-IMG-05	Toute erreur modèle est gérée et normalisée
+RF-IMG-06	L’image n’est pas persistée après traitement
+8. Edge cases utilisateur
+
+Image trop volumineuse
+
+Format non supporté
+
+Modèle sélectionné non multimodal
+
+Modèle indisponible
+
+Image contenant des données sensibles
+
+Prompt malveillant ou interdit
+
+Timeout ou erreur du fournisseur LLM
+
+9. Critères d’acceptation (US produit)
+
+L’utilisateur peut soumettre une image + question
+
+Le modèle est validé avant appel
+
+Guardrails peuvent bloquer la requête
+
+Les erreurs sont explicites et compréhensibles
+
+Aucune image n’est stockée durablement
+
+Chaque requête est traçable
+
+Déclinaison en sous-US techniques (backend)
+US-IMG-V0-01-T1 — Validation et ingestion de l’image
+
+Description
+La plateforme valide et ingère l’image utilisateur.
+
+Périmètre
+
+Validation MIME
+
+Validation taille
+
+Stockage temporaire
+
+Edge cases
+
+Image corrompue
+
+Dépassement taille
+
+Critères d’acceptation
+
+Image valide acceptée
+
+Image invalide rejetée
+
+US-IMG-V0-01-T2 — Vérification du modèle multimodal
+
+Description
+La plateforme vérifie que le modèle sélectionné supporte l’analyse d’image.
+
+Périmètre
+
+Catalogue modèles
+
+Capabilités multimodales
+
+Edge cases
+
+Modèle inconnu
+
+Modèle texte-only
+
+Critères d’acceptation
+
+Modèle valide autorisé
+
+Modèle incompatible bloqué
+
+US-IMG-V0-01-T3 — Analyse Guardrails image + prompt
+
+Description
+La plateforme applique les contrôles de sécurité avant appel LLM.
+
+Périmètre
+
+Détection contenu sensible
+
+Classification image
+
+Analyse prompt
+
+Edge cases
+
+Faux positif
+
+Ambiguïté classification
+
+Critères d’acceptation
+
+Décision PASS / BLOCK / REJECT
+
+Raison fournie
+
+US-IMG-V0-01-T4 — Appel LLM multimodal
+
+Description
+La plateforme orchestre l’appel vers le LLM multimodal.
+
+Périmètre
+
+Payload image + prompt
+
+Timeout configurable
+
+Edge cases
+
+Timeout
+
+Erreur fournisseur
+
+Critères d’acceptation
+
+Réponse correcte
+
+Erreur normalisée
+
+US-IMG-V0-01-T5 — Gestion des erreurs modèle
+
+Description
+La plateforme capture et transforme les erreurs LLM.
+
+Périmètre
+
+Mapping erreurs techniques → fonctionnelles
+
+Edge cases
+
+Erreur inconnue
+
+Critères d’acceptation
+
+Message utilisateur compréhensible
+
+Pas de fuite technique
+
+US-IMG-V0-01-T6 — Traçabilité & audit
+
+Description
+La plateforme trace l’intégralité du flux.
+
+Périmètre
+
+Logs structurés
+
+Audit sécurité
+
+Edge cases
+
+Échec logging
+
+Critères d’acceptation
+
+trace_id présent
+
+Logs exploitables
