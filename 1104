@@ -1,0 +1,230 @@
+US-CTX-V0-01 — Contexte personnel utilisateur
+1. User Story (produit)
+
+En tant qu’utilisateur de la plateforme IA gouvernée, je veux définir un contexte personnel, afin que le LLM personnalise ses réponses selon mon profil, mes préférences et mon contexte d’usage, sans que j’aie à le répéter à chaque interaction.
+
+2. Valeur utilisateur
+
+Réponses plus pertinentes et adaptées
+
+Gain de temps (pas de répétition du contexte)
+
+Expérience personnalisée et cohérente
+
+Meilleure exploitation des capacités du LLM
+
+3. Responsabilité de la plateforme (backend)
+
+La plateforme est responsable de :
+
+Exposer une API CRUD pour le contexte personnel
+
+Valider la taille et le format du contexte
+
+Stocker le contexte dans le MemoryStore
+
+Injecter le contexte sous forme de system message
+
+Anonymiser toute trace du contexte dans les logs
+
+Garantir que le contexte n’introduit pas de données sensibles non autorisées
+
+La plateforme ne gère pas l’interface utilisateur.
+
+4. Périmètre fonctionnel
+Inclus
+
+Création, lecture, mise à jour, suppression du contexte
+
+Stockage gouverné dans MemoryStore
+
+Injection automatique dans chaque appel LLM
+
+Validation de taille et structure
+
+Anonymisation des journaux
+
+Exclu
+
+Inférence automatique du contexte
+
+Partage de contexte entre utilisateurs
+
+Contextes applicatifs globaux
+
+Optimisation de prompt
+
+5. Entrées fonctionnelles
+Nom	Description
+user_id	Identifiant utilisateur
+context_payload	Texte de contexte personnel
+context_type	Profil, préférences, métier, etc.
+session_id	Identifiant de session
+trace_id	Identifiant de corrélation
+6. Sorties fonctionnelles
+Nom	Description
+context_status	CREATED / UPDATED / DELETED
+injected_context	Contexte injecté au LLM
+validation_status	OK / NOK
+error	Message fonctionnel en cas d’erreur
+trace_id	Identifiant de traçabilité
+7. Règles fonctionnelles
+Règle	Description
+RF-CTX-01	Le contexte est propre à un utilisateur
+RF-CTX-02	La taille maximale du contexte est limitée
+RF-CTX-03	Le contexte est injecté comme system message
+RF-CTX-04	Aucune donnée sensible interdite n’est acceptée
+RF-CTX-05	Le contexte n’est jamais logué en clair
+RF-CTX-06	Le contexte est appliqué à tous les appels LLM
+8. Edge cases utilisateur
+
+Contexte trop volumineux
+
+Contexte vide ou mal formé
+
+Tentative d’injection de données sensibles
+
+Contexte supprimé mais encore référencé
+
+Erreur MemoryStore
+
+Contexte incompatible avec la fenêtre du modèle
+
+9. Critères d’acceptation (US produit)
+
+L’utilisateur peut créer et modifier son contexte
+
+Le contexte est injecté automatiquement dans les appels LLM
+
+La taille est contrôlée et respectée
+
+Aucun contenu sensible n’est exposé dans les logs
+
+La suppression est effective immédiatement
+
+Toute opération est traçable
+
+Déclinaison en sous-US techniques (backend)
+US-CTX-V0-01-T1 — API CRUD de contexte personnel
+
+Description
+La plateforme expose des endpoints pour gérer le contexte utilisateur.
+
+Périmètre
+
+Create / Read / Update / Delete
+
+Authentification requise
+
+Edge cases
+
+Accès non autorisé
+
+Contexte inexistant
+
+Critères d’acceptation
+
+API fonctionnelle
+
+Accès contrôlé
+
+US-CTX-V0-01-T2 — Validation taille et structure du contexte
+
+Description
+La plateforme valide la taille et le format du contexte.
+
+Périmètre
+
+Limite caractères / tokens
+
+Format texte uniquement
+
+Edge cases
+
+Dépassement limite
+
+Format invalide
+
+Critères d’acceptation
+
+Rejet explicite si non conforme
+
+US-CTX-V0-01-T3 — Stockage MemoryStore gouverné
+
+Description
+Le contexte est stocké dans MemoryStore.
+
+Périmètre
+
+Stockage sécurisé
+
+Indexation par user_id
+
+Edge cases
+
+Indisponibilité MemoryStore
+
+Critères d’acceptation
+
+Contexte persisté et récupérable
+
+US-CTX-V0-01-T4 — Injection en system message
+
+Description
+La plateforme injecte le contexte dans l’appel LLM.
+
+Périmètre
+
+Préfixe system message
+
+Fusion avec contexte conversationnel
+
+Edge cases
+
+Fenêtre modèle dépassée
+
+Critères d’acceptation
+
+Contexte effectivement transmis au LLM
+
+US-CTX-V0-01-T5 — Anonymisation et observabilité
+
+Description
+La plateforme anonymise toute trace du contexte.
+
+Périmètre
+
+Hashing / redaction
+
+Logs structurés
+
+Edge cases
+
+Tentative de log brut
+
+Critères d’acceptation
+
+Aucun contexte lisible dans les logs
+
+US-CTX-V0-01-T6 — Gestion des erreurs MemoryStore
+
+Description
+La plateforme gère les erreurs liées au stockage.
+
+Périmètre
+
+Fallback
+
+Message utilisateur
+
+Edge cases
+
+Timeout
+
+Erreur persistante
+
+Critères d’acceptation
+
+Erreur compréhensible
+
+Pas de corruption de contexte
