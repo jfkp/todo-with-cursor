@@ -1,0 +1,219 @@
+US-PREF-V0-01 — Gestion des préférences utilisateur
+1. User Story (produit)
+
+En tant qu’utilisateur de la plateforme IA gouvernée, je veux que mes préférences soient sauvegardées afin de retrouver automatiquement ma configuration à chaque connexion, sans avoir à la redéfinir.
+
+2. Valeur utilisateur
+
+Expérience personnalisée et cohérente
+
+Gain de temps à chaque session
+
+Réduction des erreurs de configuration
+
+Continuité d’usage entre connexions
+
+3. Responsabilité de la plateforme (backend)
+
+La plateforme est responsable de :
+
+Stocker les préférences utilisateur de manière persistante
+
+Exposer des APIs pour créer, lire, mettre à jour et supprimer les préférences
+
+Valider la cohérence et la conformité des données
+
+Charger les préférences à l’authentification
+
+Associer les préférences à l’identité SSO utilisateur
+
+Garantir traçabilité et sécurité
+
+La plateforme n’expose pas d’interface utilisateur.
+
+4. Périmètre fonctionnel
+Inclus
+
+CRUD des préférences utilisateur
+
+Stockage persistant des préférences
+
+API de récupération des préférences
+
+API de mise à jour des préférences
+
+Validation des données (types, valeurs autorisées)
+
+Chargement automatique à la connexion
+
+Association aux identifiants SSO
+
+Exclu
+
+UI de paramétrage
+
+Gestion des profils métiers complexes
+
+Recommandation automatique de préférences
+
+Synchronisation inter-plateformes
+
+5. Entrées fonctionnelles
+Nom	Description
+user_id	Identifiant utilisateur (issu du SSO)
+preferences_payload	Données de préférences
+trace_id	Identifiant de corrélation
+action	create / read / update / delete
+Exemple de preferences_payload
+
+default_model
+
+preferred_language
+
+ui_theme
+
+6. Sorties fonctionnelles
+Nom	Description
+preferences	Préférences utilisateur courantes
+status	SUCCESS / ERROR
+validation_errors	Erreurs de validation éventuelles
+trace_id	Corrélation
+7. Règles fonctionnelles
+Règle	Description
+RF-PREF-01	Les préférences sont liées à un user_id unique
+RF-PREF-02	Les préférences sont persistées en base de données
+RF-PREF-03	Les préférences sont chargées à l’authentification
+RF-PREF-04	Toute modification est validée avant persistance
+RF-PREF-05	Les valeurs non autorisées sont rejetées
+RF-PREF-06	Une valeur par défaut existe si aucune préférence n’est définie
+RF-PREF-07	Toute opération est tracée
+RF-PREF-08	Aucune donnée sensible n’est stockée
+8. Edge cases utilisateur
+
+Préférences inexistantes → valeurs par défaut appliquées
+
+Payload incomplet ou invalide
+
+Tentative d’injection de valeurs non autorisées
+
+Mise à jour concurrente
+
+Préférences corrompues
+
+Utilisateur inconnu ou non authentifié
+
+9. Critères d’acceptation (US produit)
+
+Les préférences sont sauvegardées de manière persistante
+
+Les préférences sont récupérables via API
+
+Les préférences sont automatiquement chargées à la connexion
+
+Les données invalides sont rejetées avec message explicite
+
+Les préférences sont correctement associées au user_id SSO
+
+Toute opération est traçable via logs
+
+Les performances respectent les SLA
+
+Déclinaison en sous-US techniques
+US-PREF-V0-01-T1 — Modèle de données préférences
+
+Description
+Définir le schéma de stockage des préférences utilisateur.
+
+Périmètre
+
+Table PostgreSQL
+
+Index sur user_id
+
+Edge cases
+
+Schéma incomplet
+
+Critères d’acceptation
+
+Schéma versionné et documenté
+
+US-PREF-V0-01-T2 — API CRUD préférences
+
+Description
+Exposer les APIs backend pour gérer les préférences.
+
+Périmètre
+
+GET /preferences
+
+POST /preferences
+
+PUT /preferences
+
+DELETE /preferences
+
+Edge cases
+
+Accès non autorisé
+
+Critères d’acceptation
+
+APIs sécurisées et testées
+
+US-PREF-V0-01-T3 — Validation des données
+
+Description
+Valider les valeurs de préférences avant persistance.
+
+Périmètre
+
+Types
+
+Valeurs autorisées
+
+Edge cases
+
+Valeur hors liste
+
+Critères d’acceptation
+
+Rejet explicite des données invalides
+
+US-PREF-V0-01-T4 — Chargement à l’authentification
+
+Description
+Charger automatiquement les préférences après AuthN.
+
+Périmètre
+
+Hook post-authentification
+
+Injection dans le contexte session
+
+Edge cases
+
+Préférences absentes
+
+Critères d’acceptation
+
+Valeurs par défaut appliquées
+
+US-PREF-V0-01-T5 — Observabilité & audit
+
+Description
+Tracer toutes les opérations liées aux préférences.
+
+Périmètre
+
+Logs structurés
+
+Métriques d’usage
+
+Edge cases
+
+Logs manquants
+
+Critères d’acceptation
+
+Audit complet disponible
