@@ -1,139 +1,144 @@
-US-DOC-V0-04 — Génération de contenu à partir d’un document
+US-DOC-V0-05 — Traduction de passage ou document
 1. User Story (produit)
 
 En tant qu’utilisateur de la plateforme,
-je veux générer un contenu structuré (email, note ou rapport) à partir d’un document que j’ai uploadé,
-afin de réutiliser efficacement les informations du document dans mes communications professionnelles.
+je veux traduire un passage de texte ou un document entier dans une autre langue,
+afin de changer la langue du contenu tout en conservant fidèlement son sens et sa structure.
 
 2. Valeur utilisateur
 
-Gain de temps dans la rédaction
+Accès multilingue à l’information
 
-Réutilisation fidèle d’un contenu existant
+Partage facilité de documents internationaux
 
-Standardisation des livrables (email, note, rapport)
+Réduction des erreurs de traduction manuelle
 
-Réduction des erreurs de reformulation
+Gain de temps
 
-Amélioration de la productivité
+Conservation du sens métier et du ton
 
 3. Responsabilité de la plateforme (backend)
 
 La plateforme est responsable de :
 
-Vérifier l’existence et l’autorisation d’accès au document
+Valider l’entrée utilisateur (texte ou document)
 
-Extraire le contenu textuel du document via ContextHub
+Vérifier l’autorisation d’accès au document si présent
 
-Permettre le choix du type de contenu à générer
+Extraire le contenu textuel exploitable (ContextHub si document)
 
-Construire un prompt de génération structuré et contrôlé
+Valider les langues source et cible
 
-Appeler un LLM autorisé, compatible avec la classification détectée
+Construire un prompt de traduction contrôlé
+
+Sélectionner un modèle LLM autorisé et compatible avec la classification détectée
 
 Appliquer les Security Guardrails sur l’entrée et la sortie
 
-Garantir que le contenu généré est strictement basé sur le document
+Garantir une traduction fidèle, sans ajout de contenu
 
-Assurer une traçabilité complète de l’opération
+Assurer la traçabilité complète de l’opération
 
-⚠️ La plateforme n’ajoute aucune information externe au document source.
+⚠️ La plateforme ne reformule pas et n’enrichit pas le contenu : traduction uniquement.
 
 4. Périmètre fonctionnel
 Inclus
 
-Génération de contenu à partir d’un document unique
+Traduction de texte libre (passage)
 
-Types supportés : email, note, rapport
+Traduction de document entier
 
-Contenu structuré (titres, paragraphes, ton professionnel)
+Langues multiples (selon modèles disponibles)
 
-Traçabilité complète
+Respect de la structure (paragraphes, titres)
 
 Exclu
 
-Recherche web
+Résumé ou reformulation
 
-RAG externe
+Adaptation culturelle avancée
 
-Fusion de plusieurs documents
+Traduction partielle automatique sans indication
 
-Création créative non basée sur le document
+Fusion de documents
 
 5. Entrées fonctionnelles
 Champ	Description
 user_id	Identifiant utilisateur
 session_id	Identifiant de session
-document_id	Identifiant du document
-content_type	email | note | rapport
-tone	formel / neutre / synthétique
+input_type	text | document
+text	Texte à traduire (si input_type=text)
+document_id	Identifiant document (si input_type=document)
+source_language	Langue source (auto ou explicite)
+target_language	Langue cible
 model	Modèle LLM
 trace_id	Identifiant de corrélation
 6. Sorties fonctionnelles
 Champ	Description
-generated_content	Contenu généré
-content_type	Type de contenu
-document_id	Document source
+translated_content	Texte traduit
+source_language	Langue détectée
+target_language	Langue cible
 model_used	Modèle utilisé
 latency_ms	Temps de réponse
 trace_id	Corrélation
 7. Règles fonctionnelles
 Règle	Description
-RF-DOC-GEN-01	Le contenu généré repose uniquement sur le document
-RF-DOC-GEN-02	L’accès au document est validé avant génération
-RF-DOC-GEN-03	Le type de contenu détermine la structure du prompt
-RF-DOC-GEN-04	Aucune information externe ne doit être ajoutée
-RF-DOC-GEN-05	Toute génération est auditable
+RF-TRANS-01	La traduction doit être fidèle au contenu source
+RF-TRANS-02	Aucun contenu ne doit être ajouté
+RF-TRANS-03	La structure du texte doit être conservée
+RF-TRANS-04	Le modèle doit être compatible avec la classification détectée
+RF-TRANS-05	Toute traduction est auditable
 8. Edge cases (produit)
 Edge case	Comportement attendu
 Document inexistant	Erreur explicite
 Accès non autorisé	Blocage AUTHZ
-Document trop volumineux	Troncature contrôlée
-Type de contenu inconnu	Erreur utilisateur claire
-Document non textuel	Génération impossible
+Langue cible non supportée	Erreur utilisateur claire
+Texte vide	Refus contrôlé
+Document trop volumineux	Troncature contrôlée + message
+Détection langue ambiguë	Fallback contrôlé
 Timeout LLM	Erreur contrôlée + audit
 9. Critères d’acceptation (US produit)
 
-Le contenu généré est fidèle au document
+La traduction est fidèle au contenu source
 
-Le format demandé est respecté
+La langue cible est respectée
 
-Le ton est appliqué correctement
+Aucun enrichissement n’est ajouté
 
-Aucun contenu externe n’est ajouté
+La structure du texte est conservée
 
 Les erreurs sont compréhensibles
 
-Le flux est entièrement traçable
+L’opération est entièrement traçable
 
 Déclinaison en sous-US techniques
-US-DOC-V0-04-A — Validation & autorisation document
+US-DOC-V0-05-A — Validation entrée & autorisation
 
 Description
-Vérifier l’existence du document et les droits utilisateur.
+Valider le type d’entrée (texte/document) et les droits d’accès.
 
 Edge cases
 
 Document supprimé
 
-Accès interdit
+Accès refusé
 
 Critères d’acceptation
 
 Blocage immédiat
 
-Décision auditable
+Décision auditée
 
-US-DOC-V0-04-B — Extraction du contenu documentaire
+US-DOC-V0-05-B — Extraction du contenu textuel
 
 Description
-Extraire le texte exploitable via ContextHub.
+Extraire le texte du document via ContextHub.
 
 Edge cases
 
 Extraction partielle
 
-Encodage incorrect
+Encodage invalide
 
 Critères d’acceptation
 
@@ -141,16 +146,33 @@ Texte exploitable
 
 Erreur contrôlée sinon
 
-US-DOC-V0-04-C — Construction du prompt de génération
+US-DOC-V0-05-C — Détection et validation des langues
 
 Description
-Construire un prompt structuré selon le type de contenu (email, note, rapport).
+Détecter la langue source et valider la langue cible.
+
+Edge cases
+
+Langue non reconnue
+
+Langue cible non supportée
+
+Critères d’acceptation
+
+Langues validées
+
+Message explicite sinon
+
+US-DOC-V0-05-D — Construction du prompt de traduction
+
+Description
+Construire un prompt strict de traduction sans reformulation.
 
 Edge cases
 
 Prompt trop long
 
-Paramètres invalides
+Paramètres incohérents
 
 Critères d’acceptation
 
@@ -158,10 +180,10 @@ Prompt conforme
 
 Paramètres validés
 
-US-DOC-V0-04-D — Appel LLM gouverné
+US-DOC-V0-05-E — Appel LLM gouverné
 
 Description
-Appeler un modèle compatible génération de contenu.
+Appeler un modèle autorisé pour traduction.
 
 Edge cases
 
@@ -175,14 +197,14 @@ Routage conforme
 
 Refus explicite sinon
 
-US-DOC-V0-04-E — Validation sécurité de la sortie
+US-DOC-V0-05-F — Validation sécurité de la sortie
 
 Description
-Analyser le contenu généré avant exposition.
+Analyser la traduction avant exposition.
 
 Edge cases
 
-Données sensibles exposées
+Fuite de données
 
 Contenu non conforme
 
@@ -192,28 +214,28 @@ Blocage ou message explicite
 
 Journalisation complète
 
-US-DOC-V0-04-F — Observabilité & audit
+US-DOC-V0-05-G — Observabilité & audit
 
 Description
-Tracer la génération et ses métadonnées.
+Tracer l’opération de traduction.
 
 Edge cases
 
-Trace absente ou incomplète
+Trace incomplète
 
 Critères d’acceptation
 
 trace_id bout-en-bout
 
-Export audit disponible
+Export audit possible
 
-10. Definition of Done — US-DOC-V0-04
+10. Definition of Done — US-DOC-V0-05
 
-Génération de contenu opérationnelle
+Traduction texte et document opérationnelle
 
-Fidélité stricte au document
+Fidélité stricte au contenu source
 
-Types email / note / rapport supportés
+Langues validées
 
 Sécurité respectée
 
