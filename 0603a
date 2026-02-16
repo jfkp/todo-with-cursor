@@ -1,0 +1,221 @@
+US-CH-V0-RAGaaS-01 — Indexation de documents via RAGaaS centralisé
+1. User Story (produit)
+
+En tant que ContextHub, je veux me connecter à un service RAGaaS centralisé pour indexer les documents uploadés afin d’externaliser l’infrastructure RAG et bénéficier d’une capacité d’indexation et de recherche mutualisée et gouvernée.
+
+2. Valeur utilisateur
+
+Mutualisation de l’infrastructure RAG
+
+Scalabilité et performance accrues
+
+Simplification de l’exploitation côté plateforme
+
+Conformité et gouvernance homogènes
+
+Réduction des coûts d’infrastructure locale
+
+3. Responsabilité de la plateforme (backend)
+
+La plateforme (ContextHub) est responsable de :
+
+Se connecter au service RAGaaS
+
+Transmettre les documents à indexer
+
+Mapper et enrichir les métadonnées
+
+Vérifier la conformité à la charte RAGaaS avant envoi
+
+Gérer les erreurs, retries et statuts d’indexation
+
+Tracer l’ensemble des opérations
+
+La plateforme ne gère pas l’indexation physique (déléguée à RAGaaS).
+
+4. Périmètre fonctionnel
+Inclus
+
+Connexion sécurisée au service RAGaaS
+
+Upload de documents pour indexation
+
+Mapping des métadonnées documentaires
+
+Vérification de conformité à la charte RAGaaS
+
+Gestion des erreurs et mécanismes de retry
+
+Suivi du statut d’indexation
+
+Traçabilité complète
+
+Exclu
+
+Recherche RAG
+
+Génération de réponses
+
+Reranking
+
+Gestion des embeddings côté plateforme
+
+5. Entrées fonctionnelles
+Nom	Description
+document_id	Identifiant interne du document
+document_content	Contenu binaire ou textuel
+document_metadata	Nom, type, taille, langue, classification
+user_id	Propriétaire du document
+rag_index_id	Index cible côté RAGaaS
+trace_id	Identifiant de corrélation
+retry_count	Compteur de retry
+6. Sorties fonctionnelles
+Nom	Description
+rag_document_id	Identifiant du document côté RAGaaS
+index_status	INDEXED / PENDING / FAILED
+error_reason	Message d’erreur éventuel
+retry_scheduled	Oui / Non
+audit_metadata	Horodatage, version charte
+trace_id	Corrélation
+7. Règles fonctionnelles
+Règle	Description
+RF-RAGaaS-01	Toute indexation passe par RAGaaS
+RF-RAGaaS-02	La charte RAGaaS est vérifiée avant upload
+RF-RAGaaS-03	Les métadonnées sont mappées vers le format RAGaaS
+RF-RAGaaS-04	Les erreurs temporaires déclenchent un retry
+RF-RAGaaS-05	Les erreurs permanentes arrêtent le flux
+RF-RAGaaS-06	Le statut d’indexation est traçable
+RF-RAGaaS-07	Aucun document non conforme n’est indexé
+RF-RAGaaS-08	Chaque appel est corrélé via trace_id
+8. Edge cases utilisateur
+
+Service RAGaaS indisponible
+
+Document trop volumineux
+
+Format non supporté par RAGaaS
+
+Charte RAGaaS non acceptée
+
+Erreur d’authentification RAGaaS
+
+Timeout lors de l’upload
+
+Échec d’indexation partielle
+
+9. Critères d’acceptation (US produit)
+
+Le document est transmis avec succès à RAGaaS
+
+Les métadonnées sont correctement mappées
+
+La charte RAGaaS est validée avant indexation
+
+Les erreurs sont correctement gérées (retry / fail)
+
+Le statut d’indexation est consultable
+
+Chaque opération est traçable et auditable
+
+Déclinaison en sous-US techniques
+US-CH-V0-RAGaaS-01-T1 — Connexion sécurisée à RAGaaS
+
+Description
+Établir une connexion sécurisée avec le service RAGaaS.
+
+Périmètre
+
+Authentification (JWT / mTLS)
+
+Edge cases
+
+Jeton expiré
+
+Critères d’acceptation
+
+Connexion validée avant upload
+
+US-CH-V0-RAGaaS-01-T2 — Upload document vers RAGaaS
+
+Description
+Transmettre le document à indexer.
+
+Périmètre
+
+Upload synchrone ou asynchrone
+
+Edge cases
+
+Upload interrompu
+
+Critères d’acceptation
+
+Document reçu côté RAGaaS
+
+US-CH-V0-RAGaaS-01-T3 — Mapping des métadonnées
+
+Description
+Transformer les métadonnées internes vers le schéma RAGaaS.
+
+Périmètre
+
+Normalisation des champs
+
+Edge cases
+
+Métadonnée manquante
+
+Critères d’acceptation
+
+Métadonnées conformes
+
+US-CH-V0-RAGaaS-01-T4 — Vérification charte RAGaaS
+
+Description
+Vérifier la conformité avant indexation.
+
+Périmètre
+
+Validation contractuelle
+
+Edge cases
+
+Charte obsolète
+
+Critères d’acceptation
+
+Indexation bloquée si non conforme
+
+US-CH-V0-RAGaaS-01-T5 — Gestion des erreurs & retry
+
+Description
+Gérer les erreurs et planifier les retries.
+
+Périmètre
+
+Retry exponentiel
+
+Edge cases
+
+Nombre max de retries atteint
+
+Critères d’acceptation
+
+Retry contrôlé et tracé
+
+US-CH-V0-RAGaaS-01-T6 — Audit & traçabilité
+
+Description
+Tracer toutes les opérations liées à RAGaaS.
+
+Périmètre
+
+Logs, métriques
+
+Edge cases
+
+Trace manquante
+
+Critères d’acceptation
+
+Traçabilité complète
