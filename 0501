@@ -1,0 +1,243 @@
+US-MEM-V0-02 — Stockage et gestion des conversations utilisateur
+1. User Story (produit)
+
+En tant que Memory Store de la plateforme IA gouvernée, je veux stocker les conversations utilisateur dans une base de données, afin de conserver l’historique des échanges, permettre leur consultation ultérieure, la recherche, le tri, et respecter les exigences de suppression et d’archivage.
+
+2. Valeur utilisateur
+
+Retrouver des conversations passées
+
+Reprendre une discussion existante
+
+Rechercher une information déjà générée
+
+Bénéficier d’un historique fiable et cohérent
+
+3. Responsabilité de la plateforme (backend)
+
+La plateforme est responsable de :
+
+Persister les conversations et messages
+
+Fournir des APIs CRUD conversation/message
+
+Indexer les données pour la recherche
+
+Implémenter soft delete et archivage
+
+Gérer pagination, tri et filtrage
+
+Garantir traçabilité, cohérence et conformité
+
+La plateforme ne fournit pas l’interface utilisateur.
+
+4. Périmètre fonctionnel
+Inclus
+
+Création de conversation
+
+Ajout de messages (prompt / réponse LLM)
+
+Lecture d’une conversation
+
+Liste paginée des conversations
+
+Recherche textuelle
+
+Soft delete
+
+Archivage
+
+Tri et filtrage
+
+Exclu
+
+Analyse sémantique des conversations
+
+Export utilisateur
+
+Partage inter-utilisateurs
+
+Versioning des messages
+
+5. Entrées fonctionnelles
+Nom	Description
+conversation_id	Identifiant conversation
+user_id	Identifiant utilisateur
+message_id	Identifiant message
+role	user / assistant / system
+content	Contenu du message
+model	Modèle LLM utilisé
+timestamp	Date/heure
+trace_id	Corrélation
+pagination	page, size
+filters	date, modèle, statut
+6. Sorties fonctionnelles
+Nom	Description
+conversation	Objet conversation
+messages	Liste de messages
+total_count	Nombre total
+page_info	Infos pagination
+status	OK / NOT_FOUND / DELETED
+trace_id	Traçabilité
+7. Règles fonctionnelles
+Règle	Description
+RF-MEM-01	Une conversation appartient à un seul utilisateur
+RF-MEM-02	Les messages sont ordonnés chronologiquement
+RF-MEM-03	Le soft delete masque la conversation
+RF-MEM-04	L’archivage est automatique ou déclenchable
+RF-MEM-05	Les données supprimées ne sont plus indexées
+RF-MEM-06	Toute action est tracée
+RF-MEM-07	Aucune donnée sensible n’est indexée
+8. Edge cases utilisateur
+
+Conversation inexistante
+
+Suppression d’une conversation active
+
+Message vide ou trop volumineux
+
+Pagination hors limites
+
+Recherche sur conversation supprimée
+
+Incohérence message/conversation
+
+Indisponibilité base de données
+
+9. Critères d’acceptation (US produit)
+
+Les conversations sont persistées correctement
+
+Les messages sont récupérables dans l’ordre
+
+La recherche retourne des résultats cohérents
+
+Le soft delete masque immédiatement la conversation
+
+L’archivage fonctionne sans perte
+
+Pagination et tri sont fonctionnels
+
+Toute action est traçable
+
+Déclinaison en sous-US techniques
+US-MEM-V0-02-T1 — CRUD Conversations
+
+Description
+Implémenter les opérations Create / Read / Update / Delete (soft).
+
+Périmètre
+
+API REST
+
+Authentification requise
+
+Edge cases
+
+Accès non autorisé
+
+Conversation déjà supprimée
+
+Critères d’acceptation
+
+CRUD fonctionnel
+
+Erreurs explicites
+
+US-MEM-V0-02-T2 — CRUD Messages
+
+Description
+Gérer l’ajout et la lecture des messages.
+
+Périmètre
+
+Ordonnancement
+
+Association conversation
+
+Edge cases
+
+Message orphelin
+
+Taille excessive
+
+Critères d’acceptation
+
+Messages persistés et lisibles
+
+US-MEM-V0-02-T3 — Indexation & recherche
+
+Description
+Indexer les conversations et messages.
+
+Périmètre
+
+Recherche plein texte
+
+Filtres simples
+
+Edge cases
+
+Recherche sur données supprimées
+
+Critères d’acceptation
+
+Résultats pertinents et rapides
+
+US-MEM-V0-02-T4 — Pagination, tri et filtres
+
+Description
+Exposer une navigation efficace.
+
+Périmètre
+
+Pagination standard
+
+Tri par date / modèle
+
+Edge cases
+
+Page hors bornes
+
+Critères d’acceptation
+
+Résultats cohérents
+
+US-MEM-V0-02-T5 — Soft delete & archivage
+
+Description
+Implémenter suppression logique et archivage.
+
+Périmètre
+
+Champ deleted_at
+
+Table/archive séparée
+
+Edge cases
+
+Accès après suppression
+
+Critères d’acceptation
+
+Conversation masquée immédiatement
+
+US-MEM-V0-02-T6 — Observabilité & audit
+
+Description
+Tracer toutes les opérations mémoire.
+
+Périmètre
+
+Logs structurés
+
+trace_id
+
+Edge cases
+
+Perte de trace
+
+Critères d’acceptation
+
+Audit complet disponible
