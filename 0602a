@@ -1,0 +1,217 @@
+US-CH-V0-INDEX-01 — Indexation vectorielle des documents pour recherche sémantique
+1. User Story (produit)
+
+En tant que ContextHub, je veux indexer vectoriellement les documents afin de préparer la recherche sémantique, pour permettre des requêtes RAG efficaces, pertinentes et performantes sur les contenus utilisateurs.
+
+2. Valeur utilisateur
+
+Recherche sémantique précise sur documents
+
+Réponses RAG plus pertinentes
+
+Temps de réponse optimisé
+
+Réduction du bruit et des hallucinations
+
+3. Responsabilité de la plateforme (backend)
+
+La plateforme (ContextHub) est responsable de :
+
+Générer des embeddings à partir des chunks documentaires
+
+Construire et maintenir un index vectoriel
+
+Associer chaque vecteur à ses métadonnées
+
+Optimiser le chunking pour la recherche sémantique
+
+Gérer le stockage et la mise à jour de l’index
+
+Garantir la traçabilité et la robustesse du pipeline
+
+Aucune interface utilisateur n’est exposée.
+
+4. Périmètre fonctionnel
+Inclus
+
+Génération d’embeddings via LLMaaS
+
+Indexation vectorielle (par document et par chunk)
+
+Optimisation du chunking pour la recherche
+
+Gestion des métadonnées (document, chunk, utilisateur)
+
+Mise à jour et suppression d’index
+
+Observabilité et gestion des erreurs
+
+Exclu
+
+Recherche sémantique (query-time)
+
+Reranking
+
+UI de visualisation
+
+OCR avancé
+
+5. Entrées fonctionnelles
+Nom	Description
+document_id	Identifiant du document
+user_id	Identifiant utilisateur
+chunks	Liste des chunks textuels
+metadata	Métadonnées document
+embedding_model	Modèle d’embedding utilisé
+trace_id	Identifiant de corrélation
+6. Sorties fonctionnelles
+Nom	Description
+vector_ids	Identifiants des vecteurs indexés
+index_status	SUCCESS / PARTIAL / ERROR
+indexed_chunks	Nombre de chunks indexés
+error_details	Détails en cas d’échec
+trace_id	Corrélation
+7. Règles fonctionnelles
+Règle	Description
+RF-CH-IDX-01	Chaque chunk est vectorisé indépendamment
+RF-CH-IDX-02	Les embeddings utilisent un modèle compatible
+RF-CH-IDX-03	Les métadonnées sont associées à chaque vecteur
+RF-CH-IDX-04	L’index est mis à jour de façon atomique
+RF-CH-IDX-05	Les chunks optimisent la recherche (taille, overlap)
+RF-CH-IDX-06	La suppression d’un document supprime ses vecteurs
+RF-CH-IDX-07	Toute erreur est tracée
+RF-CH-IDX-08	L’indexation partielle est autorisée mais signalée
+8. Edge cases utilisateur
+
+Document avec très grand nombre de chunks
+
+Timeout du service d’embedding
+
+Modèle d’embedding indisponible
+
+Incohérence métadonnées / chunks
+
+Suppression du document pendant l’indexation
+
+Échec partiel de génération d’embeddings
+
+Saturation de l’index vectoriel
+
+9. Critères d’acceptation (US produit)
+
+Les embeddings sont générés pour chaque chunk valide
+
+Les vecteurs sont indexés avec leurs métadonnées
+
+L’index est exploitable pour une recherche ultérieure
+
+Les erreurs partielles sont signalées sans bloquer le flux
+
+La suppression d’un document nettoie l’index associé
+
+Toutes les opérations sont traçables
+
+Déclinaison en sous-US techniques
+US-CH-V0-INDEX-01-T1 — Génération d’embeddings
+
+Description
+Appeler le service d’embedding pour chaque chunk.
+
+Périmètre
+
+Appels LLMaaS embedding
+
+Edge cases
+
+Timeout ou quota dépassé
+
+Critères d’acceptation
+
+Embedding généré ou erreur tracée
+
+US-CH-V0-INDEX-01-T2 — Optimisation du chunking
+
+Description
+Adapter la taille et le recouvrement des chunks pour la recherche.
+
+Périmètre
+
+Paramétrage chunk_size / overlap
+
+Edge cases
+
+Chunk trop court ou trop long
+
+Critères d’acceptation
+
+Chunks compatibles embedding
+
+US-CH-V0-INDEX-01-T3 — Index vectoriel
+
+Description
+Indexer les embeddings dans le moteur vectoriel.
+
+Périmètre
+
+Création / mise à jour d’index
+
+Edge cases
+
+Index indisponible
+
+Critères d’acceptation
+
+Vecteurs accessibles par document_id
+
+US-CH-V0-INDEX-01-T4 — Gestion des métadonnées
+
+Description
+Associer métadonnées document et chunk aux vecteurs.
+
+Périmètre
+
+user_id, document_id, chunk_id
+
+Edge cases
+
+Métadonnées manquantes
+
+Critères d’acceptation
+
+Métadonnées cohérentes et complètes
+
+US-CH-V0-INDEX-01-T5 — Suppression et mise à jour
+
+Description
+Nettoyer l’index lors de la suppression ou mise à jour d’un document.
+
+Périmètre
+
+Delete par document_id
+
+Edge cases
+
+Suppression partielle
+
+Critères d’acceptation
+
+Aucun vecteur orphelin
+
+US-CH-V0-INDEX-01-T6 — Observabilité & erreurs
+
+Description
+Tracer l’ensemble du pipeline d’indexation.
+
+Périmètre
+
+Logs structurés
+
+Métriques
+
+Edge cases
+
+Manque de corrélation
+
+Critères d’acceptation
+
+Indexation entièrement observable
