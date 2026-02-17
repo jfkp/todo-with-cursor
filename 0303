@@ -1,0 +1,151 @@
+US-GR-V0-07 — Filtrage et protection des réponses LLM contenant des données sensibles
+1. User Story (produit)
+
+En tant que Security Guardrails, je veux analyser et filtrer les réponses générées par le LLM afin de détecter, masquer ou bloquer toute donnée sensible ou secret, pour éviter les fuites d’informations confidentielles vers l’utilisateur final.
+
+2. Valeur utilisateur
+
+Protection contre la divulgation accidentelle de secrets
+
+Conformité aux exigences de sécurité et RGPD
+
+Réponses exploitables sans exposition de données critiques
+
+Transparence en cas de masquage ou de blocage
+
+3. Responsabilité de la plateforme (backend)
+
+La plateforme est responsable de :
+
+Analyser toutes les réponses LLM avant envoi à l’utilisateur
+
+Détecter les secrets techniques (API keys, tokens, mots de passe, credentials)
+
+Détecter les données sensibles personnelles (IBAN, carte bancaire, SSN, identifiants)
+
+Appliquer une redaction automatique (masquage) lorsque possible
+
+Bloquer la réponse si le niveau de risque est trop élevé
+
+Alerter les équipes sécurité en cas de détection critique
+
+Journaliser tous les incidents dans l’observabilité
+
+Permettre la configuration des patterns sensibles
+
+Aucune réponse non conforme ne doit être transmise à l’utilisateur.
+
+4. Périmètre fonctionnel
+Inclus
+
+Analyse des réponses LLM avant exposition
+
+Détection de secrets via règles et regex
+
+Détection de données sensibles (PII, financières)
+
+Redaction automatique (masquage partiel)
+
+Blocage des réponses à haut risque
+
+Message explicite utilisateur
+
+Alertes sécurité
+
+Logging et audit des incidents
+
+Configuration des patterns sensibles
+
+Exclu
+
+Analyse sémantique avancée par IA (V0)
+
+Classification réglementaire avancée (traitée ailleurs)
+
+Correction ou reformulation automatique des réponses
+
+5. Entrées fonctionnelles
+Nom	Description
+user_id	Identifiant utilisateur
+session_id	Identifiant de session
+llm_response	Réponse brute générée par le LLM
+model_id	Modèle utilisé
+trace_id	Identifiant de corrélation
+guardrail_ruleset	Règles actives de filtrage
+6. Sorties fonctionnelles
+Nom	Description
+decision	PASS / REDACT / BLOCK
+detected_items	Types de données détectées
+redacted_response	Réponse masquée (si applicable)
+user_message	Message explicite
+audit_metadata	Timestamp, règle, modèle, trace_id
+7. Règles fonctionnelles
+Règle	Description
+RF-GR-OUT-01	Toute réponse LLM est analysée avant envoi
+RF-GR-OUT-02	Les secrets techniques déclenchent un masquage ou un blocage
+RF-GR-OUT-03	Les données sensibles personnelles sont masquées par défaut
+RF-GR-OUT-04	Les données critiques déclenchent un BLOCK
+RF-GR-OUT-05	Les patterns sont configurables par admin
+RF-GR-OUT-06	Toute détection est loggée
+RF-GR-OUT-07	Une alerte est émise pour les incidents critiques
+RF-GR-OUT-08	L’utilisateur est informé sans divulgation
+8. Edge cases utilisateur
+Situation	Comportement attendu
+Faux positif	Redaction conservatrice
+Donnée partiellement valide	Masquage partiel
+Multiples secrets détectés	Blocage complet
+Réponse très longue	Analyse segmentée
+Pattern inconnu	Passage avec audit
+Service Guardrails indisponible	Blocage par défaut
+9. Critères d’acceptation (US produit)
+
+Aucune réponse contenant un secret n’est affichée en clair
+
+Les données sensibles sont masquées automatiquement
+
+Les réponses à haut risque sont bloquées
+
+L’utilisateur reçoit un message clair
+
+Les incidents sont visibles dans l’observabilité
+
+Les patterns sont configurables sans redéploiement
+
+Déclinaison en sous-US techniques
+US-GR-V0-07-T1 — Détection de secrets techniques
+
+Regex API keys, tokens, passwords
+
+Liste extensible
+
+US-GR-V0-07-T2 — Détection de données sensibles (PII)
+
+IBAN, CB, SSN, identifiants
+
+Validation par checksum si applicable
+
+US-GR-V0-07-T3 — Redaction automatique
+
+Masquage partiel standardisé
+
+Conservation de la lisibilité
+
+US-GR-V0-07-T4 — Blocage des réponses critiques
+
+Seuils configurables
+
+Réponse utilisateur contrôlée
+
+US-GR-V0-07-T5 — Configuration des patterns sensibles
+
+CRUD admin
+
+Versioning des règles
+
+US-GR-V0-07-T6 — Alerting & observabilité sécurité
+
+Logs incidents
+
+Métriques par type de fuite
+
+Alertes temps réel
