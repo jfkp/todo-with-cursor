@@ -1,0 +1,169 @@
+US-PS-V0-03 — Contrôle des quotas d’usage utilisateur (anti-abus)
+1. User Story (produit)
+
+En tant que PolicyShield, je veux vérifier que l’utilisateur n’a pas dépassé ses quotas d’usage afin de bloquer les abus, protéger la plateforme et garantir une utilisation équitable des ressources IA.
+
+2. Valeur utilisateur
+
+Protection contre les blocages globaux liés aux abus
+
+Transparence sur les limites d’usage
+
+Message explicite en cas de dépassement
+
+Expérience équitable entre utilisateurs
+
+3. Responsabilité de la plateforme (backend)
+
+PolicyShield doit :
+
+Mesurer l’usage par utilisateur
+
+Appliquer des quotas configurables (par rôle ou groupe)
+
+Bloquer les appels LLM avant exécution si quota dépassé
+
+Exposer des APIs de consultation de quotas
+
+Journaliser chaque décision liée aux quotas
+
+Fournir une visibilité admin (dashboard)
+
+4. Périmètre fonctionnel
+Inclus
+
+Compteurs par utilisateur :
+
+Nombre de messages
+
+Tokens consommés (input / output)
+
+Vérification quota avant appel LLM
+
+Quotas définis par :
+
+rôle
+
+groupe
+
+Reset automatique des quotas
+
+API récupération quota utilisateur
+
+Dashboard admin quotas
+
+Message explicite utilisateur en cas de blocage
+
+Audit et traçabilité
+
+Exclu
+
+Facturation
+
+Optimisation des prompts
+
+Limitation réseau (rate limit pur)
+
+5. Entrées fonctionnelles
+Nom	Description
+user_id	Identifiant utilisateur
+role	Rôle utilisateur
+group_id	Groupe éventuel
+request_type	Type de requête (chat, RAG, etc.)
+estimated_tokens	Estimation tokens
+trace_id	Identifiant de corrélation
+6. Sorties fonctionnelles
+Nom	Description
+decision	ALLOW / BLOCK
+remaining_quota	Quota restant
+quota_type	Messages / tokens
+reason	Motif du blocage
+audit_metadata	Métadonnées d’audit
+7. Règles fonctionnelles
+Règle	Description
+RF-PS-QUOTA-01	Toute requête est vérifiée avant appel LLM
+RF-PS-QUOTA-02	Les quotas sont définis par rôle/groupe
+RF-PS-QUOTA-03	Les compteurs sont par utilisateur
+RF-PS-QUOTA-04	Dépassement ⇒ blocage immédiat
+RF-PS-QUOTA-05	Message explicite retourné à l’utilisateur
+RF-PS-QUOTA-06	Les quotas sont réinitialisés périodiquement
+RF-PS-QUOTA-07	Toute décision est auditée
+8. Edge cases utilisateur
+Situation	Comportement attendu
+Quota exact atteint	Requête bloquée
+Estimation tokens imprécise	Blocage par précaution
+Quota non configuré	Valeur par défaut appliquée
+Utilisateur sans rôle	Quota minimal
+Job reset en cours	Cohérence garantie
+Compteur indisponible	Fail-safe BLOCK
+Tentative contournement	Blocage + audit sécurité
+9. Critères d’acceptation (US produit)
+
+Les quotas sont vérifiés avant tout appel LLM
+
+Les utilisateurs bloqués reçoivent un message clair
+
+Les quotas sont configurables par rôle/groupe
+
+Les compteurs sont fiables et traçables
+
+Un admin peut consulter l’état des quotas
+
+Les quotas sont automatiquement réinitialisés
+
+Déclinaison en sous-US techniques
+US-PS-V0-03-T1 — Gestion des compteurs utilisateur
+
+Compteurs messages / tokens
+
+Stockage persistant + cache
+
+Incrément atomique
+
+US-PS-V0-03-T2 — Moteur de vérification de quotas
+
+Calcul quota effectif
+
+Estimation tokens
+
+Décision ALLOW / BLOCK
+
+US-PS-V0-03-T3 — Configuration quotas par rôle/groupe
+
+API configuration quotas
+
+Héritage rôle/groupe
+
+Valeurs par défaut
+
+US-PS-V0-03-T4 — Job périodique de reset quotas
+
+Reset quotidien / hebdo / mensuel
+
+Idempotence
+
+Logs d’exécution
+
+US-PS-V0-03-T5 — API récupération quota utilisateur
+
+Endpoint /quota/user
+
+Quotas consommés / restants
+
+Réponse normalisée
+
+US-PS-V0-03-T6 — Dashboard admin quotas
+
+Vue par utilisateur / rôle
+
+Alertes seuils atteints
+
+Historique consommation
+
+US-PS-V0-03-T7 — Audit & observabilité quotas
+
+Logs structurés
+
+trace_id obligatoire
+
+Intégration observabilité
