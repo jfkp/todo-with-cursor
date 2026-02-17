@@ -1,0 +1,162 @@
+US-ORCH-V0-ROUT-01 — Routage des requêtes vers le modèle LLM sélectionné
+1. User Story (produit)
+
+En tant que Smart Router, je veux router chaque requête vers le modèle LLM choisi par l’utilisateur afin de transmettre la requête au bon endpoint LLMaaS, en garantissant la compatibilité, la disponibilité et la traçabilité du routage.
+
+2. Valeur utilisateur
+
+Le modèle utilisé correspond réellement au choix utilisateur
+
+Fiabilité des appels vers les bons endpoints
+
+Expérience cohérente même en cas d’indisponibilité partielle
+
+Transparence sur les erreurs liées aux modèles
+
+3. Responsabilité de la plateforme (backend)
+
+La plateforme doit :
+
+Récupérer le choix de modèle utilisateur
+
+Maintenir un catalogue synchronisé des modèles disponibles
+
+Mapper chaque modèle vers un endpoint LLMaaS
+
+Vérifier la disponibilité (healthcheck) du modèle
+
+Router la requête vers le bon endpoint
+
+Gérer les erreurs et indisponibilités
+
+Journaliser toutes les décisions de routage
+
+4. Périmètre fonctionnel
+Inclus
+
+Récupération du modèle sélectionné
+
+Catalogue modèles synchronisé depuis LLMaaS
+
+Mapping modèle → endpoint LLMaaS
+
+Vérification de disponibilité (healthcheck)
+
+Routage simple (1 modèle → 1 endpoint)
+
+Logging des décisions de routage
+
+Gestion des erreurs LLMaaS
+
+Exclu
+
+Routage multi-modèles avancé (A/B, canary)
+
+Optimisation coût/latence
+
+Sélection automatique de modèle
+
+Streaming (traité dans une autre US)
+
+5. Entrées fonctionnelles
+Nom	Description
+user_id	Identifiant utilisateur
+session_id	Identifiant de conversation
+selected_model	Modèle choisi par l’utilisateur
+request_payload	Prompt + paramètres
+trace_id	Identifiant de corrélation
+sensitivity_level	Classification détectée (issue Guardrails)
+6. Sorties fonctionnelles
+Nom	Description
+llm_endpoint	Endpoint LLMaaS ciblé
+routing_status	SUCCESS / FAILED
+error_code	Code erreur fonctionnel
+routing_metadata	modèle, endpoint, timestamp
+7. Règles fonctionnelles
+Règle	Description
+RF-ROUT-01	Le modèle doit exister dans le catalogue
+RF-ROUT-02	Le modèle doit être autorisé pour l’utilisateur
+RF-ROUT-03	Le modèle doit être compatible avec la classification
+RF-ROUT-04	Le healthcheck doit être OK avant appel
+RF-ROUT-05	En cas d’indisponibilité → erreur contrôlée
+RF-ROUT-06	Chaque décision de routage est loguée
+RF-ROUT-07	Aucun fallback implicite sans règle explicite
+8. Edge cases utilisateur
+Situation	Comportement attendu
+Modèle inexistant	Erreur explicite “modèle inconnu”
+Modèle non autorisé	Erreur AUTHZ claire
+Modèle incompatible sécurité	Blocage + message utilisateur
+Endpoint LLM indisponible	Erreur contrôlée
+Catalogue obsolète	Refus + log incident
+Healthcheck KO	Requête non envoyée
+Erreur LLMaaS	Message utilisateur compréhensible
+9. Critères d’acceptation (US produit)
+
+Le modèle choisi est systématiquement respecté
+
+Le mapping modèle → endpoint est correct
+
+Les modèles indisponibles ne sont jamais appelés
+
+Les erreurs sont compréhensibles côté utilisateur
+
+Toutes les décisions de routage sont traçables
+
+Aucun appel LLMaaS n’est fait hors catalogue
+
+Déclinaison en sous-US techniques
+US-ORCH-V0-ROUT-01-T1 — Synchronisation du catalogue modèles
+
+Job batch de récupération depuis LLMaaS
+
+Stockage catalogue (JSON / DB)
+
+Versioning du catalogue
+
+US-ORCH-V0-ROUT-01-T2 — Mapping modèle → endpoint LLMaaS
+
+Table de correspondance modèle / endpoint
+
+Validation de cohérence
+
+Support multi-endpoints futurs
+
+US-ORCH-V0-ROUT-01-T3 — Vérification du choix utilisateur
+
+Validation existence du modèle
+
+Validation autorisation utilisateur
+
+Validation compatibilité sécurité
+
+US-ORCH-V0-ROUT-01-T4 — Healthcheck des modèles
+
+API de healthcheck par modèle
+
+Cache du statut (TTL)
+
+Détection d’indisponibilité
+
+US-ORCH-V0-ROUT-01-T5 — Routage vers LLMaaS
+
+Construction requête LLMaaS
+
+Transmission vers endpoint ciblé
+
+Gestion timeout et erreurs
+
+US-ORCH-V0-ROUT-01-T6 — Gestion des erreurs & fallback
+
+Normalisation des erreurs LLMaaS
+
+Message utilisateur explicite
+
+Aucun fallback silencieux
+
+US-ORCH-V0-ROUT-01-T7 — Observabilité du routage
+
+Logs : modèle, endpoint, statut
+
+Corrélation trace_id
+
+Métriques par modèle
