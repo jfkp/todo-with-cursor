@@ -1,0 +1,154 @@
+US-ORCH-V0-LB-01 — Équilibrage de charge vers les instances LLMaaS
+1. User Story (produit)
+
+En tant que Smart Router, je veux répartir la charge entre les différentes instances LLMaaS disponibles afin d’éviter la surcharge d’une instance unique et de garantir des performances stables et fiables pour les utilisateurs.
+
+2. Valeur utilisateur
+
+Réponses plus rapides et plus stables
+
+Réduction des erreurs liées à la saturation
+
+Continuité de service même en cas de panne partielle
+
+Expérience homogène quelle que soit la charge
+
+3. Responsabilité de la plateforme (backend)
+
+La plateforme doit :
+
+Maintenir la liste des instances LLMaaS disponibles
+
+Répartir les requêtes selon une stratégie Round Robin
+
+Exclure automatiquement les instances DOWN
+
+Mesurer la latence par instance
+
+Journaliser chaque décision d’équilibrage
+
+Exposer des métriques exploitables
+
+4. Périmètre fonctionnel
+Inclus
+
+Round Robin simple entre instances actives
+
+Exclusion des instances indisponibles
+
+Mesure latence par instance
+
+Logging des décisions de load balancing
+
+Mise à jour dynamique des instances
+
+Exclu
+
+Load balancing pondéré avancé
+
+Autoscaling des instances
+
+Affinité utilisateur/session
+
+Optimisation coût / SLA multi-critères
+
+5. Entrées fonctionnelles
+Nom	Description
+model_id	Modèle ciblé
+request_id	Identifiant de requête
+trace_id	Identifiant de corrélation
+available_instances	Liste des instances actives
+instance_health	Statut healthcheck
+routing_context	Contexte de routage
+6. Sorties fonctionnelles
+Nom	Description
+selected_instance	Instance choisie
+lb_strategy	Round Robin
+lb_status	SUCCESS / FAILED
+latency_snapshot	Latence observée
+lb_metadata	Décision LB tracée
+7. Règles fonctionnelles
+Règle	Description
+RF-LB-01	Une requête est routée vers une seule instance
+RF-LB-02	Les instances DOWN sont exclues
+RF-LB-03	Le Round Robin s’applique uniquement aux instances actives
+RF-LB-04	La latence est mesurée pour chaque appel
+RF-LB-05	Chaque décision LB est journalisée
+RF-LB-06	En absence d’instance disponible → erreur contrôlée
+RF-LB-07	Aucun appel n’est tenté vers une instance DOWN
+8. Edge cases utilisateur
+Situation	Comportement attendu
+Toutes les instances sont DOWN	Erreur contrôlée
+Instance devient DOWN en cours d’appel	Échec + exclusion
+Une seule instance disponible	Routage vers celle-ci
+Latence excessive persistante	Instance conservée mais métriques visibles
+Liste d’instances vide	Blocage immédiat
+Désynchronisation état health	Rafraîchissement forcé
+9. Critères d’acceptation (US produit)
+
+La charge est répartie équitablement
+
+Les instances DOWN ne reçoivent aucune requête
+
+La latence par instance est mesurée
+
+Les décisions de load balancing sont traçables
+
+Le système reste stable sous charge
+
+Déclinaison en sous-US techniques
+US-ORCH-V0-LB-01-T1 — Gestion du pool d’instances LLMaaS
+
+Enregistrement des instances par modèle
+
+Mise à jour dynamique du pool
+
+Cache de la liste des instances
+
+US-ORCH-V0-LB-01-T2 — Healthcheck des instances
+
+Vérification périodique
+
+Marquage UP / DOWN
+
+TTL du statut health
+
+US-ORCH-V0-LB-01-T3 — Algorithme Round Robin
+
+Index circulaire par modèle
+
+Exclusion des instances DOWN
+
+Sélection déterministe
+
+US-ORCH-V0-LB-01-T4 — Mesure de latence par instance
+
+Capture latence appel
+
+Agrégation métriques
+
+Publication observabilité
+
+US-ORCH-V0-LB-01-T5 — Routage vers l’instance sélectionnée
+
+Injection endpoint instance
+
+Gestion timeout
+
+Gestion erreurs réseau
+
+US-ORCH-V0-LB-01-T6 — Observabilité & audit du load balancing
+
+Logs : instance, latence, statut
+
+Corrélation trace_id
+
+Métriques par modèle / instance
+
+US-ORCH-V0-LB-01-T7 — Gestion des erreurs globales
+
+Aucun fallback silencieux
+
+Erreur utilisateur explicite
+
+Audit incident LB
