@@ -1,0 +1,155 @@
+US-PS-V0-02 — Contrôle d’accès RBAC par PolicyShield (moindre privilège)
+1. User Story (produit)
+
+En tant que PolicyShield, je veux contrôler l’accès aux ressources de la plateforme selon les rôles utilisateur afin de garantir le principe du moindre privilège et empêcher tout accès non autorisé.
+
+2. Valeur utilisateur
+
+Accès strictement limité à ce qui est autorisé
+
+Réduction du risque de fuite ou d’abus
+
+Séparation claire des responsabilités (user / admin / super_admin)
+
+Conformité sécurité et auditabilité
+
+3. Responsabilité de la plateforme (backend)
+
+PolicyShield doit :
+
+Vérifier les droits d’accès à chaque appel API
+
+S’appuyer sur un moteur RBAC externe (les rôles ne sont pas définis dans PolicyShield)
+
+Interroger OPAL pour récupérer les rôles et périmètres organisationnels
+
+Appliquer un modèle de rôles hiérarchiques
+
+Exposer une API de récupération des permissions utilisateur
+
+Fournir un middleware RBAC pour protéger les APIs
+
+Journaliser toutes les décisions d’accès
+
+4. Périmètre fonctionnel
+Inclus
+
+Rôles supportés : user, admin, super_admin
+
+Hiérarchie des rôles (super_admin ⊃ admin ⊃ user)
+
+Mapping rôles ↔ permissions
+
+Récupération des rôles depuis OPAL (API)
+
+Middleware RBAC sur toutes les APIs exposées
+
+Décision ALLOW / DENY centralisée
+
+API permissions utilisateur
+
+Logging des accès et refus
+
+Exclu
+
+Définition ou administration des rôles
+
+Gestion UI des rôles
+
+Authentification utilisateur (hors périmètre)
+
+5. Entrées fonctionnelles
+Nom	Description
+user_id	Identifiant utilisateur
+roles	Rôles récupérés depuis OPAL
+resource	Ressource cible (API, action)
+action	Action demandée (READ, WRITE, ADMIN…)
+trace_id	Identifiant de corrélation
+context_org	Contexte organisationnel
+6. Sorties fonctionnelles
+Nom	Description
+decision	ALLOW / DENY
+effective_role	Rôle appliqué
+permissions	Permissions calculées
+reason	Motif de refus (si DENY)
+audit_metadata	Métadonnées d’audit
+7. Règles fonctionnelles
+Règle	Description
+RF-PS-RBAC-01	Tout accès API passe par PolicyShield
+RF-PS-RBAC-02	Les rôles sont récupérés depuis OPAL
+RF-PS-RBAC-03	Les rôles sont hiérarchiques
+RF-PS-RBAC-04	Le moindre privilège est appliqué
+RF-PS-RBAC-05	Toute décision est journalisée
+RF-PS-RBAC-06	En cas d’erreur, l’accès est refusé
+RF-PS-RBAC-07	Les permissions sont évaluées par ressource + action
+8. Edge cases utilisateur
+Situation	Comportement attendu
+Rôle inconnu	DENY + audit
+Utilisateur sans rôle	DENY par défaut
+Incohérence OPAL	DENY + alerte
+Ressource inconnue	DENY
+Appel API sans contexte	DENY
+OPAL indisponible	Fail-safe DENY
+Tentative d’escalade	Blocage + log sécurité
+9. Critères d’acceptation (US produit)
+
+Tous les accès API sont filtrés par PolicyShield
+
+Les rôles sont récupérés dynamiquement depuis OPAL
+
+La hiérarchie des rôles est respectée
+
+Les accès non autorisés sont bloqués
+
+Une API permet de récupérer les permissions d’un utilisateur
+
+Chaque décision est tracée et auditée
+
+Déclinaison en sous-US techniques
+US-PS-V0-02-T1 — Intégration OPAL (récupération rôles)
+
+Appel API OPAL
+
+Mapping rôles ↔ utilisateur
+
+Gestion erreurs OPAL
+
+US-PS-V0-02-T2 — Modèle RBAC hiérarchique
+
+Définition hiérarchie rôles
+
+Résolution du rôle effectif
+
+Héritage des permissions
+
+US-PS-V0-02-T3 — Middleware RBAC API
+
+Interception requêtes API
+
+Vérification ressource / action
+
+Décision ALLOW / DENY
+
+US-PS-V0-02-T4 — API permissions utilisateur
+
+Endpoint /permissions/user
+
+Permissions calculées
+
+Réponse normalisée
+
+US-PS-V0-02-T5 — Logging & audit accès
+
+Logs structurés (user, rôle, ressource)
+
+Trace_id obligatoire
+
+Intégration observabilité
+
+US-PS-V0-02-T6 — Gestion erreurs & fail-safe
+
+DENY par défaut
+
+Alerte sécurité
+
+Résilience OPAL
