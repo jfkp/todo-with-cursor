@@ -1,0 +1,171 @@
+US-RBAC-V0-01 — Gestion des rôles et permissions granulaires
+1. User Story (produit)
+
+En tant qu’administrateur de la plateforme, je veux gérer des rôles avec des permissions granulaires afin d’adapter précisément les accès aux fonctionnalités selon les profils utilisateurs et garantir le principe du moindre privilège.
+
+2. Valeur utilisateur
+
+Accès adaptés aux responsabilités réelles
+
+Réduction des risques de sur-permission
+
+Gouvernance claire et auditable
+
+Délégation maîtrisée des droits
+
+3. Responsabilité de la plateforme (backend)
+
+La plateforme doit :
+
+Définir et exposer un modèle RBAC standard
+
+Gérer les rôles, permissions et leurs associations
+
+Appliquer l’héritage hiérarchique des rôles
+
+Exposer des APIs d’administration sécurisées
+
+Tracer tout changement de rôle ou permission
+
+Fournir les informations nécessaires aux moteurs de contrôle d’accès (ex. PolicyShield)
+
+4. Périmètre fonctionnel
+Inclus
+
+Rôles standards :
+
+user
+
+power_user
+
+analyst
+
+admin
+
+super_admin
+
+Permissions granulaires par fonctionnalité (ex : chat, upload, RAG, admin, audit…)
+
+CRUD des rôles
+
+CRUD des permissions
+
+Association utilisateurs ↔ rôles
+
+Héritage hiérarchique des rôles
+
+Audit des changements
+
+APIs d’exposition des rôles/permissions
+
+Exclu
+
+Authentification (SSO)
+
+Décision d’autorisation temps réel (déléguée à PolicyShield)
+
+UI d’administration (portée par un autre projet)
+
+5. Entrées fonctionnelles
+Nom	Description
+admin_id	Identifiant de l’administrateur
+user_id	Identifiant utilisateur
+role_id	Identifiant du rôle
+permission_id	Identifiant permission
+action	CREATE / UPDATE / DELETE / ASSIGN
+trace_id	Identifiant de corrélation
+6. Sorties fonctionnelles
+Nom	Description
+status	SUCCESS / ERROR
+role_definition	Rôle et permissions associées
+user_roles	Rôles assignés à un utilisateur
+audit_metadata	Auteur, horodatage, action
+7. Règles fonctionnelles
+Règle	Description
+RF-RBAC-01	Chaque utilisateur a au moins un rôle
+RF-RBAC-02	Les permissions sont attachées aux rôles
+RF-RBAC-03	L’héritage est cumulatif (ex : admin ⊃ user)
+RF-RBAC-04	Seul super_admin peut gérer les rôles système
+RF-RBAC-05	Toute modification est auditée
+RF-RBAC-06	Les APIs RBAC sont protégées
+RF-RBAC-07	Les changements sont immédiatement effectifs
+8. Edge cases utilisateur
+Situation	Comportement attendu
+Suppression d’un rôle critique	Refus ou confirmation forte
+Retrait du dernier rôle d’un utilisateur	Blocage
+Permission inconnue	Rejet explicite
+Conflit héritage	Règle la plus restrictive appliquée
+Modification concurrente	Verrou logique
+Tentative par admin non autorisé	Rejet + audit
+9. Critères d’acceptation (US produit)
+
+Les rôles standards sont définis et exploitables
+
+Les permissions sont granulaires et configurables
+
+Les admins peuvent gérer rôles et permissions via API
+
+Les utilisateurs peuvent être associés à plusieurs rôles
+
+L’héritage hiérarchique fonctionne correctement
+
+Tous les changements sont auditables
+
+Les données RBAC sont exploitables par PolicyShield
+
+Déclinaison en sous-US techniques
+US-RBAC-V0-01-T1 — Modèle de données RBAC
+
+Tables rôles / permissions / associations
+
+Support héritage hiérarchique
+
+Contraintes d’intégrité
+
+US-RBAC-V0-01-T2 — API CRUD rôles
+
+Création / modification / suppression rôles
+
+Protection des rôles système
+
+Validation des dépendances
+
+US-RBAC-V0-01-T3 — API CRUD permissions
+
+Définition permissions fonctionnelles
+
+Association permissions ↔ rôles
+
+Vérification cohérence
+
+US-RBAC-V0-01-T4 — Association utilisateurs ↔ rôles
+
+Assignation / retrait de rôles
+
+Multi-rôles supportés
+
+Vérification droits admin
+
+US-RBAC-V0-01-T5 — Moteur d’héritage hiérarchique
+
+Calcul des permissions effectives
+
+Résolution des conflits
+
+Cache des permissions calculées
+
+US-RBAC-V0-01-T6 — API exposition permissions utilisateur
+
+Endpoint permissions effectives
+
+Utilisable par PolicyShield / Orchestrateur
+
+Réponse normalisée
+
+US-RBAC-V0-01-T7 — Audit des changements RBAC
+
+Logs structurés
+
+Historique des modifications
+
+Intégration observabilité
