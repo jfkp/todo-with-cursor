@@ -1,0 +1,174 @@
+US-AUTHN-V0-01 — Authentification WebSSO utilisateur
+1. User Story (produit)
+
+En tant qu’utilisateur, je veux m’authentifier via le WebSSO de mon entreprise afin d’accéder à la plateforme avec mon compte d’entreprise, sans créer de nouveau compte.
+
+2. Valeur utilisateur
+
+Accès simplifié et sans friction
+
+Expérience cohérente avec les outils d’entreprise
+
+Sécurité renforcée
+
+Pas de gestion de mot de passe supplémentaire
+
+Traçabilité des accès
+
+3. Responsabilité de la plateforme (backend)
+
+La plateforme doit :
+
+Intégrer un fournisseur WebSSO / LDAP
+
+Gérer le flux d’authentification et de callback
+
+Vérifier la validité et l’intégrité des tokens
+
+Créer et maintenir une session utilisateur sécurisée
+
+Vérifier la signature de la charte d’utilisation via PolicyShield
+
+Exposer des API d’authentification et de logout
+
+Journaliser tous les accès dans l’observabilité
+
+⚠️ La plateforme ne fournit pas d’interface UI ; elle expose uniquement des API backend.
+
+4. Périmètre fonctionnel
+Inclus
+
+Intégration WebSSO (OIDC / SAML selon IdP)
+
+Authentification via LDAP / IdP entreprise
+
+Gestion du callback d’authentification
+
+Validation du token (signature, expiration, audience)
+
+Création d’une session utilisateur
+
+Association utilisateur ↔ identifiant SSO
+
+Vérification de la charte d’utilisation
+
+API de logout
+
+Logs d’accès centralisés
+
+Exclu
+
+Gestion UI du login
+
+Création manuelle de comptes locaux
+
+Authentification par mot de passe local
+
+5. Entrées fonctionnelles
+Nom	Description
+sso_token	Token retourné par le WebSSO
+idp_metadata	Informations IdP (issuer, audience)
+callback_payload	Données du callback d’authentification
+trace_id	Identifiant de corrélation
+client_id	Application appelante
+6. Sorties fonctionnelles
+Nom	Description
+session_id	Identifiant de session
+user_id	Identifiant utilisateur interne
+roles	Rôles utilisateur
+session_expiry	Date d’expiration
+charter_status	Signée / Non signée
+auth_status	AUTHENTICATED / REJECTED
+audit_metadata	Métadonnées d’audit
+7. Règles fonctionnelles
+Règle	Description
+RF-AUTHN-01	Toute authentification passe par WebSSO
+RF-AUTHN-02	Le token SSO doit être valide et signé
+RF-AUTHN-03	L’utilisateur est identifié via son identifiant SSO
+RF-AUTHN-04	Une session est créée après succès
+RF-AUTHN-05	La charte doit être signée pour accéder aux services
+RF-AUTHN-06	Le logout invalide immédiatement la session
+RF-AUTHN-07	Chaque accès est logué
+RF-AUTHN-08	Les erreurs d’authentification sont tracées
+8. Edge cases utilisateur
+Situation	Comportement attendu
+Token expiré	Authentification refusée
+Token invalide / signature incorrecte	REJECT + audit
+Callback manquant	Erreur contrôlée
+Utilisateur inconnu	Création utilisateur à la volée (si autorisé)
+Charte non signée	Accès bloqué + statut retourné
+Session expirée	Re-authentification requise
+Tentative de rejeu	Blocage + audit
+Logout multiple	Idempotence
+9. Critères d’acceptation (US produit)
+
+L’utilisateur peut s’authentifier via WebSSO
+
+Aucun mot de passe n’est géré par la plateforme
+
+Les tokens sont validés correctement
+
+Une session sécurisée est créée
+
+La charte est vérifiée avant accès
+
+Le logout invalide la session
+
+Tous les accès sont tracés
+
+Déclinaison en sous-US techniques
+US-AUTHN-V0-01-T1 — Intégration WebSSO / LDAP
+
+Configuration IdP
+
+Support OIDC / SAML
+
+Gestion metadata IdP
+
+US-AUTHN-V0-01-T2 — Gestion callback authentification
+
+Endpoint callback sécurisé
+
+Validation payload
+
+Protection CSRF / replay
+
+US-AUTHN-V0-01-T3 — Validation token SSO
+
+Vérification signature
+
+Vérification expiration
+
+Vérification audience / issuer
+
+US-AUTHN-V0-01-T4 — Gestion session utilisateur
+
+Création session
+
+Stockage session
+
+Expiration / invalidation
+
+US-AUTHN-V0-01-T5 — Vérification charte d’utilisation
+
+Appel PolicyShield
+
+Vérification version charte
+
+Blocage si non signée
+
+US-AUTHN-V0-01-T6 — API Logout
+
+Invalidation session
+
+Idempotence
+
+Audit logout
+
+US-AUTHN-V0-01-T7 — Observabilité & audit
+
+Logs accès
+
+Logs erreurs auth
+
+Corrélation trace_id
