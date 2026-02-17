@@ -1,0 +1,147 @@
+US-GR-V0-05 — Détection de contenus inappropriés (Prompt & Réponse)
+1. User Story (produit)
+
+En tant que Security Guardrails, je veux détecter les contenus inappropriés afin de bloquer les prompts utilisateurs et les réponses LLM non conformes, garantissant ainsi la sécurité, la conformité et l’usage responsable de la plateforme.
+
+2. Valeur utilisateur
+
+Protection contre des contenus choquants ou dangereux
+
+Garantie d’un usage responsable de l’IA
+
+Message clair en cas de blocage (compréhension, pas d’erreur opaque)
+
+Confiance renforcée dans la plateforme IA gouvernée
+
+3. Responsabilité de la plateforme (backend)
+
+La plateforme est responsable de :
+
+Analyser les prompts utilisateurs avant envoi au LLM
+
+Analyser les réponses générées par le LLM avant exposition utilisateur
+
+Classifier les contenus selon des catégories de risque
+
+Calculer un score par catégorie
+
+Appliquer un blocage automatique si un seuil est dépassé
+
+Informer explicitement l’utilisateur en cas de rejet
+
+Journaliser chaque incident dans l’observabilité
+
+La plateforme agit comme barrière de sécurité obligatoire, aucun flux ne peut la contourner.
+
+4. Périmètre fonctionnel
+Inclus
+
+Analyse des prompts utilisateurs (pré-LLM)
+
+Analyse des réponses LLM (post-LLM)
+
+Catégorisation des contenus
+
+Scoring par catégorie
+
+Seuils configurables par catégorie
+
+Blocage automatique
+
+Message utilisateur explicite
+
+Logging sécurité & métriques
+
+Exclu
+
+Réécriture automatique des contenus bloqués
+
+Intervention humaine (V0)
+
+Apprentissage automatique des seuils
+
+Modération a posteriori hors flux
+
+5. Entrées fonctionnelles
+Nom	Description
+user_id	Identifiant utilisateur
+session_id	Identifiant de session
+content	Prompt utilisateur ou réponse LLM
+content_type	INPUT / OUTPUT
+trace_id	Identifiant de corrélation
+guardrail_policy	Configuration active (seuils, catégories)
+6. Sorties fonctionnelles
+Nom	Description
+decision	PASS / BLOCK
+blocked_categories	Catégories ayant déclenché le blocage
+score_details	Scores par catégorie
+user_message	Message explicite pour l’utilisateur
+audit_metadata	Décision, seuils, timestamps
+7. Règles fonctionnelles
+Règle	Description
+RF-GR-CONT-01	Tout prompt est analysé avant envoi au LLM
+RF-GR-CONT-02	Toute réponse LLM est analysée avant exposition
+RF-GR-CONT-03	Les catégories analysées incluent : violence, haine, sexuel, auto-mutilation, suicide
+RF-GR-CONT-04	Chaque catégorie dispose d’un score et d’un seuil configurable
+RF-GR-CONT-05	Si un score dépasse le seuil → BLOCK immédiat
+RF-GR-CONT-06	L’utilisateur reçoit un message explicite et compréhensible
+RF-GR-CONT-07	Chaque décision est tracée dans l’observabilité
+RF-GR-CONT-08	Aucun contenu bloqué n’est transmis au LLM ou à l’utilisateur
+8. Edge cases utilisateur
+Situation	Comportement attendu
+Contenu ambigu	Blocage par précaution
+Faux positif	Blocage + audit
+API d’analyse indisponible	Blocage par défaut
+Prompt très court	Analyse quand même
+Réponse LLM tronquée	Analyse sur contenu disponible
+Tentative de contournement	Blocage + alerte sécurité
+9. Critères d’acceptation (US produit)
+
+Tous les prompts sont analysés avant LLM
+
+Toutes les réponses LLM sont analysées avant affichage
+
+Les catégories sont correctement détectées
+
+Les seuils sont configurables sans redéploiement
+
+Les contenus non conformes sont bloqués
+
+L’utilisateur reçoit un message explicite
+
+Les incidents sont tracés dans l’observabilité
+
+Déclinaison en sous-US techniques
+US-GR-V0-05-T1 — Analyse des prompts (pré-LLM)
+
+Classification multi-catégories
+
+Scoring par catégorie
+
+US-GR-V0-05-T2 — Analyse des réponses LLM (post-LLM)
+
+Même moteur d’analyse
+
+Blocage avant exposition
+
+US-GR-V0-05-T3 — Gestion des seuils et catégories
+
+Configuration dynamique
+
+Activation / désactivation par catégorie
+
+US-GR-V0-05-T4 — Message utilisateur explicite
+
+Message non technique
+
+Raison du blocage
+
+US-GR-V0-05-T5 — Observabilité & audit sécurité
+
+Logs structurés
+
+Métriques par catégorie
+
+Alertes sécurité
+
+Si tu veux, je peux ensuite :
