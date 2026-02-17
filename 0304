@@ -1,0 +1,162 @@
+US-GR-V0-08 — Consultation des logs d’incidents de sécurité
+1. User Story (produit)
+
+En tant qu’administrateur sécurité, je veux consulter les logs d’incidents de sécurité afin de détecter les comportements suspects et analyser les risques.
+
+2. Valeur utilisateur
+
+Détection proactive des anomalies
+
+Visibilité sur les tentatives de contournement
+
+Capacité d’investigation rapide
+
+Conformité réglementaire
+
+Support aux audits internes et externes
+
+3. Responsabilité de la plateforme (backend)
+
+La plateforme doit :
+
+Centraliser tous les incidents de sécurité dans l’observabilité
+
+Stocker des logs structurés exploitables
+
+Exposer une API de consultation des incidents
+
+Permettre le filtrage avancé
+
+Exposer les données au dashboard admin
+
+Permettre l’export des incidents
+
+Déclencher des alertes en cas de volume anormal
+
+La plateforme ne fournit pas l’interface UI, mais expose les API nécessaires.
+
+4. Périmètre fonctionnel
+Inclus
+
+Stockage centralisé des incidents sécurité
+
+Log structuré (JSON normalisé)
+
+Filtres par :
+
+Type d’incident
+
+user_id
+
+modèle
+
+catégorie
+
+période
+
+Dashboard admin (consommation API)
+
+Export CSV / JSON
+
+Alerting automatique sur seuil volumétrique
+
+Agrégation statistique
+
+Exclu
+
+Analyse prédictive IA des incidents
+
+Corrélation avancée inter-systèmes (SIEM externe)
+
+5. Entrées fonctionnelles
+Nom	Description
+incident_id	Identifiant unique
+user_id	Identifiant utilisateur
+incident_type	Catégorie (toxicité, secret, jailbreak, classification…)
+severity	Niveau (low / medium / high / critical)
+details	Détails techniques
+model_id	Modèle concerné
+trace_id	Identifiant corrélation
+timestamp	Horodatage
+decision	BLOCK / REDACT / PASS
+source	input / output
+6. Sorties fonctionnelles
+Nom	Description
+incident_list	Liste paginée des incidents
+aggregated_metrics	Statistiques par type/période
+export_file	Fichier exportable
+alert_triggered	Indicateur alerte
+audit_metadata	Traçabilité requête admin
+7. Règles fonctionnelles
+Règle	Description
+RF-LOG-01	Tous les incidents sécurité sont loggés
+RF-LOG-02	Le log est structuré et normalisé
+RF-LOG-03	Les incidents sont consultables via API sécurisée
+RF-LOG-04	Les filtres doivent supporter pagination et tri
+RF-LOG-05	Les exports respectent les règles RGPD
+RF-LOG-06	Une alerte est déclenchée si seuil anormal
+RF-LOG-07	Les accès aux logs sont eux-mêmes audités
+8. Edge cases utilisateur
+Situation	Comportement attendu
+Volume massif d’incidents	Pagination obligatoire + agrégation
+Incident sans user_id (M2M)	Tag system_client
+Tentative d’accès non autorisé	REFUSE + audit
+Export volumineux	Export asynchrone
+Logs partiellement corrompus	Isolation + alerte
+Pic soudain d’incidents	Alerting automatique
+9. Critères d’acceptation (US produit)
+
+Tous les incidents sont stockés de manière structurée
+
+L’admin peut filtrer par type, utilisateur, période
+
+Les incidents sont exportables
+
+Les alertes se déclenchent en cas de volume anormal
+
+Les accès aux logs sont audités
+
+Les données sont traçables via trace_id
+
+Déclinaison en sous-US techniques
+US-GR-V0-08-T1 — Centralisation des logs sécurité
+
+Schéma JSON normalisé
+
+Stockage dans backend observabilité
+
+Indexation pour recherche rapide
+
+US-GR-V0-08-T2 — API de consultation incidents
+
+Endpoint sécurisé
+
+Filtres multiples
+
+Pagination
+
+Tri
+
+US-GR-V0-08-T3 — Dashboard sécurité
+
+Agrégation métriques
+
+Top incidents
+
+Histogramme volumétrie
+
+US-GR-V0-08-T4 — Export incidents
+
+Export CSV / JSON
+
+Gestion volumétrie
+
+Traçabilité export
+
+US-GR-V0-08-T5 — Alerting automatique
+
+Seuil configurable
+
+Monitoring volumétrie
+
+Notification équipe sécurité
