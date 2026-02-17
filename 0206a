@@ -1,0 +1,172 @@
+US-USER-V0-01 — Provisionnement massif d’utilisateurs par import CSV
+1. User Story (produit)
+
+En tant qu’administrateur, je veux importer par lot des utilisateurs via un fichier CSV afin de provisionner massivement les accès à la plateforme, accélérer le déploiement auprès des équipes et garantir une gestion cohérente des rôles et groupes.
+
+2. Valeur utilisateur
+
+Gain de temps pour le provisioning à grande échelle
+
+Réduction des erreurs manuelles
+
+Déploiement rapide de nouveaux utilisateurs
+
+Traçabilité et visibilité sur le provisioning
+
+3. Responsabilité de la plateforme (backend)
+
+La plateforme doit :
+
+Exposer une API d’import CSV
+
+Valider le format et la cohérence des données
+
+Appeler le moteur d’identité / OPAL en mode bulk
+
+Gérer les erreurs partielles sans bloquer l’ensemble
+
+Générer un rapport détaillé de provisioning
+
+Journaliser toutes les opérations dans l’observabilité
+
+Garantir l’idempotence des imports
+
+4. Périmètre fonctionnel
+Inclus
+
+Import CSV avec colonnes :
+
+user_id
+
+email
+
+role
+
+group
+
+Validation syntaxique et sémantique
+
+Intégration OPAL (bulk create / update)
+
+Gestion des doublons
+
+Rapport de provisioning (succès / échecs)
+
+Logs techniques et métiers
+
+Gestion des erreurs et retry contrôlé
+
+Exclu
+
+Interface UI d’upload (hors périmètre plateforme)
+
+Création manuelle utilisateur
+
+Gestion des mots de passe
+
+5. Entrées fonctionnelles
+Nom	Description
+csv_file	Fichier CSV des utilisateurs
+admin_id	Identifiant administrateur
+trace_id	Identifiant de corrélation
+import_options	Mode strict / tolérant
+dry_run	Simulation sans création
+6. Sorties fonctionnelles
+Nom	Description
+provisioning_report	Résumé succès / erreurs
+created_users	Liste des utilisateurs créés
+failed_rows	Lignes en échec + raisons
+audit_metadata	Horodatage, admin, volume
+7. Règles fonctionnelles
+Règle	Description
+RF-PROV-01	Le format CSV est strictement validé
+RF-PROV-02	Un utilisateur invalide n’annule pas tout le lot
+RF-PROV-03	Les rôles doivent exister dans le RBAC
+RF-PROV-04	Les groupes sont validés via OPAL
+RF-PROV-05	L’import est idempotent
+RF-PROV-06	Toute action est auditée
+RF-PROV-07	Un mode dry-run est disponible
+8. Edge cases utilisateur
+Situation	Comportement attendu
+CSV mal formé	Import refusé + erreur explicite
+Colonne manquante	Échec ligne + rapport
+Rôle inconnu	Utilisateur non créé
+Groupe invalide OPAL	Échec ciblé + log
+Utilisateur déjà existant	Mise à jour contrôlée
+OPAL indisponible	Retry + échec partiel
+Import volumineux	Traitement batché
+Double import	Aucun doublon créé
+9. Critères d’acceptation (US produit)
+
+Le CSV est validé avant tout provisioning
+
+Les utilisateurs valides sont créés même si certains échouent
+
+Les rôles et groupes sont cohérents
+
+Un rapport détaillé est généré
+
+Les erreurs sont explicites et traçables
+
+Les opérations sont visibles dans l’observabilité
+
+Le mode dry-run fonctionne sans effet de bord
+
+Déclinaison en sous-US techniques
+US-USER-V0-01-T1 — API d’import CSV
+
+Endpoint sécurisé
+
+Upload fichier
+
+Validation taille / format
+
+Support dry-run
+
+US-USER-V0-01-T2 — Parser & validation CSV
+
+Validation schéma
+
+Validation email / user_id
+
+Normalisation données
+
+US-USER-V0-01-T3 — Intégration OPAL (bulk)
+
+Appel bulk create / update
+
+Mapping rôle / groupe
+
+Gestion erreurs OPAL
+
+US-USER-V0-01-T4 — Gestion idempotence & doublons
+
+Détection utilisateur existant
+
+Mise à jour contrôlée
+
+Aucun doublon créé
+
+US-USER-V0-01-T5 — Rapport de provisioning
+
+Succès / échecs
+
+Détail par ligne
+
+Export JSON / CSV
+
+US-USER-V0-01-T6 — Observabilité & audit
+
+Logs techniques
+
+Logs métiers
+
+Trace admin / volume / durée
+
+US-USER-V0-01-T7 — Gestion erreurs & retry
+
+Retry ciblé
+
+Timeout contrôlé
+
+Erreurs explicites
