@@ -1,0 +1,149 @@
+US-GR-V0-06 — Détection et blocage des prompts malveillants (Jailbreak & Prompt Injection)
+1. User Story (produit)
+
+En tant que Security Guardrails, je veux détecter et bloquer les prompts malveillants (jailbreak, prompt injection, contournement d’instructions) afin de protéger le système, les modèles LLM et les règles de gouvernance de la plateforme.
+
+2. Valeur utilisateur
+
+Protection contre les usages abusifs ou malveillants
+
+Garantie que les règles de sécurité ne peuvent pas être contournées
+
+Message clair expliquant le refus
+
+Confiance dans la robustesse et la gouvernance de la plateforme
+
+3. Responsabilité de la plateforme (backend)
+
+La plateforme est responsable de :
+
+Analyser tous les prompts utilisateurs avant traitement
+
+Détecter les tentatives de jailbreak (contournement des règles système)
+
+Détecter les prompt injections (override d’instructions système / développeur)
+
+Appliquer des règles de détection basées sur patterns et heuristiques
+
+Bloquer immédiatement les requêtes malveillantes
+
+Informer explicitement l’utilisateur
+
+Journaliser toutes les tentatives pour audit et détection d’abus
+
+Exposer des APIs d’administration pour gérer les règles
+
+Aucun prompt malveillant ne doit atteindre l’Orchestrateur ou le LLM.
+
+4. Périmètre fonctionnel
+Inclus
+
+Détection de jailbreak
+
+Détection de prompt injection (instruction override)
+
+Blacklist de mots-clés et patterns sensibles
+
+Blocage immédiat du prompt
+
+Message utilisateur explicite
+
+Logging détaillé des tentatives
+
+CRUD des règles par administrateur
+
+Exclu
+
+Correction automatique du prompt
+
+Apprentissage automatique des règles (V0)
+
+Analyse des réponses LLM (traitée par une autre US)
+
+5. Entrées fonctionnelles
+Nom	Description
+user_id	Identifiant utilisateur
+session_id	Identifiant de session
+prompt	Texte soumis par l’utilisateur
+trace_id	Identifiant de corrélation
+guardrail_ruleset	Jeu de règles actif
+identity_context	Rôle, tenant, profil
+6. Sorties fonctionnelles
+Nom	Description
+decision	PASS / BLOCK
+detection_type	JAILBREAK / PROMPT_INJECTION / KEYWORD
+matched_rules	Règles déclenchées
+user_message	Message explicite à l’utilisateur
+audit_metadata	Timestamp, user_id, règle, trace_id
+7. Règles fonctionnelles
+Règle	Description
+RF-GR-JB-01	Tout prompt est analysé avant toute autre étape
+RF-GR-JB-02	Les tentatives de jailbreak sont détectées via patterns connus
+RF-GR-JB-03	Les prompt injections (override d’instructions) sont bloquées
+RF-GR-JB-04	Les mots-clés sensibles sont maintenus via une blacklist
+RF-GR-JB-05	Toute détection entraîne un BLOCK immédiat
+RF-GR-JB-06	L’utilisateur reçoit un message explicite
+RF-GR-JB-07	Chaque tentative est loggée pour audit
+RF-GR-JB-08	Les règles sont modifiables sans redéploiement
+8. Edge cases utilisateur
+Situation	Comportement attendu
+Prompt ambigu	Blocage par précaution
+Tentative répétée	Blocage + alerte sécurité
+Faux positif	Blocage + audit
+Règles indisponibles	Blocage par défaut
+Prompt très long	Analyse par segments
+Tentative d’obfuscation	Détection heuristique
+9. Critères d’acceptation (US produit)
+
+Tous les prompts sont analysés avant exécution
+
+Les jailbreaks sont bloqués systématiquement
+
+Les prompt injections sont détectées et bloquées
+
+Les mots-clés sensibles déclenchent un blocage
+
+L’utilisateur reçoit un message clair
+
+Les tentatives sont centralisées dans les logs
+
+Les règles sont administrables via API
+
+Déclinaison en sous-US techniques
+US-GR-V0-06-T1 — Détection de jailbreak par patterns
+
+Règles textuelles et regex
+
+Liste maintenable
+
+US-GR-V0-06-T2 — Détection de prompt injection
+
+Analyse d’override d’instructions
+
+Détection de contournement système
+
+US-GR-V0-06-T3 — Blacklist de mots-clés sensibles
+
+CRUD des mots-clés
+
+Activation/désactivation
+
+US-GR-V0-06-T4 — Blocage & message utilisateur
+
+Message explicite non technique
+
+Pas de fuite d’information
+
+US-GR-V0-06-T5 — Administration des règles
+
+APIs CRUD admin
+
+Versioning des règles
+
+US-GR-V0-06-T6 — Observabilité & audit sécurité
+
+Logs des tentatives
+
+Métriques par type d’attaque
+
+Alertes
