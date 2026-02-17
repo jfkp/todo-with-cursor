@@ -1,0 +1,176 @@
+1. User Story (produit)
+
+En tant que DPO (Data Protection Officer), je veux accéder aux logs d’audit complets de la plateforme afin de vérifier la conformité RGPD, tracer les accès et actions sur les données, et être en mesure de répondre aux obligations réglementaires (audit, contrôle, incident, droit des personnes).
+
+2. Valeur utilisateur
+
+Capacité à prouver la conformité RGPD
+
+Traçabilité complète et fiable des actions
+
+Réduction du risque réglementaire et juridique
+
+Réponse rapide aux audits internes / autorités
+
+3. Responsabilité de la plateforme (backend)
+
+La plateforme doit :
+
+Centraliser tous les événements auditables
+
+Garantir des logs append-only (non modifiables)
+
+Enregistrer les accès, actions et usages de données
+
+Anonymiser ou pseudonymiser les données sensibles
+
+Exposer des APIs sécurisées de consultation et d’export
+
+Assurer la conservation selon les politiques RGPD
+
+4. Périmètre fonctionnel
+Inclus
+
+Logs d’audit append-only
+
+Types d’événements :
+
+Authentification / déconnexion
+
+Actions utilisateurs (lecture, écriture, suppression)
+
+Accès aux données (conversation, document, mémoire)
+
+Modifications de rôles / permissions
+
+Actions administratives
+
+Champs obligatoires par événement :
+
+user_id (ou user_id_hash)
+
+timestamp
+
+action
+
+resource
+
+ip_address
+
+result (SUCCESS / DENY / ERROR)
+
+Anonymisation / pseudonymisation des données sensibles
+
+API de recherche dans les logs
+
+Export des logs (audit, contrôle, incident)
+
+Exclu
+
+Visualisation UI (portée par un autre projet)
+
+Analyse comportementale avancée
+
+Décision de sécurité temps réel
+
+5. Entrées fonctionnelles
+Nom	Description
+dpo_id	Identifiant du DPO
+query_filters	Période, utilisateur, action, ressource
+export_format	CSV / JSON
+trace_id	Identifiant de corrélation
+6. Sorties fonctionnelles
+Nom	Description
+audit_logs	Liste des événements d’audit
+total_count	Nombre total d’événements
+export_file	Fichier d’export
+audit_metadata	Période, filtres, horodatage
+7. Règles fonctionnelles
+Règle	Description
+RF-AUDIT-01	Les logs sont append-only (immutables)
+RF-AUDIT-02	Toute action sensible génère un log
+RF-AUDIT-03	Les données sensibles sont anonymisées
+RF-AUDIT-04	Seuls les rôles autorisés (DPO, admin) accèdent aux logs
+RF-AUDIT-05	Les logs sont horodatés en UTC
+RF-AUDIT-06	La rétention respecte la politique RGPD
+RF-AUDIT-07	Les exports sont tracés comme événements
+8. Edge cases utilisateur
+Situation	Comportement attendu
+Tentative d’accès non autorisé	Refus + log d’audit
+Log manquant	Signalement non conformité
+Export volumineux	Pagination ou export asynchrone
+Donnée sensible non anonymisée	Blocage + alerte
+Période hors rétention	Résultat vide + justification
+Tentative de modification d’un log	Refus absolu
+9. Critères d’acceptation (US produit)
+
+Tous les événements critiques sont tracés
+
+Les logs sont immuables et append-only
+
+Les champs requis sont présents et cohérents
+
+Les données sensibles sont anonymisées
+
+Le DPO peut rechercher les logs via API
+
+Les logs peuvent être exportés
+
+L’accès est strictement contrôlé et audité
+
+Déclinaison en sous-US techniques
+US-AUDIT-V0-01-T1 — Modèle d’événement d’audit
+
+Schéma standardisé des logs
+
+Champs obligatoires RGPD
+
+Typologie d’événements
+
+US-AUDIT-V0-01-T2 — Pipeline de collecte des logs
+
+Centralisation multi-composants
+
+Garantie append-only
+
+Horodatage fiable
+
+US-AUDIT-V0-01-T3 — Anonymisation / pseudonymisation
+
+Masquage IP, identifiants sensibles
+
+Hash user_id si nécessaire
+
+Conformité RGPD by design
+
+US-AUDIT-V0-01-T4 — API de recherche des logs
+
+Filtres (temps, user, action, ressource)
+
+Pagination
+
+Sécurisation par rôle
+
+US-AUDIT-V0-01-T5 — API d’export des logs
+
+Export CSV / JSON
+
+Traçabilité des exports
+
+Limitation volumétrique
+
+US-AUDIT-V0-01-T6 — Gestion rétention & purge
+
+Politique de conservation configurable
+
+Purge automatique
+
+Journalisation des purges
+
+US-AUDIT-V0-01-T7 — Sécurité & contrôle d’accès
+
+RBAC sur les APIs audit
+
+Intégration PolicyShield
+
+Journalisation des accès aux logs
