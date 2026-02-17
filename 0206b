@@ -1,0 +1,158 @@
+US-USER-V0-02 — Notification email post-provisionnement & onboarding
+1. User Story (produit)
+
+En tant qu’utilisateur, je veux recevoir un email après mon provisioning afin d’être informé de mon accès à la plateforme et accompagné dans mon onboarding (connexion, signature de la charte, premières étapes).
+
+2. Valeur utilisateur
+
+Confirmation claire de l’accès à la plateforme
+
+Onboarding guidé sans friction
+
+Rappels automatiques en cas d’inaction
+
+Communication adaptée à la langue de l’utilisateur
+
+3. Responsabilité de la plateforme (backend)
+
+La plateforme doit :
+
+Déclencher l’envoi d’emails transactionnels liés au provisioning et à l’onboarding
+
+Gérer des templates email multilingues
+
+Orchestrer des relances automatiques via cron
+
+Déclencher des emails conditionnels (charte signée)
+
+Journaliser tous les envois et statuts dans l’observabilité
+
+Garantir l’idempotence des notifications
+
+4. Périmètre fonctionnel
+Inclus
+
+Email post-provisionnement (email 1)
+
+Email de relance si aucune connexion après X jours (email 2)
+
+Email de relance supplémentaire (email 3)
+
+Email après signature de la charte d’utilisation
+
+Templates multilingues (langue utilisateur)
+
+Paramétrage des délais de relance
+
+Logs d’envoi et d’échec
+
+Exclu
+
+Interface UI de création de templates
+
+Gestion des préférences marketing
+
+Envoi de notifications non email (SMS, push)
+
+5. Entrées fonctionnelles
+Nom	Description
+user_id	Identifiant utilisateur
+email	Adresse email
+locale	Langue préférée
+event_type	provisioning / reminder / charter_signed
+charter_version	Version de la charte
+trace_id	Identifiant de corrélation
+6. Sorties fonctionnelles
+Nom	Description
+email_status	SENT / FAILED / SKIPPED
+template_id	Identifiant du template utilisé
+send_timestamp	Horodatage d’envoi
+audit_metadata	user_id, event_type, résultat
+7. Règles fonctionnelles
+Règle	Description
+RF-EMAIL-01	Un email est envoyé après provisioning réussi
+RF-EMAIL-02	La langue du template dépend du profil utilisateur
+RF-EMAIL-03	Les relances sont déclenchées par cron
+RF-EMAIL-04	Aucun doublon d’email pour un même événement
+RF-EMAIL-05	Les emails post-charte sont envoyés uniquement après signature
+RF-EMAIL-06	Tous les envois sont auditables
+RF-EMAIL-07	Un échec d’envoi n’interrompt pas le flux principal
+8. Edge cases utilisateur
+Situation	Comportement attendu
+Email invalide	Envoi ignoré + log erreur
+Template manquant langue	Fallback langue par défaut
+Utilisateur déjà connecté	Relance non envoyée
+Charte déjà signée	Email post-charte non renvoyé
+Service email indisponible	Retry + log incident
+Cron exécuté en double	Aucun doublon d’envoi
+Utilisateur supprimé	Aucun email envoyé
+9. Critères d’acceptation (US produit)
+
+Un email est envoyé après chaque provisioning valide
+
+Les templates sont correctement localisés
+
+Les relances sont envoyées uniquement aux utilisateurs inactifs
+
+Les emails post-charte sont déclenchés après signature
+
+Aucun doublon n’est envoyé
+
+Tous les envois sont traçables et audités
+
+Les erreurs sont visibles dans l’observabilité
+
+Déclinaison en sous-US techniques
+US-USER-V0-02-T1 — Service d’envoi d’emails transactionnels
+
+API interne d’envoi
+
+Intégration SMTP / provider email
+
+Gestion erreurs et timeout
+
+US-USER-V0-02-T2 — Gestion des templates multilingues
+
+Stockage templates
+
+Sélection par locale
+
+Fallback par défaut
+
+US-USER-V0-02-T3 — Déclenchement post-provisionnement
+
+Hook après provisioning utilisateur
+
+Idempotence événement
+
+US-USER-V0-02-T4 — Cron de relance onboarding
+
+Job planifié (J+X, J+Y)
+
+Vérification absence de connexion
+
+Déclenchement conditionnel
+
+US-USER-V0-02-T5 — Email post-signature de charte
+
+Événement charter_signed
+
+Sélection template dédié
+
+Envoi unique par version
+
+US-USER-V0-02-T6 — Observabilité & audit email
+
+Logs d’envoi
+
+Logs d’échec
+
+Corrélation user_id / trace_id
+
+US-USER-V0-02-T7 — Sécurité & conformité
+
+Pas de contenu sensible dans les emails
+
+Masquage des identifiants
+
+Conservation des logs conforme RGPD
